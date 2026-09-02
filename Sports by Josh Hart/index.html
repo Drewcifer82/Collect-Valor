@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#070710" />
+<title>Collect Valor — Sports & Pokémon Card Scanner & Price Checker</title>
+<meta name="description" content="Collect Valor turns your phone into a sports and Pokémon card scanner — snap a photo and get a card's real market value in seconds, then track your whole collection." />
+<link rel="canonical" href="https://collectvalor.com/" />
+<meta name="robots" content="index, follow" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/favicon.svg" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Collect Valor" />
+<meta property="og:title" content="Collect Valor — Sports & Pokémon Card Scanner & Price Checker" />
+<meta property="og:description" content="Snap a photo of any sports or Pokémon card and get its real market value in seconds. Track your collection and watch its value grow." />
+<meta property="og:url" content="https://collectvalor.com/" />
+<meta property="og:image" content="https://collectvalor.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Collect Valor — Card Scanner & Price Checker" />
+<meta name="twitter:description" content="Scan any sports or Pokémon card and get its real market value in seconds." />
+<meta name="twitter:image" content="https://collectvalor.com/og-image.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Collect Valor",
+  "url": "https://collectvalor.com/",
+  "description": "Scan any sports or Pokémon card and get its real market value in seconds, then track your collection.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Web, iOS, Android",
+  "offers": { "@type": "Offer", "price": "8.99", "priceCurrency": "USD" }
+}
+</script>
+<style>
+  :root {
+    --navy:        #070710;
+    --navy-facet:  #12132A;
+    --navy-facet2: #0C0D1A;
+    --panel:       #10111E;
+    --panel-2:     #141626;
+    --slot:        #191B2E;
+    --mint:        #2F6BFF;   /* electric blue - primary accent */
+    --mint-dark:   #FFFFFF;   /* text on accent fills */
+    --line:        #262A40;
+    --text:        #F4F6FB;
+    --text-dim:    #AEB6CE;
+    --muted:       #7E88A6;
+    --muted-2:     #566079;
+    --danger:      #FF6B6B;
+    --magenta:     #FF3DBE;   /* used sparingly */
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: var(--navy); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body { position: relative; overflow-x: hidden; }
+
+  /* Faceted background planes */
+  .facets { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .facets span { position: absolute; display: block; background: var(--navy-facet); }
+  .facets .f1 { width: 60vw; height: 70vh; top: -12vh; left: -18vw; transform: rotate(18deg); }
+  .facets .f2 { width: 70vw; height: 80vh; bottom: -20vh; right: -22vw; transform: rotate(-14deg); background: var(--navy-facet2); }
+  .facets .f3 { width: 45vw; height: 45vh; top: 38vh; right: -14vw; transform: rotate(24deg); background: var(--navy-facet2); }
+
+  .wrap { position: relative; z-index: 1; max-width: 460px; margin: 0 auto; padding: 26px 18px 96px; }
+
+  .brand .title { color: var(--text); font-size: 22px; font-weight: 600; letter-spacing: 1.5px; }
+  .brand .by { color: var(--magenta); font-size: 12px; letter-spacing: 0.5px; margin-top: 1px; }
+
+  .hidden { display: none !important; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* ---------- Login ---------- */
+  .login-shell { display: flex; flex-direction: column; min-height: 78vh; justify-content: center; }
+  .login-brand { text-align: center; margin-bottom: 26px; }
+  .login-brand .title { font-size: 26px; letter-spacing: 2px; }
+  .login-mark {
+    width: 62px; height: 62px; margin: 0 auto 16px; border-radius: 16px;
+    border: 1px solid var(--mint); display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .login-mark::before, .login-mark::after {
+    content: ''; position: absolute; width: 16px; height: 16px;
+  }
+  .login-mark::before { top: -1px; left: -1px; border-top: 2px solid var(--mint); border-left: 2px solid var(--mint); border-radius: 16px 0 0 0; }
+  .login-mark::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--mint); border-right: 2px solid var(--mint); border-radius: 0 0 16px 0; }
+  .login-mark b { color: var(--mint); font-size: 24px; font-weight: 600; }
+
+  .card {
+    border: 1px solid rgba(255,255,255,0.06); background: var(--panel);
+    border-radius: 16px; padding: 20px 18px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 17px; font-weight: 500; color: var(--text); }
+  .card p.sub { margin: 0 0 18px; font-size: 12.5px; color: var(--muted); }
+
+  label.field {
+    display: block; font-size: 10px; color: var(--muted); margin: 0 0 6px;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  input.text {
+    width: 100%; height: 46px; padding: 0 14px; margin-bottom: 15px;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 11px;
+    color: var(--text); font-size: 16px; outline: none;
+    transition: border-color .15s ease;
+  }
+  input.text:focus { border-color: var(--mint); }
+  input.text::placeholder { color: var(--muted-2); }
+
+  button.primary {
+    width: 100%; height: 48px; border: none;
+    background: var(--mint); color: var(--mint-dark); font-size: 15px; font-weight: 600;
+    border-radius: 24px; cursor: pointer; letter-spacing: 0.3px;
+    transition: opacity .15s ease;
+  }
+  button.primary:hover { opacity: .9; }
+  button.primary:active { transform: scale(0.99); }
+  button.primary:disabled { opacity: 0.45; cursor: default; }
+
+  .msg { min-height: 18px; margin-top: 12px; font-size: 12.5px; text-align: center; color: var(--muted); }
+  .msg.error { color: var(--danger); }
+  .msg.ok { color: var(--mint); }
+
+  /* ---------- App header ---------- */
+  .app-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .stat {
+    background: var(--panel); border-radius: 14px; padding: 9px 13px; text-align: right; min-width: 118px;
+  }
+  .stat .lbl { color: var(--muted); font-size: 8.5px; letter-spacing: 1px; }
+  .stat .val { color: var(--mint); font-size: 18px; font-weight: 600; line-height: 1.2; }
+  .stat .sub { color: var(--muted); font-size: 9px; letter-spacing: .5px; }
+
+  /* ---------- Scan ---------- */
+  .scanbox {
+    position: relative; height: 330px; border: 1px solid var(--mint);
+    border-radius: 16px; background: var(--panel-2); overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted-2); font-size: 13px; text-align: center;
+  }
+  .scanbox img { width: 100%; height: 100%; object-fit: contain; background: #071522; }
+  .corner { position: absolute; width: 26px; height: 26px; z-index: 2; }
+  .corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--mint); border-left: 2px solid var(--mint); border-radius: 16px 0 0 0; }
+  .corner.tr { top: -1px; right: -1px; border-top: 2px solid var(--mint); border-right: 2px solid var(--mint); border-radius: 0 16px 0 0; }
+  .corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--mint); border-left: 2px solid var(--mint); border-radius: 0 0 0 16px; }
+  .corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--mint); border-right: 2px solid var(--mint); border-radius: 0 0 16px 0; }
+  .scan-hint { position: absolute; z-index: 1; padding: 0 20px; }
+  .scan-hint .eye { display: block; font-size: 30px; color: #3C5D77; margin-bottom: 8px; }
+  .busy {
+    position: absolute; inset: 0; z-index: 3; background: rgba(7,21,34,0.78);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--mint); font-size: 13px; letter-spacing: 2px;
+  }
+  .busy .bar { width: 60%; height: 3px; background: var(--line); border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+  .busy .bar i { display: block; height: 100%; width: 40%; background: var(--mint); animation: slide 1.1s ease-in-out infinite; }
+  @keyframes slide { 0% { transform: translateX(-100%);} 100% { transform: translateX(250%);} }
+
+  .actions { display: flex; gap: 8px; margin-top: 13px; }
+  .actions button {
+    flex: 1; height: 44px; border-radius: 22px; background: transparent;
+    color: var(--text-dim); font-size: 13.5px; cursor: pointer; border: 1px solid var(--line);
+  }
+  .actions .scan { background: var(--mint); color: var(--mint-dark); border: none; font-weight: 600; }
+  .actions button:active { transform: scale(0.99); }
+
+  /* ---------- Result ---------- */
+  .result { margin-top: 14px; }
+  .result .tag { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 10px; }
+  .result .tag .check {
+    width: 15px; height: 15px; border-radius: 50%; background: var(--mint);
+    color: var(--mint-dark); font-size: 10px; line-height: 15px; text-align: center; font-weight: 700;
+  }
+  .result .tag .lbl { color: var(--mint); letter-spacing: .5px; }
+  .result .name { color: var(--text); font-size: 18px; font-weight: 600; }
+  .result .detail { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .result .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .result .chip {
+    font-size: 10px; padding: 3px 9px; border-radius: 20px; letter-spacing: .5px;
+    background: var(--slot); color: #8FB6C9;
+  }
+  .result .chip.rookie { color: var(--mint-dark); background: var(--mint); font-weight: 700; }
+  .result .highlights { margin: 12px 0 0; padding: 0 0 0 16px; }
+  .result .highlights li { color: var(--text-dim); font-size: 12.5px; margin-bottom: 4px; line-height: 1.45; }
+  .result .notes { color: var(--muted); font-size: 12.5px; margin-top: 8px; font-style: italic; }
+
+  .bigprice { border-top: 1px solid rgba(255,255,255,0.07); margin-top: 14px; padding-top: 12px; }
+  .bigprice .plabel { color: var(--muted); font-size: 9px; letter-spacing: 1.2px; }
+  .bigprice .pval { color: var(--mint); font-size: 24px; font-weight: 600; }
+  .bigprice .pnote { color: var(--muted-2); font-size: 11px; margin-top: 2px; }
+
+  /* Save-to-collection star */
+  .price-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .rdebug { margin-top: 10px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px;
+            background: var(--panel-2); color: var(--text-dim); font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .rdebug b { color: var(--mint); }
+  .chart-spans { display: flex; gap: 6px; margin-bottom: 8px; }
+  .span-btn { flex: 0 0 auto; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--line);
+              background: transparent; color: var(--text-dim); font-size: 11px; font-weight: 600;
+              letter-spacing: .5px; cursor: pointer; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .span-btn.on { background: var(--mint); border-color: var(--mint); color: var(--mint-dark); }
+  .cand img.imgerr { background: var(--slot); object-fit: contain; }
+  .roi-co { margin: 12px 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: var(--mint); font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .roi-co:first-child { margin-top: 2px; }
+  .savestar {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+    background: transparent; border: 1px solid var(--line); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .12s ease, background .2s ease, border-color .2s ease;
+  }
+  .savestar svg { width: 23px; height: 23px; fill: none; stroke: var(--muted); stroke-width: 1.6; stroke-linejoin: round; }
+  .savestar:active { transform: scale(0.88); }
+  .savestar.saved { background: #F5C542; border-color: #F5C542; }
+  .savestar.saved svg { fill: #4A3B00; stroke: #4A3B00; }
+  .savestar:disabled { cursor: default; opacity: .7; }
+  .save-msg { min-height: 15px; margin-top: 9px; font-size: 11.5px; color: var(--muted); }
+  .save-msg.ok { color: #F5C542; }
+  .save-msg.error { color: var(--danger); }
+
+  /* Manual price search fallback */
+  .fixlink {
+    background: none; border: none; padding: 0; margin-top: 8px; cursor: pointer;
+    color: var(--muted); font-size: 11.5px; text-decoration: underline; text-underline-offset: 3px;
+  }
+  .fixrow { display: flex; gap: 7px; margin-top: 9px; }
+  .fixrow input {
+    flex: 1; height: 40px; padding: 0 12px; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 11px; color: var(--text); font-size: 14px; outline: none;
+  }
+  .fixrow input:focus { border-color: var(--mint); }
+  .fixrow button {
+    height: 40px; padding: 0 16px; border: none; border-radius: 20px;
+    background: var(--mint); color: var(--mint-dark); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .fixrow button:disabled { opacity: .5; }
+  .cand-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; max-height: 360px; overflow-y: auto; }
+  .cand {
+    display: flex; gap: 10px; align-items: center; text-align: left; width: 100%;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 11px;
+    padding: 8px 10px; cursor: pointer; color: var(--text);
+  }
+  .cand:active { border-color: var(--mint); }
+  .cand img { width: 72px; height: 100px; object-fit: cover; border-radius: 7px; background: var(--slot); flex-shrink: 0; }
+  .cand .ph { width: 72px; height: 100px; border-radius: 7px; background: var(--slot); flex-shrink: 0; }
+  .cand .cd { color: var(--text); font-size: 12px; line-height: 1.35; }
+  .cand .cs { color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .cand .cp { margin-left: auto; color: var(--mint); font-size: 12px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; flex-shrink: 0; }
+
+  /* Data tabs on the result */
+  .dtabs { display: flex; gap: 5px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .dtabs::-webkit-scrollbar { display: none; }
+  .dtab {
+    font-size: 11px; padding: 6px 13px; border-radius: 20px; white-space: nowrap;
+    border: 1px solid var(--line); color: var(--text-dim); background: transparent; cursor: pointer;
+  }
+  .dtab.on { background: var(--mint); color: var(--mint-dark); border-color: var(--mint); font-weight: 600; }
+  .dpane { margin-top: 11px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .stat-sm { background: var(--panel-2); border-radius: 10px; padding: 9px 11px; }
+  .stat-sm .k { color: var(--muted-2); font-size: 8.5px; letter-spacing: 1px; }
+  .stat-sm .v { color: var(--text); font-size: 13.5px; margin-top: 1px; }
+
+  .locked {
+    background: var(--panel-2); border-radius: 12px; padding: 18px 14px; text-align: center;
+  }
+  .locked .ic { font-size: 22px; color: var(--muted-2); }
+  .locked .t { color: var(--text-dim); font-size: 13px; margin-top: 6px; }
+  .locked .s { color: var(--muted-2); font-size: 11.5px; margin-top: 4px; line-height: 1.5; }
+
+  /* ---------- Section / collection ---------- */
+  .sect-title { font-size: 19px; font-weight: 600; letter-spacing: 1.5px; }
+  .pills { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .pill {
+    font-size: 11.5px; padding: 7px 14px; border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--line); color: var(--text-dim); background: transparent;
+  }
+  .pill.on { background: var(--mint); color: var(--mint-dark); border-color: var(--mint); font-weight: 600; }
+
+  .capbar { margin-top: 14px; }
+  .capbar .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .capbar .k { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+  .capbar .v { color: var(--text); font-size: 12px; }
+  .capbar .track { height: 5px; background: var(--panel-2); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+  .capbar .track i { display: block; height: 100%; background: var(--mint); width: 0%; }
+
+  .empty { text-align: center; padding: 40px 16px; }
+  .empty .ic { font-size: 30px; color: #2E4B63; }
+  .empty .t { color: var(--text-dim); font-size: 14px; margin-top: 10px; }
+  .empty .s { color: var(--muted-2); font-size: 12px; margin-top: 6px; line-height: 1.55; }
+
+  /* Collection grid */
+  .coll-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .binder-head { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
+  .binder-head:first-child { margin-top: 0; }
+  .binder-head .bo { color: var(--text); font-size: 14px; font-weight: 600; letter-spacing: .5px; }
+  .binder-head .byou { color: var(--mint); font-size: 8.5px; letter-spacing: 1px; border: 1px solid var(--mint); border-radius: 10px; padding: 1px 7px; }
+  .binder-head .bc { color: var(--muted); font-size: 10.5px; }
+  .binder-head .bv { margin-left: auto; color: var(--mint); font-size: 12px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .ccard { position: relative; background: var(--panel); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
+  .cdel {
+    position: absolute; top: 6px; right: 6px; z-index: 2;
+    height: 26px; min-width: 26px; padding: 0 8px; border-radius: 13px;
+    background: rgba(7,21,34,0.72); border: 1px solid var(--line); color: var(--text-dim);
+    font-size: 12px; cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .cdel.arm { background: var(--danger); border-color: var(--danger); color: #fff; font-size: 10.5px; font-weight: 600; }
+  .cshow {
+    position: absolute; top: 6px; left: 6px; z-index: 2;
+    height: 26px; min-width: 26px; padding: 0 7px; border-radius: 13px;
+    background: rgba(7,21,34,0.72); border: 1px solid var(--line); color: var(--text-dim);
+    font-size: 13px; cursor: pointer; transition: background .15s ease, color .15s ease;
+  }
+  .cshow.on { background: var(--mint); border-color: var(--mint); color: var(--mint-dark); }
+  .cshow:disabled { opacity: .6; }
+  .ccard .thumb { width: 100%; aspect-ratio: 3 / 4; background: var(--slot); object-fit: cover; display: block; }
+  .ccard .meta { padding: 8px 10px 10px; }
+  .ccard .cname { color: var(--text); font-size: 12px; font-weight: 500; line-height: 1.3; }
+  .ccard .csub { color: var(--muted); font-size: 10.5px; margin-top: 2px; }
+  .ccard .cval { color: var(--mint); font-size: 12.5px; font-weight: 600; margin-top: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* Grading ROI */
+  .fee-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; color: var(--muted); font-size: 9px; letter-spacing: 1px; }
+  .fee-row input {
+    width: 74px; height: 34px; padding: 0 10px; background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 9px; color: var(--text); font-size: 14px; outline: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .fee-row input:focus { border-color: var(--mint); }
+  .roi-row { display: flex; align-items: baseline; gap: 10px; background: var(--panel-2); border-radius: 9px; padding: 8px 11px; margin-bottom: 6px; }
+  .roi-row .rg { color: var(--text); font-size: 12.5px; min-width: 64px; }
+  .roi-row .rp { color: var(--text-dim); font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .roi-row .rn { margin-left: auto; font-size: 12.5px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .roi-row .rn.pos { color: var(--mint); }
+  .roi-row .rn.neg { color: var(--danger); }
+  .roi-base { color: var(--muted); font-size: 10.5px; margin-bottom: 8px; }
+
+  /* Price history chart */
+  .chart-wrap {
+    position: relative;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .chart-wrap svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .chart-tip {
+    position: absolute; display: none; pointer-events: none; white-space: nowrap; z-index: 2;
+    background: #071522; border: 1px solid var(--line); border-radius: 8px;
+    padding: 5px 9px; font-size: 11px; color: var(--text);
+  }
+  .chart-tip b { color: var(--mint); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; }
+
+  /* Market movers */
+  .mkt-row { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .mkt-row:last-child { border-bottom: none; }
+  .mkt-row img { width: 50px; height: 70px; object-fit: cover; border-radius: 6px; background: var(--slot); flex-shrink: 0; }
+  .mkt-row .ph { width: 50px; height: 70px; border-radius: 6px; background: var(--slot); flex-shrink: 0; }
+  .mkt-row .md { color: var(--text); font-size: 11.5px; line-height: 1.35; }
+  .mkt-row .ms { color: var(--muted); font-size: 10px; margin-top: 1px; }
+  .mkt-row .mg { margin-left: auto; color: var(--mint); font-size: 12px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; flex-shrink: 0; }
+
+  /* Recent sales list (Card Hedge) */
+  .sales-list { display: flex; flex-direction: column; gap: 6px; }
+  .sale-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; background: var(--panel-2); border-radius: 9px; padding: 8px 11px; }
+  .sale-row .sp { color: var(--mint); font-size: 13px; font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* Buy/Sell pressure + 30/90-day averages + external links */
+  .insights { margin-top: 12px; }
+  .pressure { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 13px; }
+  .pr-top { display: flex; justify-content: space-between; align-items: center; }
+  .pr-lbl { font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+  .pr-lbl.buy { color: #FF6B6B; } .pr-lbl.sell { color: #4EA8FF; }
+  .pr-pctrow { position: relative; height: 17px; margin: 3px 0 4px; }
+  .pr-pct { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-size: 12.5px; font-weight: 700; font-family: ui-monospace, Menlo, monospace; transition: left .35s ease; }
+  .pr-bar { position: relative; height: 22px; border-radius: 11px; overflow: hidden; background: #0b1b2a; border: 1px solid var(--line); }
+  .pr-fill { position: absolute; inset: 0; display: flex; }
+  .pr-red { height: 100%; background: linear-gradient(90deg,#ff3b3b,#ff6b6b); transition: width .35s ease; }
+  .pr-blue { height: 100%; background: linear-gradient(90deg,#3f97f0,#66b6ff); transition: width .35s ease; }
+  .pr-center { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; background: rgba(255,255,255,.22); transform: translateX(-1px); }
+  .pr-seam { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #fff; box-shadow: 0 0 7px rgba(255,255,255,.5); transition: left .35s ease; }
+  .pr-foot { margin-top: 8px; text-align: center; font-size: 11.5px; color: var(--text-dim); }
+  .avgs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-top: 10px; }
+  .links { display: flex; gap: 8px; margin-top: 10px; }
+  .xlink { flex: 1; text-align: center; text-decoration: none; border-radius: 20px; padding: 9px 10px; font-size: 11.5px; font-weight: 600; letter-spacing: .3px; border: 1px solid #3f6a86; color: var(--text); background: var(--panel); }
+  .xlink:active { opacity: .65; }
+  .sale-row .sm { color: var(--muted); font-size: 10.5px; text-align: right; }
+
+  .trade-opt {
+    background: var(--panel); border-radius: 14px; padding: 13px 14px; margin-top: 9px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .trade-opt .ic {
+    width: 34px; height: 34px; border-radius: 10px; background: var(--slot); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: var(--mint); font-size: 16px;
+  }
+  .trade-opt .t { color: var(--text); font-size: 13.5px; font-weight: 500; }
+  .trade-opt .s { color: var(--muted); font-size: 11.5px; margin-top: 3px; line-height: 1.5; }
+
+  .prof-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .prof-row .k { color: var(--muted); font-size: 12.5px; }
+  .prof-row .v { color: var(--text); font-size: 12.5px; }
+  .signout {
+    width: 100%; height: 44px; margin-top: 20px; border-radius: 22px;
+    border: 1px solid var(--line); background: transparent; color: var(--text-dim);
+    font-size: 13.5px; cursor: pointer;
+  }
+
+  /* ---------- Bottom nav ---------- */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 5;
+    background: rgba(10,26,43,0.96); border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; max-width: 460px; margin: 0 auto;
+    padding: 9px 0 calc(9px + env(safe-area-inset-bottom));
+  }
+  .nav button {
+    flex: 1; background: none; border: none; cursor: pointer; color: var(--muted-2);
+    font-size: 9px; letter-spacing: .5px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .nav button svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .nav button.on { color: var(--mint); }
+
+  /* --- polish pass: match the color-demo look --- */
+  .result { background: linear-gradient(180deg, var(--panel), var(--panel-2)); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+  .bigprice .pval { font-size: 34px; font-weight: 800; letter-spacing: -0.5px; color: var(--mint); }
+  .result .chip { border: 1px solid rgba(47,107,255,0.30); background: rgba(47,107,255,0.12); color: var(--mint); }
+  .pr-red  { background: linear-gradient(90deg,#ff2ea6,#ff5cc0) !important; }
+  .pr-blue { background: linear-gradient(90deg,#2F6BFF,#5B8CFF) !important; }
+  .actions .scan { background: linear-gradient(90deg, var(--mint), #5B8CFF) !important; box-shadow: 0 8px 24px rgba(47,107,255,0.40); }
+  .scanbox { box-shadow: 0 0 26px rgba(47,107,255,0.14); }
+
+  /* --- match-the-mock layout --- */
+  .rhead { display:flex; gap:13px; align-items:flex-start; }
+  .rthumb { width:92px; height:126px; flex:none; border-radius:10px; border:1px solid var(--line);
+    object-fit:cover; background:linear-gradient(135deg,#1c2240,#0e1122); }
+  .rhead-body { min-width:0; flex:1; }
+  .pressure { background:transparent !important; border:none !important; padding:6px 0 0 !important; }
+  .pr-lbl.buy { color:var(--magenta) !important; } .pr-lbl.sell { color:var(--mint) !important; }
+  .pr-pct { font-family:inherit !important; }
+  .pr-bar { height:9px !important; border-radius:6px !important; }
+  .pr-center, .pr-seam { display:none !important; }
+  .pr-foot { color:var(--muted); font-size:11px; }
+  .dtab.on { background:rgba(47,107,255,0.14) !important; color:var(--text) !important; border-color:var(--mint) !important; font-weight:600; }
+
+  /* --- header brand to match the mock --- */
+  .app-head .brand { display:flex; align-items:center; gap:11px; }
+  .logo-mk { width:44px; height:44px; border-radius:12px; border:2px solid var(--mint);
+    display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--mint);
+    font-size:18px; box-shadow:0 0 18px rgba(47,107,255,.45), inset 0 0 12px rgba(47,107,255,.25); flex:none; }
+  .app-head .by { color:var(--magenta); font-size:10px; letter-spacing:1px; font-weight:700; text-transform:uppercase; margin-top:2px; }
+
+  .result .chip.mag { color:var(--magenta); background:rgba(255,61,190,.14); border:1px solid rgba(255,61,190,.4); }
+</style>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-CFsJ2ENI3kalPgEOBxGW9.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+</head>
+<body>
+<div class="facets"><span class="f1"></span><span class="f2"></span><span class="f3"></span></div>
+
+<div class="wrap">
+
+  <!-- ============ LOGIN VIEW ============ -->
+  <section id="login-view" class="hidden">
+    <div class="login-shell">
+      <div class="login-brand">
+        <div class="login-mark"><b>CV</b></div>
+        <div class="brand">
+          <div class="title">COLLECT VALOR</div>
+          </div>
+      </div>
+      <div class="card">
+        <h2>Sign in</h2>
+        <p class="sub">Members only. Enter your username and PIN.</p>
+        <form id="login-form" autocomplete="off">
+          <label class="field" for="username">Username</label>
+          <input class="text" id="username" name="username" type="text"
+                 autocapitalize="none" autocorrect="off" placeholder="andrew" />
+          <label class="field" for="pin">PIN</label>
+          <input class="text" id="pin" name="pin" type="password" inputmode="numeric"
+                 autocomplete="off" placeholder="••••" />
+          <button class="primary" type="submit" id="login-btn">Sign in</button>
+          <div class="msg" id="login-msg"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APP VIEW ============ -->
+  <section id="app-view">
+
+    <div class="app-head">
+      <div class="brand">
+        <div class="logo-mk">CV</div>
+        <div>
+          <div class="title">COLLECT VALOR</div>
+          <div class="by">FOUNDING MEMBER</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="lbl">COLLECTION VALUE</div>
+        <div class="val" id="stat-value">$0</div>
+        <div class="sub mono" id="stat-count">0/70 CARDS</div>
+      </div>
+    </div>
+
+    <!-- ---- TAB: SCAN ---- -->
+    <div id="tab-scan">
+      <div class="scanbox">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <span class="scan-hint" id="scan-hint">
+          <span class="eye">◱</span>
+          align card in frame
+        </span>
+        <img id="preview" class="hidden" alt="card preview" />
+        <div id="busy" class="busy hidden">
+          <span class="bar"><i></i></span>
+          <span id="busy-txt">IDENTIFYING CARD</span>
+        </div>
+      </div>
+
+      <div class="pills hidden" id="scan-mode">
+        <button class="pill on" id="mode-raw" type="button">Raw card</button>
+        <button class="pill" id="mode-slab" type="button">Graded slab</button>
+      </div>
+
+      <div class="actions">
+        <button class="scan" id="btn-scan">Scan</button>
+        <button class="upload" id="btn-upload">Upload</button>
+      </div>
+      <div class="msg" id="scan-msg"></div>
+
+      <style>
+        #sub-card{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--panel),#0c0d18);
+          border:1px solid var(--line);border-radius:18px;padding:20px 16px;text-align:center;margin-top:14px}
+        #sub-card::before{content:"";position:absolute;top:-60px;right:-40px;width:160px;height:160px;
+          background:radial-gradient(circle,rgba(255,61,190,.18),transparent 70%);pointer-events:none}
+        #sub-card .sc-badge{font-size:10px;letter-spacing:1.4px;color:var(--magenta);font-weight:700;margin-bottom:8px}
+        #sub-card .sc-price{font-size:32px;font-weight:800;color:var(--text);line-height:1.05}
+        #sub-card .sc-price span{font-size:14px;color:var(--muted);font-weight:400}
+        #sub-card .sc-fine{margin:8px 0 0;font-size:12.5px;color:var(--text-dim);line-height:1.5}
+        #sub-card .sc-cta{margin-top:14px;height:46px;border-radius:24px;border:none;width:100%;
+          background:linear-gradient(90deg,var(--mint),#5B8CFF);color:#fff;font-size:15px;font-weight:700;
+          box-shadow:0 8px 24px rgba(47,107,255,.45);cursor:pointer}
+        #sub-card .sc-cta:active{transform:scale(.99)}
+        #sub-card .sc-link{display:block;margin:12px auto 0;background:none;border:none;color:var(--mint);
+          font-size:12.5px;cursor:pointer;text-decoration:underline}
+      </style>
+      <div id="sub-card" class="hidden">
+        <div class="sc-badge">EARLY BETA &middot; FOUNDING MEMBER</div>
+        <div class="sc-price">$8.99<span>/mo</span></div>
+        <div class="sc-fine">Lock in <b>$8.99/mo for life</b> &mdash; as long as you stay a member. Unlimited scanning &amp; pricing.</div>
+        <button class="sc-cta" id="sc-subscribe">Subscribe &mdash; $8.99/mo</button>
+        <button class="sc-link" id="sc-verify">Already subscribed? Unlock</button>
+      </div>
+
+      <div class="card result hidden" id="result">
+        <div class="rhead">
+          <img id="r-thumb" class="rthumb" alt="card" />
+          <div class="rhead-body">
+            <div class="tag"><span class="check">✓</span><span class="lbl" id="r-tag">identified</span></div>
+            <div class="name" id="r-name"></div>
+            <div class="detail" id="r-detail"></div>
+            <div class="chips" id="r-chips"></div>
+          </div>
+        </div>
+        <ul class="highlights hidden" id="r-highlights"></ul>
+        <div class="notes hidden" id="r-notes"></div>
+
+        <div class="bigprice">
+          <div class="price-row">
+            <div>
+              <div class="plabel" id="r-plabel">ROUGH ESTIMATE (AI)</div>
+              <div class="pval" id="r-estimate">—</div>
+              <div class="pnote" id="r-price">Verified market price coming with Card Hedge</div>
+            </div>
+            <button class="savestar" id="save-star" type="button" aria-label="Save to collection" title="Save to collection">
+              <svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.6L12 18.6 6 21.3l1.2-6.6L2.4 9.5l6.6-.9L12 2.5z"/></svg>
+            </button>
+          </div>
+          <div class="save-msg" id="save-msg"></div>
+          <button class="fixlink" id="fix-link" type="button">Wrong card or no price? Search by name</button>
+          <div class="fixrow hidden" id="fix-row">
+            <input id="fix-input" type="text" placeholder="e.g. 2003 Topps LeBron James #221"
+                   autocapitalize="none" autocorrect="off" />
+            <button id="fix-btn" type="button">Search</button>
+          </div>
+          <div class="cand-list hidden" id="fix-results"></div>
+          <div class="rdebug hidden" id="r-debug"></div>
+        </div>
+
+        <div class="insights hidden" id="insights">
+          <div class="pressure hidden" id="pressure-wrap">
+            <div class="pr-top">
+              <span class="pr-lbl buy">◀ Buying</span>
+              <span class="pr-lbl sell">Selling ▶</span>
+            </div>
+            <div class="pr-pctrow"><span class="pr-pct" id="pr-pct">—</span></div>
+            <div class="pr-bar">
+              <div class="pr-fill"><div class="pr-red" id="pr-red"></div><div class="pr-blue" id="pr-blue"></div></div>
+              <div class="pr-center"></div>
+              <div class="pr-seam" id="pr-seam"></div>
+            </div>
+            <div class="pr-foot" id="pr-verdict">—</div>
+          </div>
+          <div class="avgs mono hidden" id="avgs-wrap">
+            <div class="stat-sm"><div class="k">30-DAY AVG</div><div class="v" id="ov-avg30">—</div></div>
+            <div class="stat-sm"><div class="k">90-DAY AVG</div><div class="v" id="ov-avg90">—</div></div>
+            <div class="stat-sm"><div class="k">SALES / 90D</div><div class="v" id="ov-vol">—</div></div>
+          </div>
+          <div class="links hidden" id="links-wrap">
+            <a class="xlink hidden" id="lnk-tcg" target="_blank" rel="noopener">Check on TCGplayer ↗</a>
+          </div>
+        </div>
+
+        <div class="dtabs">
+          <button class="dtab on" data-pane="overview">Overview</button>
+          <button class="dtab" data-pane="grades">Grades</button>
+          <button class="dtab" data-pane="history">History</button>
+          <button class="dtab" data-pane="sales">Sales</button>
+          <button class="dtab" data-pane="pop">Pop</button>
+        </div>
+
+        <div class="dpane" id="pane-overview">
+          <div class="grid2 mono">
+            <div class="stat-sm"><div class="k">GRADE</div><div class="v" id="ov-grade">Raw</div></div>
+            <div class="stat-sm"><div class="k">CERT #</div><div class="v" id="ov-cert">—</div></div>
+            <div class="stat-sm"><div class="k">LAST SALE</div><div class="v" id="ov-lastsale">—</div></div>
+            <div class="stat-sm"><div class="k">30-DAY TREND</div><div class="v" id="ov-trend">—</div></div>
+          </div>
+        </div>
+
+        <div class="dpane hidden" id="pane-grades">
+          <div class="locked" id="roi-empty">
+            <div class="ic">◈</div>
+            <div class="t">Grading ROI</div>
+            <div class="s">Scan and match a raw card to see what it would be worth graded — and whether grading pays.</div>
+          </div>
+          <div class="hidden" id="roi-wrap">
+            <div class="fee-row">GRADING FEE $ <input id="roi-fee" type="number" inputmode="decimal" value="25" min="0" /></div>
+            <div class="roi-base" id="roi-base"></div>
+            <div id="roi-rows"></div>
+          </div>
+        </div>
+
+        <div class="dpane hidden" id="pane-history">
+          <div class="locked">
+            <div class="ic">◷</div>
+            <div class="t">Price history</div>
+            <div class="s">Recent sale history appears here when Card Hedge has it for this card.</div>
+          </div>
+        </div>
+
+        <div class="dpane hidden" id="pane-sales">
+          <div class="locked">
+            <div class="ic">⇄</div>
+            <div class="t">Recent sales</div>
+            <div class="s">Real recent-sale comps with dates and grades, straight from Card Hedge.</div>
+          </div>
+        </div>
+
+        <div class="dpane hidden" id="pane-pop">
+          <div class="locked">
+            <div class="ic">▤</div>
+            <div class="t">Population report</div>
+            <div class="s">PSA cert lookup and population counts. Needs the PSA public API token.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="market" style="margin-top:14px;">
+        <div class="plabel" style="color:var(--muted); font-size:9px; letter-spacing:1.2px;">MARKET MOVERS · BIGGEST WEEKLY GAINS</div>
+        <div id="market-list" style="margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- ---- TAB: COLLECTION ---- -->
+    <div id="tab-collection" class="hidden">
+      <div class="sect-title">COLLECTION</div>
+
+      <div class="pills">
+        <button class="pill on" data-coll="singles">Singles</button>
+        <button class="pill" data-coll="slabs">Slabs</button>
+        <button class="pill" data-coll="showcase">★ Showcase</button>
+        <button class="pill" data-coll="binders">▤ Binders</button>
+      </div>
+
+      <div class="capbar">
+        <div class="row">
+          <span class="k" id="cap-label">SINGLES · UNGRADED</span>
+          <span class="v mono" id="cap-count">0 / 50</span>
+        </div>
+        <div class="track"><i id="cap-fill"></i></div>
+      </div>
+
+      <div id="coll-list" class="coll-grid"></div>
+
+      <div class="empty" id="coll-empty">
+        <div class="ic">▦</div>
+        <div class="t" id="empty-title">No cards saved yet</div>
+        <div class="s" id="empty-sub">
+          Scan a card and tap the star to add it here.<br />
+          Singles cap at 50, slabs at 20.
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- TAB: WATCHLIST ---- -->
+    <div id="tab-watch" class="hidden">
+      <div class="sect-title">WATCHLIST</div>
+      <div class="s" style="color:var(--muted); font-size:12.5px; margin-top:8px; line-height:1.55;">
+        Track cards you don't own yet and follow how their value moves.
+      </div>
+
+      <div class="locked" style="margin-top:16px;">
+        <div class="ic">☆</div>
+        <div class="t">Watchlist isn't live yet</div>
+        <div class="s">Soon you'll add any scanned card to a watchlist and follow its 30/90-day value — with price alerts to come.</div>
+      </div>
+    </div>
+
+    <!-- ---- TAB: PROFILE ---- -->
+    <div id="tab-profile" class="hidden">
+      <div class="sect-title">PROFILE</div>
+      <div style="margin-top:16px;">
+        <div class="prof-row"><span class="k">Signed in as</span><span class="v" id="who">—</span></div>
+        <div class="prof-row"><span class="k">Plan</span><span class="v" id="plan-name">Founder</span></div>
+        <div class="prof-row"><span class="k">Singles</span><span class="v mono" id="prof-singles">0 / 50</span></div>
+        <div class="prof-row"><span class="k">Slabs</span><span class="v mono" id="prof-slabs">0 / 20</span></div>
+        <div class="prof-row"><span class="k">Scans today</span><span class="v mono" id="scans-today">0</span></div>
+        <div class="prof-row"><span class="k">Favorite collections</span><span class="v mono">0</span></div>
+      </div>
+      <button class="signout" id="signout">Sign out</button>
+    </div>
+
+    <input id="camera-input" type="file" accept="image/*" capture="environment" hidden />
+    <input id="upload-input" type="file" accept="image/*" hidden />
+  </section>
+</div>
+
+<!-- ============ BOTTOM NAV ============ -->
+<nav class="nav hidden" id="nav">
+  <button class="on" data-tab="scan">
+    <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16"/></svg>
+    SCAN
+  </button>
+  <button data-tab="collection">
+    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="16" rx="2"/><path d="M8 3h9a2 2 0 0 1 2 2v13"/></svg>
+    COLLECTION
+  </button>
+  <button data-tab="watch">
+    <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+    WATCHLIST
+  </button>
+  <button data-tab="profile">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    PROFILE
+  </button>
+</nav>
+
+<style>
+  #paywall { position: fixed; inset: 0; z-index: 50; background: rgba(6,16,26,0.94);
+    display: none; align-items: center; justify-content: center; padding: 22px; }
+  #paywall.show { display: flex; }
+  #paywall .pw-card { position: relative; width: 100%; max-width: 400px; background: var(--panel, #10283D);
+    border: 1px solid var(--line, #294A63); border-radius: 18px; padding: 26px 20px 22px; text-align: center; }
+  #paywall h2 { margin: 0 0 4px; font-size: 20px; color: var(--text, #EAF1F7); }
+  #paywall .pw-badge { color: var(--magenta, #FF3DBE); font-size: 11px; letter-spacing: 1px; margin-bottom: 16px; }
+  #paywall .pw-price { font-size: 32px; font-weight: 700; color: var(--text, #EAF1F7); line-height: 1.1; }
+  #paywall .pw-price span { font-size: 14px; color: var(--muted, #7C93A8); font-weight: 400; }
+  #paywall .pw-sub { color: var(--text-dim, #B7C6D4); font-size: 13px; margin: 8px 0 18px; line-height: 1.5; }
+  #paywall .pw-link { display: inline-block; margin-top: 14px; color: var(--mint, #34E3AE);
+    font-size: 13px; cursor: pointer; text-decoration: underline; background: none; border: none; }
+  #paywall .pw-x { position: absolute; top: 12px; right: 14px; color: var(--muted, #7C93A8);
+    font-size: 24px; line-height: 1; cursor: pointer; background: none; border: none; }
+  #paywall .pw-hide { display: none; }
+</style>
+<div id="paywall">
+  <div class="pw-card">
+    <button class="pw-x" id="pw-close" aria-label="Close">&times;</button>
+    <h2>Collect Valor</h2>
+    <div class="pw-badge">FOUNDING MEMBER &middot; EARLY BETA</div>
+
+    <div id="pw-stage-intro">
+      <div class="pw-price">$8.99<span>/mo</span></div>
+      <div class="pw-sub">We&rsquo;re in an early testing beta &mdash; sign up now and <b>keep this $8.99/mo rate for life</b>, as long as you stay a member. Unlimited scanning &amp; pricing.</div>
+      <button class="primary" id="pw-subscribe">Subscribe &mdash; $8.99/mo</button>
+      <button class="pw-link" id="pw-have-paid">I already paid &mdash; verify my email</button>
+    </div>
+
+    <div id="pw-stage-verify" class="pw-hide">
+      <div class="pw-sub">Enter the email you subscribed with to unlock.</div>
+      <input class="text" id="pw-email" type="email" placeholder="you@email.com" autocomplete="email" />
+      <button class="primary" id="pw-continue">Unlock</button>
+      <div class="msg" id="pw-msg"></div>
+      <button class="pw-link" id="pw-back">&larr; Back</button>
+    </div>
+  </div>
+</div>
+<script>
+  const loginView = document.getElementById('login-view');
+  const appView   = document.getElementById('app-view');
+  const navBar    = document.getElementById('nav');
+  const form      = document.getElementById('login-form');
+  const loginBtn  = document.getElementById('login-btn');
+  const loginMsg  = document.getElementById('login-msg');
+  const who       = document.getElementById('who');
+
+  let session = null;
+  let collection = { cards: [], counts: { singles: 0, slabs: 0, total: 0 }, value: 0 };
+  let collFilter = 'singles';
+
+  function showApp(s) {
+    session = s;
+    who.textContent = (s && (s.email || s.username)) || '';
+    loginView.classList.add('hidden');
+    appView.classList.remove('hidden');
+    navBar.classList.remove('hidden');
+    if (s && s.token) {
+      loadCollection();
+      // Deferred: showApp can run during initial parse, before the market code exists.
+      setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0);
+    }
+    try { updateSubCard(); } catch (e) {}
+  }
+
+  function guestSession() { return { email: null, token: null, plan: 'free', entitled: false }; }
+  const saved = localStorage.getItem('cv_session');
+  if (saved) {
+    try { showApp(JSON.parse(saved)); } catch (e) { showApp(guestSession()); }
+  } else {
+    showApp(guestSession());
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginMsg.className = 'msg'; loginMsg.textContent = '';
+    const username = document.getElementById('username').value.trim();
+    const pin = document.getElementById('pin').value.trim();
+    if (!username || !pin) { loginMsg.classList.add('error'); loginMsg.textContent = 'Enter a username and PIN'; return; }
+    loginBtn.disabled = true; loginBtn.textContent = 'Checking…';
+    try {
+      const res = await fetch('/.netlify/functions/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, pin }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        loginMsg.classList.add('error'); loginMsg.textContent = data.error || 'Invalid username or PIN';
+        loginBtn.disabled = false; loginBtn.textContent = 'Sign in'; return;
+      }
+      const s = { username: data.username, token: data.token, plan: data.plan, entitled: !!data.entitled };
+      sessionStorage.setItem('cv_session', JSON.stringify(s));
+      showApp(s);
+    } catch (err) {
+      loginMsg.classList.add('error'); loginMsg.textContent = 'Could not reach the server';
+      loginBtn.disabled = false; loginBtn.textContent = 'Sign in';
+    }
+  });
+
+  document.getElementById('signout').addEventListener('click', () => {
+    localStorage.removeItem('cv_session');
+    session = guestSession();
+    who.textContent = '';
+    switchTab('scan');
+  });
+
+  // ---- Bottom nav ----
+  const tabs = { scan: 'tab-scan', collection: 'tab-collection', watch: 'tab-watch', profile: 'tab-profile' };
+  function switchTab(name) {
+    Object.entries(tabs).forEach(([k, id]) => {
+      document.getElementById(id).classList.toggle('hidden', k !== name);
+    });
+    document.querySelectorAll('.nav button').forEach((b) => {
+      b.classList.toggle('on', b.dataset.tab === name);
+    });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('.nav button').forEach((b) => {
+    b.addEventListener('click', () => switchTab(b.dataset.tab));
+  });
+
+  // ---- Result data tabs ----
+  document.querySelectorAll('.dtab').forEach((t) => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.dtab').forEach((x) => x.classList.remove('on'));
+      t.classList.add('on');
+      ['overview','grades','history','sales','pop'].forEach((p) => {
+        document.getElementById('pane-' + p).classList.toggle('hidden', p !== t.dataset.pane);
+      });
+      if (t.dataset.pane === 'history') maybeLoadHistory();
+    });
+  });
+
+  // ---- Collection filter pills ----
+  const capCfg = {
+    singles:  { label: 'SINGLES · UNGRADED', max: 50, title: 'No singles saved yet',
+                sub: 'Saving to your collection turns on once the database is wired up.<br />Singles cap at 50.' },
+    slabs:    { label: 'SLABS · GRADED',     max: 20, title: 'No slabs saved yet',
+                sub: 'Graded cards get their own shelf, verified by PSA cert number.<br />Slabs cap at 20.' },
+    showcase: { label: 'SHOWCASE',           max: 70, title: 'Showcase is empty',
+                sub: 'Star your best cards to show them off to other collectors.' },
+    trade:    { label: 'TRADEABLE',          max: 5,  title: 'Nothing posted for trade',
+                sub: 'Post up to 5 cards you would be willing to trade away.' },
+  };
+  document.querySelectorAll('.pill[data-coll]').forEach((p) => {
+    p.addEventListener('click', () => {
+      document.querySelectorAll('.pill[data-coll]').forEach((x) => x.classList.remove('on'));
+      p.classList.add('on');
+      collFilter = p.dataset.coll;
+      renderCollection();
+    });
+  });
+
+  async function loadCollection() {
+    if (!session) return;
+    try {
+      const res = await fetch('/.netlify/functions/load-collection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session.token }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      collection = {
+        cards: data.cards || [],
+        counts: data.counts || { singles: 0, slabs: 0, total: 0 },
+        value: data.value || 0,
+      };
+      updateHeader();
+      renderCollection();
+    } catch (e) { /* keep whatever we had on failure */ }
+  }
+
+  function renderCollection() {
+    if (collFilter === 'binders') { renderBinders(); return; }
+    const c = capCfg[collFilter] || capCfg.singles;
+    let list;
+    if (collFilter === 'slabs') list = collection.cards.filter((x) => x.is_slab);
+    else if (collFilter === 'showcase') list = collection.cards.filter((x) => x.is_showcase);
+    else if (collFilter === 'trade') list = collection.cards.filter((x) => x.is_tradeable);
+    else list = collection.cards.filter((x) => !x.is_slab);
+
+    document.getElementById('cap-label').textContent = c.label;
+    document.getElementById('cap-count').textContent = list.length + ' / ' + c.max;
+    document.getElementById('cap-fill').style.width = Math.min(100, Math.round(list.length / c.max * 100)) + '%';
+
+    const grid = document.getElementById('coll-list');
+    const empty = document.getElementById('coll-empty');
+    grid.innerHTML = '';
+    if (!list.length) {
+      empty.classList.remove('hidden');
+      document.getElementById('empty-title').textContent = c.title;
+      document.getElementById('empty-sub').innerHTML = c.sub;
+      return;
+    }
+    empty.classList.add('hidden');
+    list.forEach((card) => grid.appendChild(buildTile(card)));
+  }
+
+  function buildTile(card) {
+    const el = document.createElement('div');
+    el.className = 'ccard';
+    const name = [card.year, card.player].filter(Boolean).join(' ') || card.player || 'Card';
+    const num = card.number ? '#' + String(card.number).replace(/^#/, '') : '';
+    const sub = [card.brand, card.set, num].filter(Boolean).join(' · ');
+    const val = card.value != null ? '$' + formatMoney(card.value) : (card.is_slab ? '—' : 'No price yet');
+    const img = card.image_url
+      ? '<img class="thumb" src="' + escapeHtml(card.image_url) + '" alt="" loading="lazy" />'
+      : '<div class="thumb"></div>';
+    el.innerHTML = img +
+      '<div class="meta">' +
+        '<div class="cname">' + escapeHtml(name) + '</div>' +
+        (sub ? '<div class="csub">' + escapeHtml(sub) + '</div>' : '') +
+        '<div class="cval">' + escapeHtml(val) + '</div>' +
+      '</div>';
+
+    // Two-tap delete: first tap arms ("Delete?"), second tap deletes. Disarms after 3s.
+    const del = document.createElement('button');
+    del.className = 'cdel';
+    del.type = 'button';
+    del.textContent = '✕';
+    del.setAttribute('aria-label', 'Remove from collection');
+    let armTimer = null;
+    del.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!del.classList.contains('arm')) {
+        del.classList.add('arm');
+        del.textContent = 'Delete?';
+        armTimer = setTimeout(() => { del.classList.remove('arm'); del.textContent = '✕'; }, 3000);
+        return;
+      }
+      clearTimeout(armTimer);
+      del.disabled = true;
+      del.textContent = '…';
+      try {
+        const res = await fetch('/.netlify/functions/delete-card', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: session ? session.token : '', id: card.id }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          del.disabled = false; del.classList.remove('arm'); del.textContent = '✕';
+          return;
+        }
+        loadCollection();
+      } catch (err) {
+        del.disabled = false; del.classList.remove('arm'); del.textContent = '✕';
+      }
+    });
+    el.appendChild(del);
+
+    // Showcase toggle: ★ flips this card in/out of your public showcase.
+    const show = document.createElement('button');
+    show.className = 'cshow' + (card.is_showcase ? ' on' : '');
+    show.type = 'button';
+    show.textContent = '★';
+    show.setAttribute('aria-label', 'Toggle showcase');
+    show.title = 'Showcase this card';
+    show.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (show.disabled) return;
+      show.disabled = true;
+      try {
+        const res = await fetch('/.netlify/functions/update-card', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: session ? session.token : '',
+            id: card.id,
+            is_showcase: !card.is_showcase,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          card.is_showcase = card.is_showcase !== true;
+          show.classList.toggle('on', card.is_showcase);
+          if (collFilter === 'showcase') renderCollection();
+        }
+      } catch (err) { /* leave the star as it was */ }
+      show.disabled = false;
+    });
+    el.appendChild(show);
+    return el;
+  }
+
+  // ---- Community binders: everyone's showcased cards ----
+  async function renderBinders() {
+    document.getElementById('cap-label').textContent = 'COMMUNITY BINDERS';
+    document.getElementById('cap-count').textContent = '';
+    document.getElementById('cap-fill').style.width = '0%';
+    const grid = document.getElementById('coll-list');
+    const empty = document.getElementById('coll-empty');
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    document.getElementById('empty-title').textContent = 'Loading binders…';
+    document.getElementById('empty-sub').innerHTML = '';
+
+    let binders;
+    try {
+      const res = await fetch('/.netlify/functions/browse-showcase', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session ? session.token : '' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'load failed');
+      binders = (data.binders || []).filter((b) => b.count > 0);
+    } catch (err) {
+      document.getElementById('empty-title').textContent = 'Could not load binders';
+      document.getElementById('empty-sub').innerHTML = 'Tap the Binders pill to try again.';
+      return;
+    }
+    if (collFilter !== 'binders') return; // user switched away while loading
+
+    if (!binders.length) {
+      document.getElementById('empty-title').textContent = 'No binders yet';
+      document.getElementById('empty-sub').innerHTML =
+        'Cards people ★ into their showcase show up here for everyone to flip through.';
+      return;
+    }
+    empty.classList.add('hidden');
+    binders.forEach((b) => {
+      const head = document.createElement('div');
+      head.className = 'binder-head';
+      head.innerHTML =
+        '<span class="bo">' + escapeHtml(b.owner) + '</span>' +
+        (b.is_you ? '<span class="byou">YOU</span>' : '') +
+        '<span class="bc mono">' + b.count + ' card' + (b.count === 1 ? '' : 's') + '</span>' +
+        '<span class="bv">$' + formatMoney(b.total_value) + '</span>';
+      grid.appendChild(head);
+      b.cards.forEach((card) => grid.appendChild(buildBinderTile(card)));
+    });
+  }
+
+  function buildBinderTile(card) {
+    const el = document.createElement('div');
+    el.className = 'ccard';
+    const name = [card.year, card.player].filter(Boolean).join(' ') || card.player || 'Card';
+    const num = card.number ? '#' + String(card.number).replace(/^#/, '') : '';
+    const sub = [card.grade, card.brand, card.set, num].filter(Boolean).join(' · ');
+    const val = card.value != null ? '$' + formatMoney(card.value) : '—';
+    const img = card.image_url
+      ? '<img class="thumb" src="' + escapeHtml(card.image_url) + '" alt="" loading="lazy" />'
+      : '<div class="thumb"></div>';
+    el.innerHTML = img +
+      '<div class="meta">' +
+        '<div class="cname">' + escapeHtml(name) + '</div>' +
+        (sub ? '<div class="csub">' + escapeHtml(sub) + '</div>' : '') +
+        '<div class="cval">' + escapeHtml(val) + '</div>' +
+      '</div>';
+    return el;
+  }
+
+  function updateHeader() {
+    document.getElementById('stat-value').textContent = '$' + formatMoney(collection.value);
+    document.getElementById('stat-count').textContent = (collection.counts.total || 0) + '/70 CARDS';
+    const ps = document.getElementById('prof-singles');
+    if (ps) ps.textContent = (collection.counts.singles || 0) + ' / 50';
+    const pl = document.getElementById('prof-slabs');
+    if (pl) pl.textContent = (collection.counts.slabs || 0) + ' / 20';
+  }
+
+  function formatMoney(n) {
+    const v = Number(n) || 0;
+    return v % 1 === 0 ? String(v) : v.toFixed(2);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  // ---- Card Hedge pricing for the scanned card ----
+  async function fetchPrice(card) {
+    resetResultData();
+    setPriceLabel('MARKET VALUE');
+    setText('r-price', 'Checking Card Hedge…');
+    // Lock the star until pricing resolves so a save always captures the value.
+    saveStar.disabled = true;
+    try {
+      await fetchPriceInner({ card }, card);
+    } finally {
+      if (!saveStar.classList.contains('saved')) saveStar.disabled = false;
+    }
+  }
+
+  async function fetchPriceInner(payload, card, fromManual) {
+    let data;
+    try {
+      const res = await fetch('/.netlify/functions/cardhedge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ token: session ? session.token : '' }, payload)),
+      });
+      data = await res.json();
+      showMatchDebug(card, data);
+      if (!res.ok || !data || !data.ok || !data.matched) {
+        if (fromManual) {
+          setText('r-price', 'No match for that search — try adding the year, brand, or card number');
+        } else if (data && data.matched === false) {
+          // No exact match: make the pick-list the hero, don't fake a value.
+          showNeedsPick(card);
+        } else {
+          showAiEstimate(card, 'Showing AI estimate');
+        }
+        return false;
+      }
+    } catch (e) {
+      if (fromManual) setText('r-price', 'Could not reach the server — try again');
+      else showAiEstimate(card, 'Showing AI estimate');
+      return false;
+    }
+
+    const picked = pickValue(data);
+    if (picked != null) {
+      setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE');
+      setText('r-estimate', '$' + formatMoney(picked.value));
+      setText('r-price', priceNote(data, picked));
+      if (current) current.value = picked.value;
+    } else if (fromManual) {
+      setPriceLabel('MARKET VALUE');
+      setText('r-estimate', '—');
+      setText('r-price', 'Matched, but Card Hedge has no price for it yet');
+      if (current) current.value = null;
+    } else {
+      showAiEstimate(card, 'Matched, but no market price yet — AI estimate shown');
+    }
+
+    // Fold the confirmed match back into the card we'd save.
+    if (data.card && current && current.card) {
+      const m = data.card;
+      if (m.player) current.card.player = m.player;
+      if (m.set) current.card.set = m.set;
+      if (m.number) current.card.number = m.number;
+      if (m.variant) current.card.variation = m.variant;
+      if (m.category) current.card.category = m.category;
+      if (m.card_id) current.card.card_id = m.card_id;
+      if (fromManual) {
+        setText('r-name', m.description || [current.card.year, m.player].filter(Boolean).join(' '));
+        const num = m.number ? '#' + String(m.number).replace(/^#/, '') : '';
+        setText('r-detail', [current.card.brand, m.set, num, m.variant].filter(Boolean).join(' · '));
+        setText('r-tag', 'matched by search');
+      }
+    }
+    fillOverview(data);
+    fillSales(data);
+    fillInsights(data);
+    lastData = data;
+    renderRoi();
+    return true;
+  }
+
+  // Auto-run the pick-list search when the scan couldn't be matched exactly.
+  // Search on the player/character name (plus year for sports) — brand words
+  // pollute the text match, and the category filter keeps results in-sport.
+  async function autoSearch(card) {
+    // Search player + set + parallel (the specifics), so the exact card surfaces near
+    // the top when the read is right. We deliberately leave the YEAR out of the query
+    // (it's the flakiest field) and never hard-filter by number — a wrong number would
+    // hide the real card. The wide result set is the safety net if a field is misread.
+    const c = card || {};
+    const bits = [c.player, c.set, c.variation].map((s) => (s ? String(s).trim() : '')).filter(Boolean);
+    const q = bits.join(' ').trim() || [c.year, c.player].filter(Boolean).join(' ').trim();
+    if (!q) return;
+    fixRow.classList.remove('hidden');
+    fixInput.value = q;
+    await manualSearch();
+  }
+
+  // No exact Card Hedge match (common for modern sports parallels/autos/inserts):
+  // make the pick-list the hero. Don't headline the rough AI guess as if it's a value —
+  // push the user to tap their exact card, and scroll the candidates into view.
+  async function showNeedsPick(card) {
+    setPriceLabel('NO EXACT MATCH — TAP YOUR CARD');
+    setText('r-estimate', (card && card.estimate) || '—');
+    setText('r-price', 'Pick your exact card below for a real price. The number above is only a rough AI guess.');
+    await autoSearch(card);
+    const fr = document.getElementById('fix-results');
+    if (fr && !fr.classList.contains('hidden')) {
+      try { fr.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+    }
+  }
+
+  // ---- Manual search fallback ----
+  const fixLink = document.getElementById('fix-link');
+  const fixRow = document.getElementById('fix-row');
+  const fixInput = document.getElementById('fix-input');
+  const fixBtn = document.getElementById('fix-btn');
+
+  fixLink.addEventListener('click', () => {
+    fixRow.classList.toggle('hidden');
+    if (!fixRow.classList.contains('hidden')) fixInput.focus();
+  });
+  fixBtn.addEventListener('click', manualSearch);
+  fixInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); manualSearch(); } });
+
+  async function manualSearch() {
+    if (PAYWALL_ON && (!session || !session.entitled)) { showPaywall(); return; }
+    const q = fixInput.value.trim();
+    if (!q || !current) return;
+    const resultsEl = document.getElementById('fix-results');
+    fixBtn.disabled = true;
+    fixBtn.textContent = '…';
+    resultsEl.classList.add('hidden');
+    resultsEl.innerHTML = '';
+    setText('r-price', 'Searching Card Hedge…');
+    try {
+      // Search name + category, then drop the category. We deliberately DON'T filter
+      // by the scanned card number — on modern parallels the number is often misread
+      // (e.g. #23 vs #SG-1), and filtering by a wrong number hides the real card.
+      // Number matches are still rewarded in ranking (scoreCandidate), just not required.
+      const cc = current.card || {};
+      const cat = cc.category ? String(cc.category) : '';
+      let data = await chSearch(q, cat, '');
+      if (!hasResults(data) && cat) data = await chSearch(q, '', '');
+      if (!hasResults(data)) {
+        setText('r-price', 'No cards found — try just the player/character name and year');
+        return;
+      }
+      const ranked = data.results
+        .map((c, i) => ({ c, i, s: scoreCandidate(c, cc) }))
+        .sort((a, b) => (b.s - a.s) || (a.i - b.i))
+        .map((x) => x.c);
+      const total = data.count || ranked.length;
+      setText('r-price', total > ranked.length
+        ? 'Found ' + total + ' — showing the ' + ranked.length + ' closest, best first:'
+        : 'Found ' + total + ' — best match first, tap your card:');
+      ranked.forEach((c) => resultsEl.appendChild(buildCandidate(c)));
+      resultsEl.classList.remove('hidden');
+    } catch (err) {
+      setText('r-price', 'Could not reach the server — try again');
+    } finally {
+      fixBtn.disabled = false;
+      fixBtn.textContent = 'Search';
+    }
+  }
+
+  function hasResults(data) {
+    return !!(data && data.ok && Array.isArray(data.results) && data.results.length);
+  }
+
+  // Rank candidates by how well they line up with what the scan read off the card.
+  function scoreCandidate(c, card) {
+    let s = 0;
+    const d = String(c.description || '').toLowerCase();
+    const cnum = String(c.number || '').replace(/^#/, '').toLowerCase();
+    const knum = String(card.number || '').replace(/^#/, '').toLowerCase();
+    if (knum && cnum && cnum === knum) s += 4;
+    if (card.year && d.includes(String(card.year).toLowerCase())) s += 2;
+    if (card.set && d.includes(String(card.set).toLowerCase())) s += 2;
+    if (card.brand && d.includes(String(card.brand).toLowerCase())) s += 1;
+    if (card.variation && d.includes(String(card.variation).toLowerCase())) s += 1;
+    return s;
+  }
+
+  async function chSearch(q, category, number) {
+    const body = { token: session ? session.token : '', search: q, page_size: 100 };
+    if (category) body.category = category;
+    if (number) body.number = number;
+    const res = await fetch('/.netlify/functions/cardhedge', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    return res.json();
+  }
+
+  function buildCandidate(c) {
+    const btn = document.createElement('button');
+    btn.className = 'cand';
+    btn.type = 'button';
+    const num = c.number ? '#' + String(c.number).replace(/^#/, '') : '';
+    const sub = [c.set, num, c.variant, c.category].filter(Boolean).join(' · ');
+    const rawPrice = (c.prices || []).find((p) => /raw|ungraded/i.test(p.grade || ''));
+    const priceTxt = rawPrice && rawPrice.price ? '$' + formatMoney(rawPrice.price) : '';
+    btn.innerHTML =
+      (c.image ? '<img src="' + escapeHtml(c.image) + '" alt="" loading="lazy" ' +
+        'onerror="this.onerror=null;this.src=\'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22/>\';this.classList.add(\'imgerr\')" />'
+        : '<span class="ph"></span>') +
+      '<span><span class="cd">' + escapeHtml(c.description || c.player || 'Card') + '</span>' +
+      (sub ? '<span class="cs" style="display:block;">' + escapeHtml(sub) + '</span>' : '') + '</span>' +
+      (priceTxt ? '<span class="cp">' + escapeHtml(priceTxt) + '</span>' : '');
+    btn.addEventListener('click', () => pickCandidate(c));
+    return btn;
+  }
+
+  async function pickCandidate(c) {
+    if (!current) return;
+    // Fold the chosen card into what we'd save.
+    current.card = current.card || {};
+    if (c.player) current.card.player = c.player;
+    if (c.set) current.card.set = c.set;
+    if (c.number) current.card.number = c.number;
+    if (c.variant) current.card.variation = c.variant;
+    if (c.category) current.card.category = c.category;
+    current.card.card_id = c.card_id;
+    if (c.rookie != null) current.card.rookie = c.rookie === true;
+
+    setText('r-tag', 'matched by search');
+    setText('r-name', c.description || c.player || 'Card');
+    const num = c.number ? '#' + String(c.number).replace(/^#/, '') : '';
+    setText('r-detail', [current.card.brand, c.set, num, c.variant].filter(Boolean).join(' · '));
+
+    document.getElementById('fix-results').classList.add('hidden');
+    fixRow.classList.add('hidden');
+    resetSaveStar();
+    saveStar.disabled = true;
+    resetResultData();
+    setPriceLabel('MARKET VALUE');
+    setText('r-estimate', '—');
+    setText('r-price', 'Getting the price…');
+    try {
+      const res = await fetch('/.netlify/functions/cardhedge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session ? session.token : '', card_id: c.card_id, grade: 'Raw' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        const picked = pickValue(data);
+        if (picked != null) {
+          setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE');
+          setText('r-estimate', '$' + formatMoney(picked.value));
+          setText('r-price', priceNote(data, picked));
+          current.value = picked.value;
+        } else {
+          setText('r-price', 'Card matched, but Card Hedge has no raw price for it yet');
+          current.value = null;
+        }
+        fillOverview(data);
+        fillSales(data);
+        fillInsights(data);
+        lastData = data;
+        renderRoi();
+      } else {
+        setText('r-price', 'Could not get a price — you can still save the card');
+        current.value = null;
+      }
+    } catch (err) {
+      setText('r-price', 'Could not get a price — you can still save the card');
+      current.value = null;
+    } finally {
+      if (!saveStar.classList.contains('saved')) saveStar.disabled = false;
+    }
+  }
+
+  function showAiEstimate(card, note) {
+    setPriceLabel('ROUGH ESTIMATE (AI)');
+    setText('r-estimate', (card && card.estimate) || '—');
+    setText('r-price', note);
+  }
+
+  // Returns { value, source, low, high }. source tells us how honest the
+  // "MARKET VALUE" label can be: 'fmv' = real market value; 'comp' = only a
+  // last-sale comp; 'grade' = a raw grade price. low/high is the fair asking range.
+  // Diagnostic: show what VISION read vs what Card Hedge MATCHED, so we can tell a
+  // misread from a mismatch. Hidden for normal users — toggle by TAPPING THE PRICE 3×
+  // (the ?debug=1 URL trick didn't survive Netlify, so this is the reliable trigger).
+  let DEBUG = /(?:\?|&|#)debug=1\b/.test(location.search + location.hash);
+  let _lastDebugArgs = null;
+  function showMatchDebug(visionCard, data) {
+    _lastDebugArgs = { visionCard, data };   // cache so the tap-toggle can re-render
+    const el = document.getElementById('r-debug');
+    if (!el) return;
+    if (!DEBUG) { el.classList.add('hidden'); return; }
+    const v = visionCard || {};
+    const m = (data && data.card) || {};
+    const fld = (o, k) => (o && o[k] != null && o[k] !== '') ? String(o[k]) : '—';
+    const lines = [
+      '<b>VISION read:</b> ' + escapeHtml([fld(v,'year'), fld(v,'brand'), fld(v,'set'),
+        fld(v,'player'), '#' + fld(v,'number'), fld(v,'variation')].join(' | ')),
+      '<b>CardHedge match:</b> ' + escapeHtml((data && data.matched)
+        ? [fld(m,'set'), '#' + fld(m,'number'), fld(m,'variant'),
+           'conf ' + fld(m,'confidence')].join(' | ')
+        : 'NO MATCH (query: ' + fld(data, 'query') + ')'),
+    ];
+    el.innerHTML = lines.join('\n');
+    el.classList.remove('hidden');
+  }
+
+  // Tap the price (or its label) 3× within 1.5s to toggle the diagnostic box.
+  (function wireDebugToggle() {
+    let taps = 0, timer = null;
+    document.addEventListener('click', (e) => {
+      const hit = e.target.closest && e.target.closest('#r-estimate, #r-plabel');
+      if (!hit) return;
+      taps += 1;
+      clearTimeout(timer);
+      timer = setTimeout(() => { taps = 0; }, 1500);
+      if (taps >= 3) {
+        taps = 0;
+        DEBUG = !DEBUG;
+        if (_lastDebugArgs) showMatchDebug(_lastDebugArgs.visionCard, _lastDebugArgs.data);
+        else { const el = document.getElementById('r-debug'); if (el && !DEBUG) el.classList.add('hidden'); }
+      }
+    });
+  })();
+
+  function pickValue(data) {
+    // Card Hedge headlines the per-grade "Raw" price on its own site — match that
+    // number first (their FMV field runs lower and confused users).
+    if (Array.isArray(data.grade_prices)) {
+      const raw = data.grade_prices.find((p) => /raw|ungraded/i.test(p.grade || ''));
+      if (raw && raw.price != null && raw.price !== '') {
+        const n = Number(raw.price);
+        if (Number.isFinite(n)) return { value: n, source: 'cardhedge', low: null, high: null };
+      }
+    }
+    if (data.fmv && data.fmv.price != null) {
+      return {
+        value: Number(data.fmv.price),
+        source: 'fmv',
+        low: data.fmv.low != null ? Number(data.fmv.low) : null,
+        high: data.fmv.high != null ? Number(data.fmv.high) : null,
+      };
+    }
+    if (data.comps && data.comps.comp_price != null) {
+      return {
+        value: Number(data.comps.comp_price),
+        source: 'comp',
+        low: data.comps.low != null ? Number(data.comps.low) : null,
+        high: data.comps.high != null ? Number(data.comps.high) : null,
+      };
+    }
+    return null;
+  }
+
+  function priceNote(data, picked) {
+    const bits = ['Card Hedge'];
+    // Fair asking range — the number collectors actually want when deciding what to list at.
+    if (picked && picked.low != null && picked.high != null && picked.high > picked.low) {
+      bits.push('range $' + formatMoney(picked.low) + '–$' + formatMoney(picked.high));
+    }
+    if (picked && picked.source === 'comp') bits.push('last sale — no market value yet');
+    if (data.fmv && data.fmv.grade_label) bits.push(data.fmv.grade_label);
+    if (data.fmv && data.fmv.as_of_date) bits.push('as of ' + String(data.fmv.as_of_date).slice(0, 10));
+    else if (data.comps && data.comps.count_used) bits.push(data.comps.count_used + ' recent sales');
+    return bits.join(' · ');
+  }
+
+  function fillOverview(data) {
+    setText('ov-grade', (data.fmv && data.fmv.grade_label) || 'Raw');
+    const last = latestSale(data);
+    setText('ov-lastsale', last && last.price != null ? '$' + formatMoney(last.price) : '—');
+    let trend = '—';
+    const pct = data.fmv && data.fmv.index_pct_change;
+    if (pct != null && pct !== '' && Number.isFinite(Number(pct))) {
+      trend = (Number(pct) > 0 ? '+' : '') + Number(pct).toFixed(1) + '%';
+    }
+    setText('ov-trend', trend);
+  }
+
+  function fillSales(data) {
+    const pane = document.getElementById('pane-sales');
+    const sales = (data.comps && Array.isArray(data.comps.sales)) ? data.comps.sales : [];
+    if (!sales.length) return;
+    const rows = sales.slice(0, 8).map((s) => {
+      const price = s.price != null ? '$' + formatMoney(s.price) : '—';
+      const meta = [s.grade, s.date ? String(s.date).slice(0, 10) : '', s.sale_type].filter(Boolean).join(' · ');
+      return '<div class="sale-row"><div class="sp">' + escapeHtml(price) + '</div>' +
+             '<div class="sm">' + escapeHtml(meta) + '</div></div>';
+    }).join('');
+    pane.innerHTML = '<div class="sales-list">' + rows + '</div>';
+  }
+
+  // Buy/Sell pressure bar + 30/90-day averages. Each piece shows on its own, so thin
+  // data hides only that piece — never the eBay/TCG links, which work on any card.
+  function fillInsights(data) {
+    const ins = data && data.insights;
+    const hasAvg = ins && (ins.avg_30 != null || ins.avg_90 != null);
+    const hasPressure = ins && ins.pressure_buy != null;
+
+    const pw = document.getElementById('pressure-wrap');
+    if (hasPressure) {
+      pw.classList.remove('hidden');
+      const buy = Math.round(ins.pressure_buy);
+      const sell = 100 - buy;
+      document.getElementById('pr-red').style.width = buy + '%';
+      document.getElementById('pr-blue').style.width = sell + '%';
+      document.getElementById('pr-seam').style.left = buy + '%';
+      const pct = document.getElementById('pr-pct');
+      const dom = buy >= sell ? buy : sell;
+      pct.textContent = dom + '% ' + (buy >= sell ? 'buying' : 'selling');
+      pct.style.left = buy + '%';
+      pct.style.color = buy >= sell ? '#FF6B6B' : '#4EA8FF';
+      setText('pr-verdict',
+        buy >= 70 ? 'Strong demand — buyers in control' :
+        buy >= 55 ? 'Leaning up — more buyers than sellers' :
+        buy > 45  ? 'Balanced — no clear pressure' :
+        buy >= 30 ? 'Leaning down — sellers outweigh buyers' :
+                    'Weak — sellers in control');
+    } else {
+      pw.classList.add('hidden');
+    }
+
+    const aw = document.getElementById('avgs-wrap');
+    if (hasAvg) {
+      aw.classList.remove('hidden');
+      setText('ov-avg30', ins.avg_30 != null ? '$' + formatMoney(ins.avg_30) : '—');
+      setText('ov-avg90', ins.avg_90 != null ? '$' + formatMoney(ins.avg_90) : '—');
+      setText('ov-vol', ins.n_90 != null ? String(ins.n_90) : '—');
+    } else {
+      aw.classList.add('hidden');
+    }
+
+    showLinks();
+  }
+
+  // Build + reveal the eBay/TCG links for whatever card we currently have. Works with
+  // or without a Card Hedge match — the links are just searches — and flips the whole
+  // insights box visible if the links OR the pressure/avgs blocks are showing.
+  function showLinks() {
+    buildLinks();
+    const box = document.getElementById('insights');
+    const shown = (id) => { const e = document.getElementById(id); return e && !e.classList.contains('hidden'); };
+    const anything = shown('links-wrap') || shown('pressure-wrap') || shown('avgs-wrap');
+    if (box) box.classList.toggle('hidden', !anything);
+  }
+
+  // "Confirm the price" link — Pokemon only, TCGplayer. Matches best on just the
+  // Pokemon/card name (e.g. "Koraidon ex"); adding year/set/number over-filters and
+  // drops the result to nothing. (eBay was dropped — its July 2026 policy forces a
+  // sign-in to see sold prices.)
+  function buildLinks() {
+    const c = (current && current.card) || {};
+    const isPoke = c.card_type === 'pokemon' || /pokemon/i.test(c.category || '');
+    const tcgName = String(c.player || '').trim();
+    const lw = document.getElementById('links-wrap');
+    const tcg = document.getElementById('lnk-tcg');
+    if (isPoke && tcgName && tcg) {
+      tcg.href = 'https://www.tcgplayer.com/search/all/product?q=' + encodeURIComponent(tcgName);
+      tcg.classList.remove('hidden');
+      if (lw) lw.classList.remove('hidden');
+    } else {
+      if (tcg) tcg.classList.add('hidden');
+      if (lw) lw.classList.add('hidden');
+    }
+  }
+
+  function latestSale(data) {
+    const sales = (data.comps && Array.isArray(data.comps.sales)) ? data.comps.sales.filter((s) => s.price != null) : [];
+    if (!sales.length) return null;
+    let best = sales[0];
+    for (const s of sales) { if ((s.date || '') > (best.date || '')) best = s; }
+    return best;
+  }
+
+  function resetResultData() {
+    lastData = null;
+    histCache = null;
+    renderRoi();
+    setText('ov-grade', 'Raw');
+    setText('ov-cert', '—');
+    setText('ov-lastsale', '—');
+    setText('ov-trend', '—');
+    ['insights', 'pressure-wrap', 'avgs-wrap', 'links-wrap'].forEach((id) => {
+      const el = document.getElementById(id); if (el) el.classList.add('hidden');
+    });
+    setText('ov-avg30', '—'); setText('ov-avg90', '—'); setText('ov-vol', '—');
+    const pane = document.getElementById('pane-sales');
+    if (pane) {
+      pane.innerHTML = '<div class="locked"><div class="ic">⇄</div><div class="t">Recent sales</div>' +
+        '<div class="s">Real recent-sale comps appear here when Card Hedge has them for this card.</div></div>';
+    }
+    const hist = document.getElementById('pane-history');
+    if (hist) {
+      hist.innerHTML = '<div class="locked"><div class="ic">◷</div><div class="t">Price history</div>' +
+        '<div class="s">Recent sale history appears here when Card Hedge has it for this card.</div></div>';
+    }
+  }
+
+  function setPriceLabel(txt) { setText('r-plabel', txt); }
+
+  function setText(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
+
+  // ---- Scanner ----
+  const cameraInput = document.getElementById('camera-input');
+  const uploadInput = document.getElementById('upload-input');
+  const preview  = document.getElementById('preview');
+  const scanHint = document.getElementById('scan-hint');
+  const busy     = document.getElementById('busy');
+  const scanMsg  = document.getElementById('scan-msg');
+  const result   = document.getElementById('result');
+  const saveStar = document.getElementById('save-star');
+  const saveMsg  = document.getElementById('save-msg');
+  let current = null;   // the card currently on screen: { card, image, value, is_slab }
+  let lastData = null;  // last Card Hedge pricing payload (grade_prices, fmv, comps)
+  let histCache = null; // sale history for the current card, once loaded
+
+  // ---- Scan mode: raw card vs graded slab ----
+  let scanMode = 'raw';
+  const modeRaw  = document.getElementById('mode-raw');
+  const modeSlab = document.getElementById('mode-slab');
+  function setMode(m) {
+    scanMode = m;
+    modeRaw.classList.toggle('on', m === 'raw');
+    modeSlab.classList.toggle('on', m === 'slab');
+    scanHint.innerHTML = '<span class="eye">◱</span>' +
+      (m === 'slab' ? 'fill the frame with the slab — label sharp, no glare' : 'align card in frame');
+  }
+  modeRaw.addEventListener('click', () => setMode('raw'));
+  modeSlab.addEventListener('click', () => setMode('slab'));
+
+  document.getElementById('btn-scan').addEventListener('click', () => cameraInput.click());
+  document.getElementById('btn-upload').addEventListener('click', () => uploadInput.click());
+  cameraInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+  uploadInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+  async function handleFile(file) {
+    if (!file) return;
+    scanMsg.className = 'msg'; scanMsg.textContent = '';
+    result.classList.add('hidden');
+    let dataUrl;
+    try {
+      dataUrl = await fileToJpeg(file);
+    } catch (err) {
+      scanMsg.classList.add('error'); scanMsg.textContent = err.message || 'Could not read that image';
+      return;
+    }
+    preview.src = dataUrl; preview.classList.remove('hidden'); scanHint.classList.add('hidden');
+    if (scanMode === 'slab') { handleSlab(dataUrl); return; }
+    setText('busy-txt', 'IDENTIFYING CARD');
+    busy.classList.remove('hidden');
+    try {
+      const res = await fetch('/.netlify/functions/identify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session ? session.token : '', image: dataUrl }),
+      });
+      const data = await res.json();
+      busy.classList.add('hidden');
+      if (data && data.paywall) { showPaywall(); return; }
+      if (!res.ok || !data.ok) {
+        scanMsg.classList.add('error'); scanMsg.textContent = data.error || 'Could not identify the card';
+        return;
+      }
+      if (data.guestToken) { if (!session) session = guestSession(); session.token = data.guestToken; session.guest = true; }
+      current = { card: data.card, image: dataUrl };
+      resetSaveStar();
+      fixRow.classList.add('hidden');
+      fixInput.value = '';
+      const fr = document.getElementById('fix-results');
+      fr.classList.add('hidden'); fr.innerHTML = '';
+      renderCard(data.card);
+      showLinks();
+      bumpScanCount();
+      fetchPrice(data.card);
+      if (session && !session.entitled && typeof data.free_remaining === 'number') {
+        scanMsg.className = 'msg ok';
+        scanMsg.textContent = data.free_remaining > 0
+          ? (data.free_remaining + ' free scan' + (data.free_remaining === 1 ? '' : 's') + ' left')
+          : 'That was your last free scan \u2014 subscribe to keep scanning.';
+      }
+    } catch (err) {
+      busy.classList.add('hidden');
+      scanMsg.classList.add('error'); scanMsg.textContent = 'Could not reach the server';
+    }
+  }
+
+  // ---- Graded slab: photo -> Card Hedge label OCR -> cert + price history ----
+  async function handleSlab(dataUrl) {
+    setText('busy-txt', 'READING SLAB LABEL');
+    busy.classList.remove('hidden');
+    try {
+      const res = await fetch('/.netlify/functions/cardhedge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session ? session.token : '', image: dataUrl }),
+      });
+      const data = await res.json();
+      busy.classList.add('hidden');
+      if (!res.ok || !data.ok || !data.matched) {
+        scanMsg.classList.add('error');
+        scanMsg.textContent = 'Could not read the grading label — get closer, keep the label sharp, avoid glare, then try again.';
+        return;
+      }
+      renderSlab(data, dataUrl);
+      bumpScanCount();
+    } catch (err) {
+      busy.classList.add('hidden');
+      scanMsg.classList.add('error'); scanMsg.textContent = 'Could not reach the server';
+    }
+  }
+
+  function renderSlab(data, dataUrl) {
+    const cert = data.cert || {};
+    const card = data.card || {};
+    const gradeLabel = [cert.grader, cert.grade].filter(Boolean).join(' ');
+    current = {
+      card: {
+        card_type: card.category === 'Pokemon' ? 'pokemon' : 'sports',
+        category: card.category || '',
+        player: card.player || '',
+        set: card.set || '',
+        number: card.number || '',
+        variation: card.variant || '',
+        cert_number: cert.cert || '',
+        grade: gradeLabel,
+        card_id: card.card_id || '',
+      },
+      image: dataUrl,
+      value: data.last_sale && data.last_sale.price != null ? Number(data.last_sale.price) : null,
+      is_slab: true,
+    };
+    resetSaveStar();
+    resetResultData();
+    fixRow.classList.add('hidden');
+    const fr = document.getElementById('fix-results');
+    fr.classList.add('hidden'); fr.innerHTML = '';
+
+    setText('r-tag', 'slab verified · ' + (cert.grader || 'graded'));
+    setText('r-name', card.description || cert.description || 'Graded card');
+    const num = card.number ? '#' + String(card.number).replace(/^#/, '') : '';
+    setText('r-detail', [card.set, num, card.variant].filter(Boolean).join(' · '));
+
+    const chips = document.getElementById('r-chips');
+    chips.innerHTML = '';
+    if (gradeLabel) addChip(chips, gradeLabel, 'rookie');
+    if (card.category) addChip(chips, card.category);
+    document.getElementById('r-highlights').classList.add('hidden');
+    document.getElementById('r-notes').classList.add('hidden');
+
+    setPriceLabel('LAST SALE · ' + (gradeLabel || 'GRADED'));
+    if (current.value != null) {
+      setText('r-estimate', '$' + formatMoney(current.value));
+      const when = data.last_sale && data.last_sale.date ? ' · ' + String(data.last_sale.date).slice(0, 10) : '';
+      setText('r-price', 'Card Hedge · cert ' + (cert.cert || '—') + when);
+    } else {
+      setText('r-estimate', '—');
+      setText('r-price', 'Label read, but no recorded sales for this card yet');
+    }
+
+    setText('ov-grade', gradeLabel || '—');
+    setText('ov-cert', cert.cert || '—');
+    setText('ov-lastsale', current.value != null ? '$' + formatMoney(current.value) : '—');
+    histCache = Array.isArray(data.history) ? data.history.filter((h) => h.price != null) : [];
+    if (histCache.length) renderHistory(histCache);
+    result.classList.remove('hidden');
+  }
+
+  // ---- Price history: chart + recent sales, loaded on demand ----
+  async function maybeLoadHistory() {
+    if (histCache && histCache.length) { renderHistory(histCache); return; }
+    const cardId = current && current.card && current.card.card_id;
+    if (!cardId) return; // no matched card — the honest empty panel stays
+    const pane = document.getElementById('pane-history');
+    pane.innerHTML = '<div class="locked"><div class="ic">◷</div><div class="t">Loading price history…</div></div>';
+    try {
+      const res = await fetch('/.netlify/functions/cardhedge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: session ? session.token : '',
+          history_for: cardId,
+          grade: (current.card.grade || 'Raw'),
+          days: 365,
+        }),
+      });
+      const data = await res.json();
+      const rows = res.ok && data.ok && Array.isArray(data.history)
+        ? data.history.filter((h) => h.price != null) : [];
+      if (rows.length) {
+        histCache = rows;
+        renderHistory(rows);
+      } else {
+        pane.innerHTML = '<div class="locked"><div class="ic">◷</div><div class="t">Price history</div>' +
+          '<div class="s">No recorded sales for this card at this grade in the last year.</div></div>';
+      }
+    } catch (err) {
+      pane.innerHTML = '<div class="locked"><div class="ic">◷</div><div class="t">Price history</div>' +
+        '<div class="s">Could not load history — tap the History tab to retry.</div></div>';
+    }
+  }
+
+  let chartSpanMonths = 6;  // 3 / 6 / 12 — set by the span buttons
+
+  function renderHistory(history) {
+    const pane = document.getElementById('pane-history');
+    // Oldest -> newest for the chart (the API returns newest first).
+    const rows = history.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    // Calm the chart: chosen span, averaged by week so it reads as a trend,
+    // not every individual sale spiking up and down.
+    let chartRows;
+    try { chartRows = smoothForChart(rows); } catch (e) { chartRows = rows; }
+    if (!chartRows || chartRows.length < 2) chartRows = rows;  // chart must never vanish
+    let html = '';
+    if (chartRows.length >= 2) html += spanButtonsHtml() + buildChart(chartRows);
+    html += '<div class="sales-list" style="margin-top:10px;">' +
+      rows.slice(-5).reverse().map((h) => {
+        const meta = [h.grade, h.date ? String(h.date).slice(0, 10) : ''].filter(Boolean).join(' · ');
+        return '<div class="sale-row"><div class="sp">$' + formatMoney(h.price) + '</div>' +
+               '<div class="sm">' + escapeHtml(meta) + '</div></div>';
+      }).join('') + '</div>';
+    pane.innerHTML = html;
+    if (chartRows.length >= 2) { wireChartTip(pane, chartRows); wireSpanButtons(pane, history); }
+  }
+
+  function spanButtonsHtml() {
+    return '<div class="chart-spans">' + [3, 6, 12].map((m) =>
+      '<button type="button" class="span-btn' + (m === chartSpanMonths ? ' on' : '') +
+      '" data-span="' + m + '">' + m + 'M</button>').join('') + '</div>';
+  }
+
+  function wireSpanButtons(pane, history) {
+    pane.querySelectorAll('.span-btn').forEach((b) => {
+      b.addEventListener('click', () => {
+        const m = parseInt(b.getAttribute('data-span'), 10);
+        if (Number.isFinite(m) && m !== chartSpanMonths) { chartSpanMonths = m; renderHistory(history); }
+      });
+    });
+  }
+
+  // Window to the chosen span (fall back to all data if thinner) and collapse
+  // sales into weekly averages, so the line shows the trend instead of noise.
+  function smoothForChart(rows) {
+    if (rows.length < 2) return rows;
+    const DAY = 86400000;
+    const days = Math.round((chartSpanMonths || 6) * 30.44);
+    const parse = (d) => Date.parse(String(d).slice(0, 10));
+    const newest = parse(rows[rows.length - 1].date);
+    if (!Number.isFinite(newest)) return rows;   // dates won't parse — show the raw line, don't crash
+    const cutoff = newest - days * DAY;
+    let win = rows.filter((r) => { const t = parse(r.date); return Number.isFinite(t) && t >= cutoff; });
+    if (win.length < 2) win = rows; // not enough in the window — show what we have
+    const start = parse(win[0].date);
+    if (!Number.isFinite(start)) return win;
+    const buckets = new Map();
+    win.forEach((r) => {
+      const t = parse(r.date), p = Number(r.price);
+      if (!Number.isFinite(t) || !Number.isFinite(p)) return;
+      const wk = Math.floor((t - start) / (7 * DAY));
+      const b = buckets.get(wk) || { sum: 0, n: 0, date: '' };
+      b.sum += p; b.n += 1; b.date = String(r.date).slice(0, 10);  // keep the real date string — never rebuild from a timestamp
+      buckets.set(wk, b);
+    });
+    const out = Array.from(buckets.keys()).sort((a, b) => a - b).map((k) => {
+      const b = buckets.get(k);
+      return { price: b.sum / b.n, date: b.date };
+    });
+    return out.length >= 2 ? out : win;
+  }
+
+  // Small single-series line chart in the app palette. Mint line on panel,
+  // recessive grid, min/max labels, last point marked.
+  function buildChart(rows) {
+    const W = 320, H = 150, L = 44, R = 12, T = 12, B = 22;
+    const prices = rows.map((r) => Number(r.price));
+    const dataLo = Math.min.apply(null, prices), dataHi = Math.max.apply(null, prices);
+    // Pad the vertical scale generously (extra room below) so ordinary swings
+    // read as a gentle wave, not a heart-attack spike. Axis never goes negative.
+    let range = dataHi - dataLo;
+    if (range <= 0) range = (dataHi * 0.1) || 1;
+    const lo = Math.max(0, dataLo - range * 1.6);
+    const hi = dataHi + range * 0.8;
+    const span = (hi - lo) || 1;
+    const X = (i) => L + (W - L - R) * (rows.length === 1 ? 0.5 : i / (rows.length - 1));
+    const Y = (p) => T + (H - T - B) * (1 - (p - lo) / span);
+    const pts = prices.map((p, i) => X(i).toFixed(1) + ',' + Y(p).toFixed(1)).join(' ');
+    const areaPts = 'M' + X(0).toFixed(1) + ',' + (H - B) + ' L' + pts.split(' ').map((p) => p).join(' L') +
+      ' L' + X(rows.length - 1).toFixed(1) + ',' + (H - B) + ' Z';
+    const gridY = [T, T + (H - T - B) / 2, H - B];
+    const lastX = X(rows.length - 1), lastY = Y(prices[prices.length - 1]);
+    const d0 = String(rows[0].date).slice(0, 10), d1 = String(rows[rows.length - 1].date).slice(0, 10);
+    return '<div class="chart-wrap" id="chart-wrap">' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Price history">' +
+      gridY.map((y) => '<line x1="' + L + '" y1="' + y + '" x2="' + (W - R) + '" y2="' + y +
+        '" stroke="#294A63" stroke-width="1" opacity="0.45"/>').join('') +
+      '<path d="' + areaPts + '" fill="#34E3AE" opacity="0.08"/>' +
+      '<polyline points="' + pts + '" fill="none" stroke="#34E3AE" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + lastX + '" cy="' + lastY + '" r="3.5" fill="#34E3AE"/>' +
+      '<text x="' + (L - 6) + '" y="' + (Y(dataHi) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#7C93A8" font-family="ui-monospace,Menlo,monospace">$' + formatMoney(dataHi) + '</text>' +
+      '<text x="' + (L - 6) + '" y="' + (Y(dataLo) + 3).toFixed(1) + '" text-anchor="end" font-size="9" fill="#7C93A8" font-family="ui-monospace,Menlo,monospace">$' + formatMoney(dataLo) + '</text>' +
+      '<text x="' + L + '" y="' + (H - 6) + '" font-size="9" fill="#566B7E" font-family="ui-monospace,Menlo,monospace">' + escapeHtml(d0) + '</text>' +
+      '<text x="' + (W - R) + '" y="' + (H - 6) + '" text-anchor="end" font-size="9" fill="#566B7E" font-family="ui-monospace,Menlo,monospace">' + escapeHtml(d1) + '</text>' +
+      '</svg><div class="chart-tip" id="chart-tip"></div></div>';
+  }
+
+  // Tap/drag on the chart shows the nearest sale (price + date).
+  function wireChartTip(pane, rows) {
+    const wrap = pane.querySelector('#chart-wrap');
+    const svg = wrap && wrap.querySelector('svg');
+    const tip = wrap && wrap.querySelector('#chart-tip');
+    if (!svg || !tip) return;
+    const W = 320, L = 44, R = 12;
+    function show(clientX) {
+      const rect = svg.getBoundingClientRect();
+      const frac = Math.max(0, Math.min(1, ((clientX - rect.left) / rect.width * W - L) / (W - L - R)));
+      const i = Math.round(frac * (rows.length - 1));
+      const r = rows[i];
+      if (!r) return;
+      tip.innerHTML = '<b>$' + formatMoney(r.price) + '</b> · ' + escapeHtml(String(r.date).slice(0, 10));
+      tip.style.display = 'block';
+      const x = Math.max(0, Math.min(rect.width - tip.offsetWidth, (clientX - rect.left) - tip.offsetWidth / 2));
+      tip.style.left = x + 'px';
+      tip.style.top = '4px';
+    }
+    // Tap (or drag) to inspect a sale; the readout STAYS on screen until the
+    // next tap. preventDefault stops long-press text selection on phones.
+    svg.addEventListener('pointerdown', (e) => { e.preventDefault(); show(e.clientX); });
+    svg.addEventListener('pointermove', (e) => { if (e.buttons || (e.pointerType === 'mouse' && e.buttons)) show(e.clientX); });
+    svg.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
+  // ---- Grading ROI: what this raw card is worth at each grade, minus the fee ----
+  const roiFee = document.getElementById('roi-fee');
+  roiFee.addEventListener('input', renderRoi);
+
+  function renderRoi() {
+    const emptyEl = document.getElementById('roi-empty');
+    const wrap = document.getElementById('roi-wrap');
+    const rowsEl = document.getElementById('roi-rows');
+    const baseEl = document.getElementById('roi-base');
+    rowsEl.innerHTML = '';
+
+    function empty(msg) {
+      wrap.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      emptyEl.querySelector('.s').textContent = msg;
+    }
+
+    if (current && current.is_slab) {
+      return empty('This card is already graded — ROI applies to raw cards you might send in.');
+    }
+    const gp = lastData && Array.isArray(lastData.grade_prices) ? lastData.grade_prices : [];
+    const rawEntry = gp.find((p) => /^raw$/i.test(String(p.grade || '').trim()));
+    let rawPrice = rawEntry && Number(rawEntry.price);
+    if (!Number.isFinite(rawPrice)) rawPrice = lastData && lastData.fmv && Number(lastData.fmv.price);
+    const graded = gp
+      .filter((p) => !/^raw$/i.test(String(p.grade || '').trim()))
+      .map((p) => ({ grade: String(p.grade || ''), price: Number(p.price) }))
+      .filter((p) => p.grade && Number.isFinite(p.price));
+    if (!Number.isFinite(rawPrice) || !graded.length) {
+      return empty('Needs a matched card with graded prices — scan a card or pick one from search first.');
+    }
+
+    emptyEl.classList.add('hidden');
+    wrap.classList.remove('hidden');
+    const fee = Math.max(0, Number(roiFee.value) || 0);
+    baseEl.textContent = 'Raw today: $' + formatMoney(rawPrice) + ' · net = graded price − raw − $' + formatMoney(fee) + ' fee';
+
+    // Parse "PSA 10" / "BGS 9.5" -> { company, gradeNum, price }.
+    const parsed = graded.map((g) => {
+      const m = String(g.grade).trim().match(/^([A-Za-z]+)\s*\.?\s*([\d.]+)$/);
+      if (!m) return null;
+      return { company: m[1].toUpperCase(), gradeNum: m[2], price: g.price };
+    }).filter(Boolean);
+
+    // Always list the TOP 3 graders for this card type, each showing 10 / 9 / 8.
+    // Show a price where Card Hedge has one, "—" where it doesn't.
+    const isPoke = current && current.card &&
+      (/pokemon/i.test(current.card.category || '') || current.card.card_type === 'pokemon');
+    const top3 = isPoke ? ['PSA', 'CGC', 'BGS'] : ['PSA', 'SGC', 'BGS'];
+    const GRADES = ['10', '9', '8'];
+    const priceFor = (co, gn) => {
+      const e = parsed.find((x) => x.company === co && x.gradeNum === gn);
+      return e ? e.price : null;
+    };
+
+    const addRow = (label, price) => {
+      const row = document.createElement('div');
+      row.className = 'roi-row';
+      if (price == null) {
+        row.innerHTML = '<span class="rg">' + escapeHtml(label) + '</span>' +
+          '<span class="rp" style="color:var(--muted-2)">—</span>' +
+          '<span class="rn" style="color:var(--muted-2)">no data</span>';
+      } else {
+        const net = price - rawPrice - fee;
+        row.innerHTML = '<span class="rg">' + escapeHtml(label) + '</span>' +
+          '<span class="rp">$' + formatMoney(price) + '</span>' +
+          '<span class="rn ' + (net >= 0 ? 'pos' : 'neg') + '">' + (net >= 0 ? '+' : '−') + '$' + formatMoney(Math.abs(net)) + '</span>';
+      }
+      rowsEl.appendChild(row);
+    };
+
+    top3.forEach((co) => {
+      const head = document.createElement('div');
+      head.className = 'roi-co';
+      head.textContent = co;
+      rowsEl.appendChild(head);
+      GRADES.forEach((gn) => addRow(co + ' ' + gn, priceFor(co, gn)));
+    });
+  }
+
+  // ---- Market movers: weekly biggest gainers on the scan screen ----
+  let marketLoaded = false;
+  async function loadMarket() {
+    if (marketLoaded || !session) return;
+    try {
+      const res = await fetch('/.netlify/functions/cardhedge', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session.token, movers: true }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok || !Array.isArray(data.movers) || !data.movers.length) return;
+      const list = document.getElementById('market-list');
+      list.innerHTML = '';
+      data.movers.slice(0, 8).forEach((m) => {
+        const row = document.createElement('div');
+        row.className = 'mkt-row';
+        const gain = m.gain != null ? (m.gain > 0 ? '+' : '') + Number(m.gain).toFixed(1) + '%' : '';
+        row.innerHTML =
+          (m.image ? '<img src="' + escapeHtml(m.image) + '" alt="" loading="lazy" />' : '<span class="ph"></span>') +
+          '<span><span class="md">' + escapeHtml(m.description || m.player || 'Card') + '</span>' +
+          (m.category ? '<span class="ms" style="display:block;">' + escapeHtml(m.category) + '</span>' : '') + '</span>' +
+          (gain ? '<span class="mg">' + escapeHtml(gain) + '</span>' : '');
+        list.appendChild(row);
+      });
+      document.getElementById('market').classList.remove('hidden');
+      marketLoaded = true;
+    } catch (err) { /* market stays hidden — never blocks scanning */ }
+  }
+
+  // ---- Save to collection (the gold star) ----
+  saveStar.addEventListener('click', saveCurrent);
+
+  async function saveCurrent() {
+    if (!current || saveStar.classList.contains('saved')) return;
+    saveMsg.className = 'save-msg'; saveMsg.textContent = '';
+    saveStar.disabled = true;
+    try {
+      const res = await fetch('/.netlify/functions/save-card', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: session ? session.token : '',
+          image: current.image,
+          card: current.card,
+          value: current.value != null ? current.value : null,
+          is_slab: current.is_slab === true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        saveStar.disabled = false;
+        saveMsg.classList.add('error');
+        saveMsg.textContent = data.error || 'Could not save the card';
+        return;
+      }
+      saveStar.classList.add('saved');
+      saveMsg.classList.add('ok');
+      saveMsg.textContent = 'Saved to your collection';
+      loadCollection();
+    } catch (err) {
+      saveStar.disabled = false;
+      saveMsg.classList.add('error');
+      saveMsg.textContent = 'Could not reach the server';
+    }
+  }
+
+  function resetSaveStar() {
+    saveStar.classList.remove('saved');
+    saveStar.disabled = false;
+    saveMsg.className = 'save-msg';
+    saveMsg.textContent = '';
+  }
+
+  // (collection counts now come from loadCollection)
+
+  function bumpScanCount() {
+    const el = document.getElementById('scans-today');
+    el.textContent = String((parseInt(el.textContent, 10) || 0) + 1);
+  }
+
+  function renderCard(card) {
+    card = card || {};
+    const name = [card.year, card.player].filter(Boolean).join(' ').trim();
+    const num  = card.number ? '#' + String(card.number).replace(/^#/, '') : '';
+    const bits = [card.brand, card.set, num, card.variation].filter(Boolean).join(' · ');
+
+    document.getElementById('r-tag').textContent =
+      card.identified === false
+        ? 'best guess' + (card.confidence ? ' · ' + card.confidence + ' confidence' : '')
+        : 'identified' + (card.confidence ? ' · ' + card.confidence + ' confidence' : '');
+    document.getElementById('r-name').textContent = name || card.player || 'Card details below';
+    document.getElementById('r-detail').textContent = bits;
+    var _th = document.getElementById('r-thumb');
+    if (_th) { if (current && current.image) { _th.src = current.image; _th.style.display = ''; } else { _th.style.display = 'none'; } }
+
+    const chips = document.getElementById('r-chips');
+    chips.innerHTML = '';
+    if (card.rookie === true) addChip(chips, 'ROOKIE', 'rookie');
+    [card.sport, card.team, card.position].filter(Boolean).forEach((c) => addChip(chips, c));
+    if (card.variation) addChip(chips, card.variation, 'mag');
+
+    const hl = document.getElementById('r-highlights');
+    hl.innerHTML = '';
+    if (Array.isArray(card.highlights) && card.highlights.length) {
+      card.highlights.forEach((h) => { const li = document.createElement('li'); li.textContent = h; hl.appendChild(li); });
+      hl.classList.remove('hidden');
+    } else { hl.classList.add('hidden'); }
+
+    const notesEl = document.getElementById('r-notes');
+    if (card.notes) { notesEl.textContent = card.notes; notesEl.classList.remove('hidden'); }
+    else { notesEl.classList.add('hidden'); }
+
+    document.getElementById('r-estimate').textContent = card.estimate || '—';
+    result.classList.remove('hidden');
+  }
+
+  function addChip(container, text, cls) {
+    const span = document.createElement('span');
+    span.className = 'chip' + (cls ? ' ' + cls : '');
+    span.textContent = text;
+    container.appendChild(span);
+  }
+
+  // Downscale + convert any phone photo (incl. iOS HEIC via Safari) to JPEG base64.
+  function fileToJpeg(file, maxDim = 1200, quality = 0.85) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width >= height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image. Try a JPG or PNG.')); };
+      img.src = url;
+    });
+  }
+
+  // ===== Paywall =====
+  const PAYWALL_ON = true; // <-- flip to true to enforce the paywall for everyone
+  // OLD $16 live link (archived): https://buy.stripe.com/eVq28r3nN8Ci5sMdJ20gw03
+  // TEST link: https://buy.stripe.com/test_14AdR9bUjbOubRa34o0gw02
+  const PAYMENT_LINK = 'https://buy.stripe.com/8x2cN54rRbOug7q8oI0gw04'; // LIVE link, $8.99/mo recurring
+  const pw = document.getElementById('paywall');
+  const pwStageIntro = document.getElementById('pw-stage-intro');
+  const pwStageVerify = document.getElementById('pw-stage-verify');
+  const pwMsg = document.getElementById('pw-msg');
+  const pwEmail = document.getElementById('pw-email');
+
+  function showPaywall(stage) { pw.classList.add('show'); setPwStage(stage || 'intro'); }
+  function hidePaywall() { pw.classList.remove('show'); }
+  function setPwStage(stage) {
+    pwMsg.textContent = ''; pwMsg.className = 'msg';
+    if (stage === 'verify') { pwStageIntro.classList.add('pw-hide'); pwStageVerify.classList.remove('pw-hide'); }
+    else { pwStageVerify.classList.add('pw-hide'); pwStageIntro.classList.remove('pw-hide'); }
+  }
+
+  document.getElementById('pw-close').addEventListener('click', hidePaywall);
+  document.getElementById('pw-back').addEventListener('click', () => setPwStage('intro'));
+  document.getElementById('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
+
+  document.getElementById('pw-subscribe').addEventListener('click', () => {
+    if (!PAYMENT_LINK || PAYMENT_LINK.indexOf('REPLACE_') === 0) { alert('Payment link not set yet.'); return; }
+    window.open(PAYMENT_LINK, '_blank');
+    setPwStage('verify'); // ready for when they come back
+  });
+
+  document.getElementById('pw-continue').addEventListener('click', unlockWithEmail);
+  pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
+
+  async function unlockWithEmail() {
+    const email = (pwEmail.value || '').trim().toLowerCase();
+    if (!email || email.indexOf('@') < 0) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Enter the email you subscribed with.'; return; }
+    pwMsg.className = 'msg'; pwMsg.textContent = 'Checking...';
+    try {
+      const res = await fetch('/.netlify/functions/start-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { pwMsg.className = 'msg error'; pwMsg.textContent = data.error || 'Could not unlock.'; return; }
+      session = { email: data.email, token: data.token, plan: data.plan || 'beta', entitled: true };
+      localStorage.setItem('cv_session', JSON.stringify(session));
+      who.textContent = data.email;
+      try { updateSubCard(); } catch (e) {}
+      pwMsg.className = 'msg ok'; pwMsg.textContent = 'Unlocked!';
+      loadCollection();
+      setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0);
+      setTimeout(hidePaywall, 700);
+    } catch (e) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Could not reach the server.'; }
+  }
+
+  function updateSubCard() {
+    var el = document.getElementById('sub-card');
+    if (!el) return;
+    if (session && session.entitled) el.classList.add('hidden');
+    else el.classList.remove('hidden');
+  }
+  var _scSub = document.getElementById('sc-subscribe');
+  if (_scSub) _scSub.addEventListener('click', function () {
+    if (!PAYMENT_LINK || PAYMENT_LINK.indexOf('REPLACE_') === 0) { alert('Payment link not set yet.'); return; }
+    window.open(PAYMENT_LINK, '_blank');
+    showPaywall('verify');
+  });
+  var _scVer = document.getElementById('sc-verify');
+  if (_scVer) _scVer.addEventListener('click', function () { showPaywall('verify'); });
+
+  // Returning from Stripe checkout -> jump straight to the unlock step.
+  try {
+    const _q = new URLSearchParams(location.search);
+    if (_q.get('sub') === 'success' && (!session || !session.entitled)) showPaywall('verify');
+  } catch (e) {}
+
+</script>
+</body>
+</html>
