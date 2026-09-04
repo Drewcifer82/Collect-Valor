@@ -1,3 +1,42 @@
+# SESSION UPDATE — Sep 3, 2026 (paywall live, $8.99, recolor, repo move)
+
+**Big session. Everything below is the current state.**
+
+## Paywall — LIVE (email-as-key, no PIN, no code)
+- Username/PIN login REMOVED. Identity = the email someone subscribes with. Site opens straight into the app; first scan -> paywall -> Subscribe (Stripe) -> enter paid email -> unlocked. `start-session.mjs` mints the token from the email (active subscriber or comp allowlist). NO 6-digit code — Resend was abandoned (API key kept returning 401; domain verified under a different Resend account). `request-code.mjs`/`verify-code.mjs` are dormant/unused.
+- Functions added: `start-session.mjs`, `stripe-webhook.mjs` (manual signature verify, no SDK). DB (Supabase utecxjkakbzywmypqlwu): `subscribers` (webhook writes), `free_scans`, users entitlement columns (paid_email UNIQUE = anti-sharing). See `paywall-schema.sql`.
+- `PAYWALL_ON` flag (top of paywall JS in index.html) is the master switch.
+
+## Pricing — $8.99/mo (was $16)
+- $8.99/mo founding-member, locked for life. LIVE link in site: https://buy.stripe.com/8x2cN54rRbOug7q8oI0gw04 (old $16 link kept in a comment).
+- LIVE Stripe webhook: Snapshot payload; events checkout.session.completed + customer.subscription.updated/deleted. `STRIPE_WEBHOOK_SECRET` set in Netlify. No Stripe secret key needed.
+
+## Free trial — 7 scans/guest, server-side by IP
+- `identify.mjs` enforces 7 free scans per IP (free_scans table); can't be reset by clearing cookies. Shows "X free scans left" then paywall. Members unlimited.
+
+## New look (step one) — black / electric blue / white / magenta
+- Recolored via CSS :root remap. Original navy/mint saved as `index.html.bak-navy`.
+- Result card restyled to the mock: thumbnail left, slim magenta/blue momentum bar, magenta parallel chip, CV-logo header + FOUNDING MEMBER. Persistent $8.99 subscribe card on scan screen (hides when entitled).
+- Favicon + og-image + og-image-square regenerated in the new scheme.
+
+## SEO + analytics
+- Added sitemap.xml, robots.txt, favicon.svg, og-image(.png/-square), full meta/OpenGraph/Twitter/JSON-LD. netlify.toml 404s internal docs. Google Search Console = Domain property (collectvalor.com), sitemap submitted. Plausible analytics snippet in <head>.
+
+## Repo / Claude Code move
+- GitHub repo `Collect-Valor`. App files are in a `Sports by Josh Hart` SUBFOLDER inside the repo -> Netlify 404s until **Base directory = "Sports by Josh Hart"** is set (or move files to repo root). .gitignore added; no secrets in files (all Netlify env). Keep repo PRIVATE (comp emails + Supabase URL in code).
+
+## Other
+- Josh re-added as paid member (jjameshart7@mail.com) via subscribers insert. Comp allowlist in start-session.mjs: paradigmnguy3339@gmail.com, @duck.com.
+- Marketing: FB profile pic, cover banner, ads at $8.99 (min emojis). IP: naming Pokemon = ok; recreating real card art/logos = risk -> using generic creatures. Andrew runs each new post by Claude first.
+
+## >>> NEW DIRECTION (next major push) <<<
+- Andrew wants a BRAND-NEW LOOK for the web app — a real UI redesign, not just tweaks. The recolor above was step one; he's after a fuller new design direction. Start here next session.
+
+## Still open
+- Netlify Base directory fix (mid-fix). PWA prep (manifest + service worker). BGS/CGC "no data" handling. Re-scrape FB Sharing Debugger after deploys.
+
+---
+
 # HANDOFF — Sports Card Scanner & Price App
 
 Read this first at the start of a session to get caught up. Pair it with DESIGN.md
