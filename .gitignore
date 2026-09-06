@@ -1,0 +1,15 @@
+# backups & scratch
+*.bak
+*.bak-*
+index.html.bak-*
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+
+# deps / secrets (if ever added locally)
+node_modules/
+.env
+.env.*
+.netlify/

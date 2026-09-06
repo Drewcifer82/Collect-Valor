@@ -1,0 +1,78 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Keep internal docs out of the public site (404 them)
+[[redirects]]
+  from = "/HANDOFF.md"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/CLAUDE.md"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/DESIGN.md"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/schema.sql"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/paywall-schema.sql"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/index.html.bak-paywall"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/index.html.bak-nologin"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/index.html.bak-navy"
+  to = "/"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/index.html.bak-prepixel"
+  to = "/"
+  status = 404
+  force = true
+
+# Clean URLs for the static pages
+[[redirects]]
+  from = "/faq.html"
+  to = "/faq"
+  status = 301
+  force = true
+[[redirects]]
+  from = "/privacy.html"
+  to = "/privacy"
+  status = 301
+  force = true
+[[redirects]]
+  from = "/faq"
+  to = "/faq.html"
+  status = 200
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+[[redirects]]
+  from = "/index.html.bak-preui"
+  to = "/"
+  status = 404
+  force = true
