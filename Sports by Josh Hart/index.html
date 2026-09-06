@@ -395,6 +395,11 @@ td,th{overflow-wrap:anywhere}
 .profile-panel .kv-row:last-of-type{border-bottom:0}
 .profile-panel .kv-row .k{color:var(--muted)}.profile-panel .kv-row .v{font-family:monospace;text-align:right;overflow-wrap:anywhere;min-width:0}
 .profile-panel .secondary{width:100%;min-height:44px;margin-top:14px;font-size:12px}
+/* Nav link to static pages + footer links */
+nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
+nav a:hover{color:white}
+footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
+@media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}}
 </style>
 <!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-CFsJ2ENI3kalPgEOBxGW9.js"></script>
@@ -413,10 +418,11 @@ td,th{overflow-wrap:anywhere}
     <button data-page="collection">Collection</button>
     <button data-page="watch">Watchlist</button>
     <button data-page="profile">Profile</button>
+    <a href="/faq">FAQ</a>
   </nav>
   <button class="who-pill" id="who-pill" type="button">GUEST</button>
 </header>
-<section class="intro"><span class="eyebrow">A LITTLE CARD. A BIG DISCOVERY.</span><h1 id="heading">Scan a card, get the market.</h1><p id="subtitle">Discover what you’re holding. Sports, Pokémon, and everything you collect.</p></section>
+<section class="intro"><span class="eyebrow">A LITTLE CARD. A BIG DISCOVERY.</span><h1 id="heading">Scan a card, get the market.</h1><p id="subtitle">A free sports card and Pokémon card price checker: snap a photo, see the market value, price history, and graded prices in seconds.</p></section>
 
 <!-- ============ PRICE DESK ============ -->
 <section id="scan" class="page workspace">
@@ -605,7 +611,7 @@ td,th{overflow-wrap:anywhere}
   </div>
 </section>
 
-<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span>Identification by Claude Vision · Market data by Card Hedge</span></footer>
+<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by Claude Vision · Market data by Card Hedge</span></footer>
 </main>
 
 <!-- ============ PAYWALL ============ -->
@@ -708,7 +714,7 @@ td,th{overflow-wrap:anywhere}
 
   // ===== Navigation =====
   const COPY = {
-    scan: ['Scan a card, get the market.', 'Discover what you’re holding. Sports, Pokémon, and everything you collect.'],
+    scan: ['Scan a card, get the market.', 'A free sports card and Pokémon card price checker: snap a photo, see the market value, price history, and graded prices in seconds.'],
     collection: ['Your cards. Your story.', 'Everything you’ve saved, priced by Card Hedge.'],
     watch: ['The next one is out there.', 'Follow cards you don’t own yet — coming soon.'],
     profile: ['Make room for great finds.', 'Your account, your standout card, your membership.'],
@@ -1851,6 +1857,9 @@ td,th{overflow-wrap:anywhere}
   updateSessionUI();
   updateHeader(); renderCollection(); renderPrize();
   if (session && session.token) { loadCollection(); setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0); }
+  // Deep links from the FAQ/privacy pages (e.g. /#collection).
+  const goHash = () => { try { const h = location.hash.replace('#', ''); if (COPY[h]) navigate(h); } catch (e) {} };
+  goHash(); window.addEventListener('hashchange', goHash);
   // Returning from Stripe checkout -> jump straight to the unlock step.
   try {
     const q = new URLSearchParams(location.search);
