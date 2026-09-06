@@ -609,6 +609,8 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
         <div class="kv-row"><span class="k">Singles</span><span class="v" id="prof-singles">0 / 50</span></div>
         <div class="kv-row"><span class="k">Slabs</span><span class="v" id="prof-slabs">0 / 20</span></div>
         <button class="secondary hidden" id="signout" type="button">Sign out</button>
+        <button class="secondary hidden" id="manage-sub" type="button">Manage subscription</button>
+        <p class="insight-note hidden" id="manage-sub-msg"></p>
         <button class="secondary" id="acct-unlock" type="button">Already subscribed? Unlock</button>
       </article>
       <article class="profile-panel profile-membership" id="membership-panel"><span class="eyebrow">EARLY BETA · FOUNDING MEMBER</span><h2 id="membership-title">Full insights.</h2><p id="membership-copy">Sign up during the beta and keep this rate for life, as long as you stay a member.</p><div class="profile-plan-price">$8.99<span>/ month</span></div><ul><li>Unlimited scanning &amp; pricing</li><li>Price history &amp; recent sales</li><li>Market signals &amp; grading scenarios</li></ul><button id="membership-cta" class="primary" type="button">Subscribe — $8.99/mo</button><p class="insight-note" id="membership-note">Secure checkout by Stripe. Cancel anytime.</p></article>
@@ -690,6 +692,8 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     const pill = $('who-pill');
     if (pill) { pill.textContent = isMember ? 'FOUNDING MEMBER' : 'GUEST'; pill.classList.toggle('member', isMember); }
     $('signout').classList.toggle('hidden', !name);
+    $('manage-sub').classList.toggle('hidden', !(isMember && plan !== 'comp'));
+    { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
@@ -713,6 +717,20 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     updateHeader(); renderCollection(); renderPrize();
     updateSessionUI();
     navigate('scan');
+  });
+  $('manage-sub').addEventListener('click', async () => {
+    const btn = $('manage-sub'); const msg = $('manage-sub-msg');
+    const label = btn.textContent;
+    if (msg) { msg.classList.add('hidden'); msg.textContent = ''; }
+    btn.disabled = true; btn.textContent = 'Opening\u2026';
+    try {
+      const { data } = await post('create-portal-session');
+      if (data && data.ok && data.url) { window.location.href = data.url; return; }
+      if (msg) { msg.textContent = (data && data.error) || 'Could not open the billing portal. Please try again.'; msg.classList.remove('hidden'); }
+    } catch (err) {
+      if (msg) { msg.textContent = 'Could not open the billing portal. Please try again.'; msg.classList.remove('hidden'); }
+    }
+    btn.disabled = false; btn.textContent = label;
   });
   $('who-pill').addEventListener('click', () => { if (entitled()) navigate('profile'); else showPaywall('intro'); });
   $('acct-unlock').addEventListener('click', () => showPaywall('verify'));
