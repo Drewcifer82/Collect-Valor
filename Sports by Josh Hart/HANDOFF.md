@@ -1,3 +1,89 @@
+# ⚡ CURRENT STATE — Sep 6, 2026 — READ THIS FIRST
+
+Everything below this block is older history (still useful for background). This block is the truth as of Sep 6, 2026.
+
+## Where the files live (important)
+- **Working folder (the one Claude connects to): `C:\Users\Parad\OneDrive\Desktop\Sports by Josh Hart`.** This is NOT a git repo.
+- **Git repo clone: `C:\Users\Parad\OneDrive\Documents\GitHub\Collect-Valor`** (note: under OneDrive\Documents, not plain Documents). Andrew has chosen NOT to connect this folder to Claude — do not ask again. He hand-copies changed files from the working folder into the repo, then commits/pushes with **GitHub Desktop**.
+- Inside the repo the app files may sit in a `Sports by Josh Hart` SUBFOLDER (Netlify Base directory). Confirm where the live files actually are before telling Andrew where to paste.
+- ⚠️ Files in the working folder reverted to older versions once (Sep 6) — suspected OneDrive sync. **After writing files, always verify with sha256sum + a content grep before telling Andrew they're ready.**
+
+## Live site status (verified Sep 6)
+- ✅ LIVE and correct: `/faq`, `/privacy` (clean URLs work → netlify.toml deployed), `sitemap.xml` (3 URLs).
+- ❌ **STALE on the live site — still needs a push:**
+  - `index.html` — never pushed since the SEO work. Live one has the OLD title and **no FAQ link in the nav** (so /faq is orphaned).
+  - `faq.html` — live version is v1 (34 Q, no contact question).
+  - `privacy.html` — live version still shows the old gmail address.
+- The working folder DOES have the correct newest versions of all three (hash-verified Sep 6). They just need copying to the repo + push.
+- Verified hashes of the good versions (first 16 of sha256): index.html `3f5e3c5ec853f1a3` (132006 b) · faq.html `529cbe519f33e3d0` (39427 b) · privacy.html `dffe17fc6d57db3d` (16670 b) · sitemap.xml `e86241993a1ed00b` · netlify.toml `5d01e3b6a6d682ff`
+
+## What shipped in the last two sessions
+**Sep 5 — new UI merged.** ChatGPT/"Astra" redesign (`design-preview.html`) merged over the real app logic into one `index.html`. Design = dark navy, cyan/purple/pink/gold gradient, top nav (Price desk / Collection / Watchlist / Profile), result card with Overview/History/Sales/Grades tabs, blurred member-insights teaser + "$8.99/month" unlock. All backend untouched. 77 headless-browser checks pass against a mock of every Netlify function.
+Merge decisions: guests see the price on free scans but deeper insights blur behind the paywall; photo → "Identify & price" button (not auto-identify); search-by-name works without a scan (member-gated); Grades tab uses REAL Card Hedge per-grade prices in a "Worth grading?" calculator (fee + shipping + selling %); Watchlist page is an honest "not live yet"; Profile prize card = highest-value card owned; dropped the dead username/PIN form and the "Pop" tab; eBay links stay off.
+
+**Sep 6 — SEO phase 1.**
+- `faq.html` (/faq) — 35 Q&As, ~2,140 words, FAQPage JSON-LD, sticky jump list.
+- `privacy.html` (/privacy) — plain-English, warm, honest. Andrew is BIG on privacy and loved this page; keep its voice if edited. Contact = **info@collectvalor.com** (ImprovMX forwarding; MX + SPF verified; no DMARC; receive-only so replying *as* info@ needs SMTP someday).
+- `index.html` — FAQ link in nav, FAQ/Privacy footer links, hash deep links (/#collection), and head retuned to lead with "price checker":
+  - title: `Pokémon & Sports Card Price Checker + Scanner | Collect Valor`
+  - description: "The free Pokémon and sports card price checker. Snap a photo to see what your card is worth right now — market value, recent sales, and graded prices."
+- `sitemap.xml` 3 URLs; `netlify.toml` clean URLs + .html→clean 301s.
+
+## Why "price checker" (GSC data, ~1 week in)
+18 impressions, 0 clicks, **all Pokémon**: "pokemon card price checker / value checker / worth checker / value finder / check pokemon card value / scan my pokemon card value". Nobody searched "scanner app". People type **checker / finder**. Keyword research doc lives in the Claude Project: `claude/seo-keyword-research-2026-09-06.md`.
+Note: do NOT submit anchor URLs (/faq#scanning) to GSC — Google strips fragments. Submit /faq and /privacy only.
+
+---
+
+# ✅ PWA — BUILT Sep 6, 2026 (pending push to live)
+
+**Status:** Built in the working folder and verified in a headless browser — service worker registers + activates (scope = root), manifest parses (name "Collect Valor", 3 icons incl. maskable, display standalone, theme #0b0f19), offline page renders, all icons load. NOT yet pushed to the repo / live.
+
+**Files to copy into the repo + push (GitHub Desktop):**
+- New: manifest.json, sw.js, offline.html, icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png
+- Changed: index.html (head: manifest link, apple-touch PNG at /apple-touch-icon.png, apple-mobile-web-app tags, theme-color now #0b0f19; before </body>: SW registration + iOS "Add to Home Screen" hint + Android install button)
+
+Verified hashes (first16 sha256): index.html `d35909c6a21fe617` (135075 b) · manifest.json `34bb618f0cb952ee` · sw.js `b7609097ef0018b6` · offline.html `81575829f68ba645`
+Note: icon PNG byte-sizes on disk are larger than generated (OneDrive re-saved them) — content is pixel-identical, verified visually.
+
+How it works: SW is network-first for HTML (new deploys show immediately), cache-first for icons/static, and NEVER caches `/.netlify/functions/*` (pricing + identify always hit network). Bump `CACHE` in sw.js on every deploy or users get stale HTML. iOS hint shows only for iOS Safari, non-standalone, dismissible (localStorage). Android fires beforeinstallprompt → real Install button.
+
+After pushing: open collectvalor.com on a phone → Share → Add to Home Screen (iOS) / Install button (Android).
+
+---
+
+## PWA build spec (kept for reference)
+
+Goal: make collectvalor.com installable so it gets a home-screen icon and opens fullscreen. Retention play, not an SEO play. Andrew understands and approved the tradeoffs.
+
+**Why:** scanning is a phone-in-hand habit — an icon gets reopened, a bookmark doesn't. Also keeps the full $8.99 (no Apple 15–30% cut), no app-store review, instant updates via Netlify.
+
+**Build (about an hour):**
+1. `manifest.json` — name "Collect Valor", short_name "Collect Valor", `start_url: "/"`, `display: "standalone"`, `background_color`/`theme_color` `#0b0f19`, icons 192/512 + a 512 maskable, `description`, `categories`.
+2. Icons — generate from the existing gradient/CV mark. Need 192×192, 512×512, 512×512 maskable (safe zone!), plus 180×180 apple-touch-icon PNG (the current apple-touch-icon points at favicon.svg — iOS wants PNG).
+3. `sw.js` service worker — cache the app shell (index.html, faq.html, privacy.html, favicon, icons) with a versioned cache name, network-first for HTML so pushes appear immediately, cache-first for icons. **Never cache `/.netlify/functions/*`** — pricing and identification must always hit the network.
+4. `index.html` head — `<link rel="manifest" href="/manifest.json">`, apple-touch-icon PNG, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, and register the service worker.
+5. Offline fallback — a small "You're offline" state; be honest that scanning needs a connection (Claude Vision + Card Hedge). Don't oversell offline.
+6. iOS hint — Safari shows no install prompt, so add a dismissible one-line "Tap Share → Add to Home Screen" nudge for iOS Safari visitors only (localStorage-dismissed). Android/Chrome fires `beforeinstallprompt` — can show a real Install button.
+7. Add manifest/sw/icons to the repo; verify Netlify serves `sw.js` from the root scope.
+8. Re-run the headless test suite before delivering.
+
+**Gotchas:** service worker must be served from the site root to control the whole site; bump the cache version on every deploy or people get stale HTML; test that the paywall/session still works inside standalone mode (localStorage persists, it should be fine, but verify).
+
+**Watch out:** a badly scoped service worker can serve a stale index.html forever. Network-first for HTML avoids this. Don't ship a cache-first HTML strategy.
+
+---
+
+# 📋 After the PWA (backlog, agreed order)
+1. **Auto "Trending cards" page** — a scheduled Netlify function writes a STATIC daily page from the Card Hedge top-movers endpoint (`{movers:true}` in cardhedge.mjs). This is the "blog that writes itself" — real player/Pokémon names and prices, fresh daily, crawlable. ⚠️ Check Card Hedge's terms on publicly displaying their data first. (Note: the OLD market-movers strip on the scan screen gave ZERO SEO value — it loaded via JS and only for sessions with a token, so Google never saw it. A static page fixes that.)
+2. **Card notes / flip-to-write** — Andrew's idea and he's excited about it: tap a card in your Collection, it "activates" and flips over like you're playing with it, and instead of the card back you get a blank note area. Write where you got it — pulled from a pack, a convention, a gift from grandma. Offer BOTH: AI-written description or write-your-own. ⚠️ Only earns SEO if those notes are published on public showcase pages — the collection is behind a login. Must be opt-in.
+3. **Evergreen guide pages** (one-time, no blogging — Andrew does not enjoy blogging): "Is grading worth it?" (calculator), "PSA vs BGS vs SGC vs CGC", "How to identify a rookie card", "How to spot a fake Pokémon card", "How to photograph cards for accurate scans", "Pokémon rarity symbols explained".
+4. **Homepage H1** — still "Scan a card, get the market." with no "worth"/"price checker" in it. Flagged as the biggest remaining on-page lever; Andrew hasn't wanted to touch Astra's headline. Ask, don't assume.
+5. Still open from before: Netlify Base directory fix, BGS/CGC "no data" handling in the Grades tab.
+
+---
+---
+
 # SESSION UPDATE — Sep 3, 2026 (paywall live, $8.99, recolor, repo move)
 
 **Big session. Everything below is the current state.**

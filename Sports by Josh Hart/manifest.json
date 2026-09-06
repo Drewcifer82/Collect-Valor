@@ -1,0 +1,17 @@
+{
+  "name": "Collect Valor",
+  "short_name": "Collect Valor",
+  "description": "Snap a photo of any Pokemon or sports card and see what it's worth right now — market value, recent sales, and graded prices.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "shopping", "entertainment"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

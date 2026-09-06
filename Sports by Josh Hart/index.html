@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#070710" />
+<meta name="theme-color" content="#0b0f19" />
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -25,7 +25,12 @@ src="https://www.facebook.com/tr?id=917040513943761&ev=PageView&noscript=1"/></n
 <link rel="canonical" href="https://collectvalor.com/" />
 <meta name="robots" content="index, follow" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="/favicon.svg" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.json" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Collect Valor" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Collect Valor" />
 <meta property="og:title" content="Pokémon & Sports Card Price Checker + Scanner | Collect Valor" />
@@ -1867,5 +1872,53 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   } catch (e) {}
 })();
 </script>
+<!-- PWA: service worker registration + install hints -->
+<div id="cv-install-ios" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;background:#141a2b;color:#e7ecf5;border:1px solid #26304a;border-radius:14px;padding:12px 14px;font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.4);align-items:center;gap:10px;display:none">
+  <span style="flex:1">Install Collect Valor: tap <b>Share</b>, then <b>Add to Home Screen</b>.</span>
+  <button id="cv-install-ios-x" aria-label="Dismiss" style="background:transparent;border:0;color:#9aa6bd;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px">&times;</button>
+</div>
+<button id="cv-install-android" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:99999;border:0;border-radius:14px;padding:14px;font:700 15px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0b0f19;background:linear-gradient(135deg,#22d3ee,#a855f7,#ec4899);cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,.4);display:none">Install Collect Valor</button>
+<script>
+(function(){
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('/sw.js').catch(function(){});
+    });
+  }
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (standalone) return;
+
+  var deferred = null;
+  var androidBtn = document.getElementById('cv-install-android');
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferred = e;
+    if (androidBtn) androidBtn.style.display = 'block';
+  });
+  if (androidBtn) androidBtn.addEventListener('click', function(){
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.finally(function(){ deferred = null; androidBtn.style.display = 'none'; });
+  });
+  window.addEventListener('appinstalled', function(){ if (androidBtn) androidBtn.style.display = 'none'; });
+
+  var ua = window.navigator.userAgent;
+  var isIOS = /iPhone|iPad|iPod/.test(ua) && !window.MSStream;
+  var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  var dismissed = false;
+  try { dismissed = localStorage.getItem('cv-ios-install-dismissed') === '1'; } catch(e){}
+  if (isIOS && isSafari && !dismissed) {
+    var bar = document.getElementById('cv-install-ios');
+    if (bar) {
+      bar.style.display = 'flex';
+      var x = document.getElementById('cv-install-ios-x');
+      if (x) x.addEventListener('click', function(){
+        bar.style.display = 'none';
+        try { localStorage.setItem('cv-ios-install-dismissed','1'); } catch(e){}
+      });
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
