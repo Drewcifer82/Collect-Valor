@@ -405,6 +405,7 @@ nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;tex
 nav a:hover{color:white}
 footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
 @media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}}
+.watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
 </style>
 <!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-CFsJ2ENI3kalPgEOBxGW9.js"></script>
@@ -530,6 +531,8 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     </div>
     <div class="result-bottom">
       <button class="save" id="save-star" type="button">☆ Save to collection</button>
+      <button class="save" id="watch-current" type="button" disabled>☆ Watch this card</button>
+      <span id="watch-current-message" class="save-msg" role="status" aria-live="polite"></span>
       <span class="updated" id="r-source">CARD HEDGE</span>
       <span class="save-msg" id="save-msg"></span>
     </div>
@@ -578,12 +581,25 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 <!-- ============ WATCHLIST ============ -->
 <section id="watch" class="page" hidden aria-label="Your watchlist">
   <div class="watch-summary">
-    <article class="watch-stat"><span class="label">ON YOUR RADAR</span><strong>—</strong><small>Cards you're following</small></article>
-    <article class="watch-stat"><span class="label">MOVING UP</span><strong class="watch-up">—</strong><small>Since you added them</small></article>
-    <article class="watch-stat"><span class="label">MOVING DOWN</span><strong class="watch-down">—</strong><small>Since you added them</small></article>
+    <article class="watch-stat"><span class="label">ON YOUR RADAR</span><strong id="watch-count">0</strong><small>Cards you're following</small></article>
+    <article class="watch-stat"><span class="label">MOVING UP</span><strong id="watch-up-count" class="watch-up">0</strong><small>Since you added them</small></article>
+    <article class="watch-stat"><span class="label">MOVING DOWN</span><strong id="watch-down-count" class="watch-down">0</strong><small>Since you added them</small></article>
   </div>
-  <div class="watch-empty"><h3>Watchlist isn’t live yet.</h3><p>Soon you’ll follow any scanned card without owning it and track how its value moves over 30 and 90 days — with price alerts to come.</p><button class="secondary" data-page="scan" type="button">Scan a card for now</button></div>
+  <button id="watch-refresh" type="button" class="secondary" style="margin-bottom:16px">Refresh prices</button>
+  <div class="watch-message"><span id="watch-message" role="status" aria-live="polite"></span><button id="watch-undo" hidden>Undo removal</button></div>
+  <div class="watch-layout">
+    <div class="watch-lineup">
+      <div class="watch-heading"><div><h2>The ones to keep an eye on.</h2><p>Latest available price, compared with when you added it.</p></div><label class="watch-sort">SORT BY<select id="watch-sort"><option value="recent">Recently added</option><option value="up">Biggest rise (%)</option><option value="down">Biggest drop (%)</option><option value="price">Price: high to low</option></select></label></div>
+      <div class="watch-filters" role="group" aria-label="Filter watched cards"><button data-watch-filter="all" aria-pressed="true">All cards</button><button data-watch-filter="up" aria-pressed="false">Rising</button><button data-watch-filter="down" aria-pressed="false">Falling</button><button data-watch-filter="flat" aria-pressed="false">Unchanged</button></div>
+      <p id="watch-showing" class="collection-status" role="status" aria-live="polite"></p>
+      <div id="watch-list" class="watch-list"></div>
+      <div id="watch-empty" class="watch-empty" hidden><h3 id="watch-empty-title">Nothing here yet.</h3><p id="watch-empty-text"></p><button id="watch-empty-action" class="secondary">Find a card</button></div>
+    </div>
+    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try LeBron, Pikachu, or baseball" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Prices from Card Hedge. Use Refresh prices to check for changes.</p></aside>
+  </div>
+  <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p>
 </section>
+<dialog id="watch-dialog" class="collection-dialog" aria-labelledby="watch-dialog-name"><header><span class="label">ON YOUR RADAR</span><button id="watch-dialog-close" class="secondary" aria-label="Close watchlist card">&times;</button></header><div id="watch-dialog-art" class="watch-detail-art"></div><h2 id="watch-dialog-name"></h2><p id="watch-dialog-meta" class="detail"></p><div class="watch-detail-prices"><div><span class="label">LATEST PRICE</span><strong id="watch-dialog-price"></strong></div><div><span class="label">WHEN ADDED</span><strong id="watch-dialog-start"></strong></div></div><p id="watch-dialog-change"></p><p id="watch-dialog-checked" class="footnote"></p></dialog>
 
 <!-- ============ PROFILE ============ -->
 <section id="profile" class="page" hidden aria-label="Your collector profile">
@@ -642,6 +658,242 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </div>
 </dialog>
 <script>
+/* Watchlist stays separate from collection ownership and existing pricing flows. */
+window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, showPaywall, artFrame }) {
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => {
+    const node = document.createElement(tag); node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const price = n => n === null ? 'No price yet' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+  const number = n => n == null || n === '' || !Number.isFinite(Number(n)) || Number(n) < 0 ? null : Number(n);
+  const signed = n => (n > 0 ? '+' : '') + price(n);
+  const percent = n => n === null ? '—' : (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+  const tone = n => n > 0 ? 'watch-up' : n < 0 ? 'watch-down' : 'watch-flat';
+  const identity = card => JSON.stringify([card.card_id, card.grade]);
+  const meta = card => [card.year, card.set, card.number && '#' + card.number, card.variation, card.grade].filter(Boolean).join(' · ');
+  const change = entry => {
+    const amount = entry.baseline === null || entry.value === null ? null : entry.value - entry.baseline;
+    return { amount, percent: amount === null || entry.baseline <= 0 ? null : amount / entry.baseline * 100 };
+  };
+  let entries = [], removed = null, filter = 'all', catalog = [], key = '', generation = 0, searchVersion = 0;
+  let refreshing = false, adding = new Set(), detailId = null;
+  const message = text => { $('watch-message').textContent = text; };
+  function storageKey() {
+    const session = getSession();
+    const owner = session && (session.email || session.username);
+    return 'cv_watchlist_v1:' + (owner ? String(owner).trim().toLowerCase() : 'guest');
+  }
+  function persist(next) {
+    try { localStorage.setItem(key, JSON.stringify(next)); entries = next; return true; }
+    catch { message('Could not save the watchlist in this browser. Check available storage and try again.'); return false; }
+  }
+  function load() {
+    generation++; searchVersion++; key = storageKey(); entries = []; removed = null; catalog = []; filter = 'all';
+    adding = new Set(); refreshing = false; $('watch-refresh').disabled = false;
+    $('watch-undo').hidden = true; $('watch-search').value = ''; $('watch-dialog').close(); message('');
+    $('watch-search-status').textContent = ''; $('watch-search-submit').disabled = false;
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!Array.isArray(saved)) throw new Error('Invalid watchlist');
+      const seen = new Set();
+      entries = saved.filter(e => e && typeof e.card_id === 'string' && e.card_id && typeof e.grade === 'string')
+        .map(e => ({ ...e, baseline: number(e.baseline), value: number(e.value) }))
+        .filter(e => { const id = identity(e); if (seen.has(id)) return false; seen.add(id); return true; });
+    } catch { message('Could not read the saved watchlist in this browser.'); }
+    render();
+  }
+  function currentCard() {
+    const current = getCurrent();
+    if (!current || !current.card || !current.card.card_id) return null;
+    if (current.is_slab && !current.card.grade) return null;
+    const c = current.card;
+    return { card_id: String(c.card_id), player: $('r-name').textContent || c.player || 'Card', set: c.set || '',
+      number: c.number || '', year: c.year || '', variation: c.variation || '', category: c.category || '',
+      grade: current.is_slab ? c.grade : 'Raw', is_slab: !!current.is_slab, image_url: '' };
+  }
+  function sync() {
+    const card = currentCard(), watching = card && entries.some(e => identity(e) === identity(card));
+    const label = watching ? '★ On your watchlist' : '☆ Watch this card';
+    if ($('watch-current').textContent !== label) $('watch-current').textContent = label;
+    $('watch-current').setAttribute('aria-pressed', String(!!watching));
+    const disabled = !card || !canWatch() || adding.has(card && identity(card));
+    if ($('watch-current').disabled !== disabled) $('watch-current').disabled = disabled;
+  }
+  function button(text, cls, action) {
+    const b = el('button', cls, text); b.type = 'button'; b.addEventListener('click', action); return b;
+  }
+  function row(entry) {
+    const article = el('article', 'watch-row'), top = el('div', 'watch-row-top'), thumb = el('div', 'watch-thumb');
+    thumb.append(artFrame(entry));
+    const title = el('div', ''); title.append(el('h3', '', entry.player), el('p', 'watch-meta', meta(entry)));
+    top.append(thumb, title);
+    const metrics = el('div', 'watch-metrics'), delta = change(entry);
+    [['LATEST PRICE', price(entry.value), ''], ['WHEN ADDED', price(entry.baseline), ''], ['CHANGE', percent(delta.percent), tone(delta.amount)]].forEach(([label, value, cls], i) => {
+      const cell = el('div', ''); cell.append(el('span', '', label), el('strong', cls, value));
+      if (i === 2 && delta.amount !== null) cell.append(el('small', cls, signed(delta.amount)));
+      metrics.append(cell);
+    });
+    const actions = el('div', 'watch-row-actions');
+    const open = button('View card details', 'watch-open', () => openDetail(entry)); open.dataset.watchId = identity(entry);
+    open.setAttribute('aria-label', 'View ' + entry.player + ', ' + meta(entry));
+    const remove = button('Remove', 'watch-remove', () => {
+      if (!persist(entries.filter(e => identity(e) !== identity(entry)))) return;
+      removed = entry; render(); $('watch-undo').hidden = false; message(entry.player + ' removed from your watchlist.'); $('watch-undo').focus();
+    });
+    remove.setAttribute('aria-label', 'Remove ' + entry.player + ', ' + meta(entry) + ' from watchlist');
+    actions.append(open, remove);
+    article.append(top, metrics, el('p', 'watch-meta', entry.checked ? 'Last checked ' + new Date(entry.checked).toLocaleString() : 'Price unavailable'), actions);
+    return article;
+  }
+  function renderCatalog() {
+    $('watch-catalog').replaceChildren(...catalog.map(card => {
+      const r = el('div', 'watch-catalog-row'), text = el('div', '');
+      text.append(el('h3', '', card.player), el('p', '', meta(card)));
+      const id = identity(card), watched = entries.some(e => identity(e) === id);
+      const b = button(watched ? 'Following' : adding.has(id) ? 'Adding…' : '+ Watch', 'watch-add', () => add(card));
+      b.disabled = watched || adding.has(id); b.setAttribute('aria-disabled', String(b.disabled));
+      b.setAttribute('aria-label', (watched ? 'Following ' : 'Watch ') + card.player + ', ' + meta(card));
+      r.append(text, b); return r;
+    }));
+  }
+  function render() {
+    $('watch-count').textContent = String(entries.length);
+    $('watch-up-count').textContent = String(entries.filter(e => change(e).amount > 0).length);
+    $('watch-down-count').textContent = String(entries.filter(e => change(e).amount < 0).length);
+    const shown = entries.filter(e => {
+      const d = change(e).amount;
+      return filter === 'all' || (filter === 'up' && d > 0) || (filter === 'down' && d < 0) || (filter === 'flat' && d === 0);
+    });
+    const order = $('watch-sort').value;
+    shown.sort((a, b) => {
+      if (order === 'recent') return b.added - a.added;
+      const av = order === 'price' ? a.value : change(a).percent, bv = order === 'price' ? b.value : change(b).percent;
+      if (av === null) return bv === null ? 0 : 1; if (bv === null) return -1;
+      return order === 'down' ? av - bv : bv - av;
+    });
+    $('watch-showing').textContent = 'Showing ' + shown.length + ' of ' + entries.length + ' watched cards';
+    $('watch-list').replaceChildren(...shown.map(row)); $('watch-empty').hidden = shown.length > 0;
+    $('watch-empty-title').textContent = entries.length ? 'No cards in this view.' : 'Your next find starts here.';
+    $('watch-empty-text').textContent = entries.length ? 'Try All cards to see everything you follow.' : 'Search for a card or tap Watch this card at the price desk.';
+    $('watch-empty-action').textContent = entries.length ? 'Show all cards' : 'Find a card';
+    document.querySelectorAll('[data-watch-filter]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.watchFilter === filter)));
+    renderCatalog(); sync();
+  }
+  async function fetchPrice(card) {
+    const { res, data } = await post('cardhedge', { card_id: card.card_id, grade: card.grade });
+    if (!res.ok || !data || !data.ok) throw new Error('Could not refresh prices. Try again.');
+    const grade = card.grade.toLowerCase().replace(/\s+/g, '');
+    const exact = (data.grade_prices || []).find(p => String(p.grade || '').toLowerCase().replace(/\s+/g, '') === grade || (grade === 'raw' && /ungraded/i.test(p.grade || '')));
+    return number(exact && exact.price) ?? number(data.fmv && data.fmv.price) ?? number(data.comps && data.comps.comp_price);
+  }
+  function requireAccess() {
+    const session = getSession();
+    if (session && session.token && session.entitled) return true;
+    showPaywall('intro'); return false;
+  }
+  async function add(card) {
+    const id = identity(card);
+    if (entries.some(e => identity(e) === id)) { message('This card is already on your watchlist.'); return; }
+    if (adding.has(id) || !requireAccess()) return;
+    const version = generation; adding.add(id); renderCatalog(); sync();
+    try {
+      const value = await fetchPrice(card);
+      if (version !== generation) return;
+      if (entries.some(e => identity(e) === id)) return;
+      const entry = { ...card, value, baseline: value, added: Date.now(), checked: value === null ? null : Date.now() };
+      if (!persist([...entries, entry])) return;
+      if (removed && identity(removed) === id) { removed = null; $('watch-undo').hidden = true; }
+      filter = 'all'; render();
+      const note = value === null ? ' Price unavailable; changes cannot be calculated without a starting price.' : ' Starting price: ' + price(value) + '.';
+      message(card.player + ' added.' + note);
+      $('watch-current-message').textContent = card.player + ' is on your watchlist.';
+    } catch { if (version === generation) message('Could not add this card. Please try again.'); }
+    finally { if (version === generation) { adding.delete(id); renderCatalog(); sync(); } }
+  }
+  async function refresh() {
+    if (refreshing || !entries.length || !requireAccess()) return;
+    const version = generation; refreshing = true; $('watch-refresh').disabled = true; message('Checking prices…');
+    let failures = 0;
+    // Sequential requests avoid a burst of paid pricing calls.
+    for (const entry of [...entries]) {
+      if (version !== generation) return;
+      try {
+        const value = await fetchPrice(entry);
+        if (version !== generation) return;
+        if (value === null) { failures++; continue; }
+        // Update only the original entry: removal/re-add must keep its new baseline.
+        const next = entries.map(e => identity(e) === identity(entry) && e.added === entry.added
+          ? { ...e, value, checked: Date.now() } : e);
+        if (!persist(next)) { refreshing = false; $('watch-refresh').disabled = false; return; }
+      } catch { failures++; }
+    }
+    if (version !== generation) return;
+    refreshing = false; $('watch-refresh').disabled = false; render();
+    message(failures ? 'Some prices could not be updated. Their last known prices are still shown.' : 'Prices updated.');
+    if ($('watch-dialog').open) {
+      const entry = entries.find(e => identity(e) === detailId); if (entry) openDetail(entry);
+    }
+  }
+  function openDetail(entry) {
+    detailId = identity(entry); const d = change(entry);
+    $('watch-dialog-name').textContent = entry.player; $('watch-dialog-meta').textContent = meta(entry);
+    $('watch-dialog-art').replaceChildren(artFrame(entry));
+    $('watch-dialog-price').textContent = price(entry.value); $('watch-dialog-start').textContent = price(entry.baseline);
+    $('watch-dialog-change').className = tone(d.amount);
+    $('watch-dialog-change').textContent = d.amount === null ? 'Waiting for price data.' : percent(d.percent) + ' (' + signed(d.amount) + ') since added';
+    $('watch-dialog-checked').textContent = entry.checked ? 'Last checked ' + new Date(entry.checked).toLocaleString() : 'No price available yet.';
+    if (!$('watch-dialog').open) $('watch-dialog').showModal();
+  }
+  $('watch-search-form').addEventListener('submit', async event => {
+    event.preventDefault(); const query = $('watch-search').value.trim();
+    if (!query || !requireAccess()) return;
+    const version = ++searchVersion; $('watch-search-submit').disabled = true;
+    catalog = []; renderCatalog(); $('watch-search-status').textContent = 'Searching…';
+    try {
+      const { res, data } = await post('cardhedge', { search: query, page_size: 20 });
+      if (version !== searchVersion) return;
+      if (!res.ok || !data || !data.ok) throw new Error();
+      const seen = new Set();
+      catalog = (data.results || []).filter(c => c.card_id && !seen.has(c.card_id) && seen.add(c.card_id)).map(c => ({
+        card_id: String(c.card_id), player: c.description || c.player || 'Card', set: c.set || '', number: c.number || '',
+        variation: c.variant || '', category: c.category || '', grade: 'Raw', is_slab: false,
+        image_url: /^https?:\/\//i.test(c.image || '') ? c.image : ''
+      }));
+      renderCatalog(); $('watch-search-status').textContent = catalog.length ? catalog.length + ' matches · choose your exact card' : 'No matches. Try a name, set, or card number.';
+    } catch { if (version === searchVersion) $('watch-search-status').textContent = 'Could not search right now. Please try again.'; }
+    finally { if (version === searchVersion) $('watch-search-submit').disabled = false; }
+  });
+  $('watch-search').addEventListener('input', () => { searchVersion++; catalog = []; renderCatalog(); $('watch-search-submit').disabled = false; $('watch-search-status').textContent = ''; });
+  $('watch-refresh').addEventListener('click', refresh);
+  $('watch-sort').addEventListener('change', render);
+  document.querySelectorAll('[data-watch-filter]').forEach(b => b.addEventListener('click', () => { filter = b.dataset.watchFilter; render(); }));
+  $('watch-empty-action').addEventListener('click', () => { if (entries.length) { filter = 'all'; render(); document.querySelector('[data-watch-filter="all"]').focus(); } else $('watch-search').focus(); });
+  $('watch-undo').addEventListener('click', () => {
+    if (!removed) return;
+    if (!entries.some(e => identity(e) === identity(removed)) && !persist([...entries, removed])) return;
+    removed = null; filter = 'all'; $('watch-undo').hidden = true; render(); message('Card restored with its original starting price.');
+    document.querySelector('[data-watch-filter="all"]').focus();
+  });
+  $('watch-dialog-close').addEventListener('click', () => $('watch-dialog').close());
+  $('watch-dialog').addEventListener('close', () => {
+    ([...$('watch-list').querySelectorAll('.watch-open')].find(b => b.dataset.watchId === detailId) || $('watch-search')).focus();
+  });
+  $('watch-current').addEventListener('click', async () => {
+    const card = currentCard(); if (!card || !canWatch()) return;
+    await add(card);
+    $('watch-current-message').textContent = $('watch-message').textContent;
+  });
+  new MutationObserver(sync).observe($('result'), { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'disabled'] });
+  // Cross-tab updates stay in the same account's browser-local watchlist.
+  window.addEventListener('storage', event => { if (event.key === key) load(); });
+  load();
+  return { open: render, sessionChanged() { if (key !== storageKey()) load(); } };
+};
+
+</script>
+<script>
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
@@ -666,6 +918,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 
   // ===== Session =====
   let session = null;
+  let watchlist = null;
   let collection = { cards: [], counts: { singles: 0, slabs: 0, total: 0 }, value: 0 };
   function guestSession() { return { email: null, token: null, plan: 'free', entitled: false }; }
   function entitled() { return !!(session && session.entitled); }
@@ -708,6 +961,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       setText('membership-note', 'Secure checkout by Stripe. Cancel anytime.');
     }
     setLocked(!isMember);
+    if (watchlist) watchlist.sessionChanged();
   }
 
   $('signout').addEventListener('click', () => {
@@ -739,7 +993,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   const COPY = {
     scan: ['Scan a card, get the market.', 'A free sports card and Pokémon card price checker: snap a photo, see the market value, price history, and graded prices in seconds.'],
     collection: ['Your cards. Your story.', 'Everything you’ve saved, priced by Card Hedge.'],
-    watch: ['The next one is out there.', 'Follow cards you don’t own yet — coming soon.'],
+    watch: ['The next one is out there.', 'Follow cards you don’t own yet and track changes in their price.'],
     profile: ['Make room for great finds.', 'Your account, your standout card, your membership.'],
   };
   let currentPage = 'scan';
@@ -755,6 +1009,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     setText('heading', COPY[page][0]);
     setText('subtitle', COPY[page][1]);
     if (page === 'collection' && collFilter === 'binders') renderCollection();
+    if (page === 'watch' && watchlist) watchlist.open();
     window.scrollTo(0, 0);
   }
   document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => navigate(b.dataset.page)));
@@ -1873,6 +2128,10 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       setTimeout(hidePaywall, 700);
     } catch (e) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Could not reach the server.'; }
   }
+
+  // ===== Watchlist: isolated browser saves, using the existing pricing endpoint =====
+  watchlist = window.createWatchlist({ getSession: () => session, getCurrent: () => current,
+    canWatch: () => !busyFlag && (!saveStar.disabled || saveStar.classList.contains('saved')), post, showPaywall, artFrame });
 
   // ===== Boot =====
   setMode('raw');
