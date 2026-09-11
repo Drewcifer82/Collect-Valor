@@ -1448,7 +1448,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     card = card || {};
     const name = [card.year, card.player].filter(Boolean).join(' ').trim();
     const conf = card.confidence ? ' · ' + String(card.confidence).toUpperCase() + ' CONFIDENCE' : '';
-    setText('r-tag', (card.identified === false ? 'BEST GUESS' : 'IDENTIFIED') + conf);
+    setText('r-tag', (card.identified === false ? 'CHECK CARD DETAILS' : 'READ FROM PHOTO') + conf);
     setText('r-name', name || card.player || 'Card details below');
     setText('r-detail', cardMeta(card));
     const chips = $('r-chips'); chips.replaceChildren();
@@ -1463,7 +1463,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     } else hl.classList.add('hidden');
     const notes = $('r-notes');
     if (card.notes) { notes.textContent = card.notes; notes.classList.remove('hidden'); } else notes.classList.add('hidden');
-    setText('r-estimate', card.estimate || '—');
+    setPriceLabel('PRICE NOT VERIFIED', 'unverified');
+    setText('r-estimate', 'No verified price');
     readout.textContent = 'Identified: ' + (name || card.player || 'card') + '.';
     result.classList.remove('hidden');
     setPane('overview');
@@ -1479,7 +1480,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
   function setPriceLabel(txt, source) {
     setText('r-plabel', txt);
-    setText('r-source', source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : source === 'tcgplayer' ? 'TCGPLAYER · TCG API' : 'CARD HEDGE');
+    setText('r-source', source === 'unverified' ? 'NO VERIFIED MARKET PRICE' : source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : source === 'tcgplayer' ? 'TCGPLAYER · TCG API' : 'CARD HEDGE');
   }
 
   // ---- Card Hedge pricing ----
@@ -1499,13 +1500,13 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       showMatchDebug(card, data);
       if (!res.ok || !data || !data.ok || !data.matched) {
         if (fromManual) setText('r-price', 'No match for that search — try adding the year, brand, or card number.');
-        else if (data && data.matched === false) showNeedsPick(card);
-        else showAiEstimate(card, 'Showing the AI estimate — the pricing provider could not be reached for a market price.');
+        else if (data && data.matched === false) await showNeedsPick(card);
+        else showUnverifiedPrice(card, 'The pricing provider could not be reached for a market price.');
         return false;
       }
     } catch (e) {
       if (fromManual) setText('r-price', 'Could not reach the server — try again.');
-      else showAiEstimate(card, 'Showing the AI estimate — could not reach the pricing service.');
+      else showUnverifiedPrice(card, 'Could not reach the pricing service.');
       return false;
     }
     applyPricing(data, card, fromManual);
@@ -1524,7 +1525,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('r-price', 'Matched, but no market price is available yet.');
       if (current) current.value = null;
     } else {
-      showAiEstimate(card, 'Matched, but no market price yet — AI estimate shown.');
+      showUnverifiedPrice(card, 'Matched, but no verified market price is available.');
     }
     if (data.card && current && current.card) {
       const m = data.card;
@@ -1550,24 +1551,23 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // No exact Card Hedge match: make the pick-list the hero, don't fake a value.
   async function showNeedsPick(card) {
-    setPriceLabel('NO EXACT MATCH — TAP YOUR CARD BELOW', 'ai');
-    setText('r-estimate', (card && card.estimate) || '—');
-    setText('r-price', 'Pick your exact card below for a real price. The number above is only a rough AI guess.');
+    showUnverifiedPrice(card, 'No exact match. Check the card name, number, and language before choosing a result.');
     await autoSearch(card);
     const fr = $('fix-results');
     if (fr.children.length) { try { fr.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
   }
   async function autoSearch(card) {
     const c = card || {};
-    const bits = [c.player, c.set, c.variation].map((s) => (s ? String(s).trim() : '')).filter(Boolean);
+    const bits = (/pok[eé]mon/i.test(c.category || '') ? [c.player] : [c.player, c.set, c.variation]).map((s) => (s ? String(s).trim() : '')).filter(Boolean);
     const q = bits.join(' ').trim() || [c.year, c.player].filter(Boolean).join(' ').trim();
     if (!q) return;
     $('fix-input').value = q;
     await manualSearch(true);
   }
-  function showAiEstimate(card, note) {
-    setPriceLabel('ROUGH ESTIMATE (AI)', 'ai');
-    setText('r-estimate', (card && card.estimate) || '—');
+  function showUnverifiedPrice(card, note) {
+    setPriceLabel('PRICE NOT VERIFIED', 'unverified');
+    setText('r-estimate', 'No verified price');
+    if (current) current.value = null;
     setText('r-price', note);
   }
 
@@ -1629,7 +1629,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const body = { search: q, page_size: 100 };
     if (category) body.category = category;
     const { res, data } = await post('cardhedge', body);
-    return res.ok ? data : null;
+    if (!res.ok) throw new Error('Pricing provider unavailable');
+    return data;
   }
   function buildCandidate(c) {
     const btn = document.createElement('button'); btn.className = 'candidate'; btn.type = 'button';

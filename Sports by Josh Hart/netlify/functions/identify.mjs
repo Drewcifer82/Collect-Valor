@@ -66,7 +66,7 @@ export default async (req) => {
     'no extra whitespace, exactly this shape: ' +
     '{"identified":boolean,"confidence":"high"|"medium"|"low","card_type":"sports"|"pokemon"|"other",' +
     '"category":string,"player":string,"team":string,"sport":string,"position":string,' +
-    '"year":string,"brand":string,"set":string,"number":string,"variation":string,' +
+    '"year":string,"brand":string,"set":string,"number":string,"variation":string,"language":string,' +
     '"rookie":boolean,"estimate":string}. ' +
     'Use empty strings for unknowns. "category" MUST be set — it drives the price lookup: for a ' +
     'sports card the specific sport capitalized ("Baseball","Basketball","Football","Hockey","Soccer"), ' +
@@ -78,7 +78,14 @@ export default async (req) => {
     '"set"=set/expansion (e.g. "151","Base Set"), "number"=collector number exactly as printed ' +
     '(e.g. "199/165","4/102"), "variation"=rarity/parallel (holo, reverse holo, full art, illustration ' +
     'rare, 1st edition, promo, etc.); leave "team","sport","position" empty and "rookie" false. ' +
-    '"estimate"=short ballpark raw value range, e.g. "$5-15" (never a guarantee). ' +
+    'Read the collector number digit by digit from the bottom edge and then recheck it against the photo. ' +
+    'Do not substitute a familiar card number, set, year, or English card title based on the artwork. ' +
+    'If any number digit is obscured, blurred, or uncertain, leave number empty and lower confidence. ' +
+    '"language"=the language printed on the card, such as English, Japanese, Simplified Chinese, or Traditional Chinese. ' +
+    'For non-English cards preserve the printed card title in player if you cannot verify the official English title. ' +
+    'Do not assume a translated title, English expansion, or English release year describes the same printing. ' +
+    'High confidence requires the name and full collector number to be clearly readable. ' +
+    '"estimate" must be empty: transcribe the card only, never invent a value or price range. ' +
     'If you cannot identify the exact card, still fill what you can and set identified=false. ' +
     'Never return an all-empty object.';
 

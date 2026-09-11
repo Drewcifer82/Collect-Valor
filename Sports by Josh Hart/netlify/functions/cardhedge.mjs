@@ -178,6 +178,12 @@ async function rawPath(body) {
   if (!tcgKey) return json({ error: 'Server not configured (no TCGAPI_KEY)' }, 500);
 
   const card = (body && body.card) || {};
+  // This search uses the English Pokemon catalog. Never assign its prices to
+  // another language's printing or automatically trust an uncertain scan.
+  if ((card.language && !/^english$/i.test(String(card.language).trim())) ||
+      card.identified === false || card.confidence === 'low') {
+    return json({ ok: true, matched: false, reason: 'Confirm the exact card and language before pricing.' });
+  }
   // Vision sets player = "Charizard ex" etc. for Pokemon; that's the best search term.
   const name = String(body.query || card.player || card.set || '').trim();
   const number = String(card.number || body.number || '').replace(/^#/, '').trim();

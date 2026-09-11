@@ -78,4 +78,13 @@ test('Pokemon pricing integration', async t => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };
     assert.equal((await request({ token: 'bad', ...scan })).status, 401);
   });
+  await t.test('Chinese printings and uncertain scans do not receive English catalog prices', async () => {
+    globalThis.fetch = async () => { throw new Error('must not fetch'); };
+    for (const fields of [{ language: 'Simplified Chinese' }, { confidence: 'low' }, { identified: false }]) {
+      const result = await request({ card: { ...scan.card, ...fields } });
+      assert.equal(result.status, 200);
+      assert.equal(result.data.matched, false);
+      assert.equal(result.data.fmv, undefined);
+    }
+  });
 });
