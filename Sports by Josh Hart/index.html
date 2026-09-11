@@ -595,7 +595,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <div id="watch-list" class="watch-list"></div>
       <div id="watch-empty" class="watch-empty" hidden><h3 id="watch-empty-title">Nothing here yet.</h3><p id="watch-empty-text"></p><button id="watch-empty-action" class="secondary">Find a card</button></div>
     </div>
-    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try LeBron, Pikachu, or baseball" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Prices from Card Hedge. Use Refresh prices to check for changes.</p></aside>
+    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try LeBron, Pikachu, or baseball" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Prices from Card Hedge and TCG API. Use Refresh prices to check for changes.</p></aside>
   </div>
   <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p>
 </section>
@@ -1479,14 +1479,14 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
   function setPriceLabel(txt, source) {
     setText('r-plabel', txt);
-    setText('r-source', source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : 'CARD HEDGE');
+    setText('r-source', source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : source === 'tcgplayer' ? 'TCGPLAYER · TCG API' : 'CARD HEDGE');
   }
 
   // ---- Card Hedge pricing ----
   async function fetchPrice(card) {
     resetResultData();
     setPriceLabel('MARKET VALUE');
-    setText('r-price', 'Checking Card Hedge…');
+    setText('r-price', 'Checking market prices…');
     saveStar.disabled = true;
     try { await fetchPriceInner({ card }, card); }
     finally { if (!saveStar.classList.contains('saved')) saveStar.disabled = false; }
@@ -1500,7 +1500,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       if (!res.ok || !data || !data.ok || !data.matched) {
         if (fromManual) setText('r-price', 'No match for that search — try adding the year, brand, or card number.');
         else if (data && data.matched === false) showNeedsPick(card);
-        else showAiEstimate(card, 'Showing the AI estimate — Card Hedge could not be reached for a market price.');
+        else showAiEstimate(card, 'Showing the AI estimate — the pricing provider could not be reached for a market price.');
         return false;
       }
     } catch (e) {
@@ -1515,13 +1515,13 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function applyPricing(data, card, fromManual) {
     const picked = pickValue(data);
     if (picked != null) {
-      setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE');
+      setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE', data.source);
       setText('r-estimate', '$' + money(picked.value));
       setText('r-price', priceNote(data, picked));
       if (current) current.value = picked.value;
     } else if (fromManual) {
       setPriceLabel('MARKET VALUE'); setText('r-estimate', '—');
-      setText('r-price', 'Matched, but Card Hedge has no price for it yet.');
+      setText('r-price', 'Matched, but no market price is available yet.');
       if (current) current.value = null;
     } else {
       showAiEstimate(card, 'Matched, but no market price yet — AI estimate shown.');
@@ -1587,7 +1587,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     fixBtn.disabled = true; fixBtn.textContent = '…';
     resultsEl.replaceChildren();
     const status = (t) => { if (!result.classList.contains('hidden')) setText('r-price', t); readout.textContent = t; };
-    status('Searching Card Hedge…');
+    status('Searching cards…');
     try {
       const cc = current.card || {};
       const cat = cc.category ? String(cc.category) : '';
@@ -1686,12 +1686,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       if (res.ok && data && data.ok) {
         const picked = pickValue(data);
         if (picked != null) {
-          setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE');
+          setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE', data.source);
           setText('r-estimate', '$' + money(picked.value));
           setText('r-price', priceNote(data, picked));
           current.value = picked.value;
         } else {
-          setText('r-price', 'Card matched, but Card Hedge has no raw price for it yet.');
+          setText('r-price', 'Card matched, but no raw price is available yet.');
           current.value = null;
         }
         fillOverview(data, picked); fillSales(data); fillInsights(data);
@@ -1755,7 +1755,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     return null;
   }
   function priceNote(data, picked) {
-    const bits = ['Card Hedge'];
+    const bits = [data.source === 'tcgplayer' ? 'TCGplayer · TCG API' : 'Card Hedge'];
     if (picked && picked.low != null && picked.high != null && picked.high > picked.low) bits.push('fair range $' + money(picked.low) + '–$' + money(picked.high));
     if (picked && picked.source === 'comp') bits.push('last sale — no market value yet');
     if (data.fmv && data.fmv.grade_label) bits.push(data.fmv.grade_label);

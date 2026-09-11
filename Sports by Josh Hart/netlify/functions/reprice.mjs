@@ -29,7 +29,7 @@ export default async () => {
     return resp({ error: 'Could not read collection', detail: String(err && err.message || err) }, 502);
   }
 
-  const priceable = (Array.isArray(rows) ? rows : []).filter((r) => r.card_id);
+  const priceable = (Array.isArray(rows) ? rows : []).filter((r) => r.card_id && !String(r.card_id).startsWith('tcg:'));
   if (!priceable.length) return resp({ ok: true, updated: 0, note: 'nothing to re-price' });
 
   // 2) Batch-price them, 100 at a time (the endpoint's max).

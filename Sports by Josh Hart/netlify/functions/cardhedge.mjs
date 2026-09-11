@@ -40,12 +40,28 @@ export default async (req) => {
       return await moversPath(body, apiKey);       // weekly top gainers
     }
     if (body.history_for) {
+      if (String(body.history_for).startsWith('tcg:')) return json({ ok: true, history: [] });
       return await historyPath(body, apiKey);      // card_id -> sale history
     }
     if (body.search) {
+      const category = String(body.category || '').toLowerCase();
+      if (/pok[eé]mon/.test(category)) return await pokemonSearchPath(body);
+      if (!category && process.env.TCGAPI_KEY) {
+        const responses = await Promise.allSettled([pokemonSearchPath(body), searchPath(body, apiKey)]);
+        const results = [];
+        let succeeded = false;
+        for (const response of responses) {
+          if (response.status !== 'fulfilled' || !response.value.ok) continue;
+          const data = await response.value.json();
+          if (data.ok) { succeeded = true; results.push(...data.results); }
+        }
+        if (!succeeded) throw new Error('Card search providers are unavailable');
+        return json({ ok: true, results, count: results.length });
+      }
       return await searchPath(body, apiKey);       // text -> list of candidate cards
     }
     if (body.card_id) {
+      if (String(body.card_id).startsWith('tcg:')) return await pokemonPricePath(body);
       return await priceByIdPath(body, apiKey);    // picked candidate -> prices
     }
     if (image) {
@@ -53,7 +69,7 @@ export default async (req) => {
     }
     return await rawPath(body);            // scan transcription -> AI match
   } catch (err) {
-    return json({ error: 'Card Hedge request failed', detail: String(err && err.message || err) }, 502);
+    return json({ error: 'Pricing service request failed', detail: String(err && err.message || err) }, 502);
   }
 };
 
@@ -176,12 +192,16 @@ async function rawPath(body) {
   }
   if (!results.length) return json({ ok: true, matched: false, query: name });
 
-  // Pick the printing: exact collector number > set-name match > highest price (list
-  // is already sorted price_desc).
-  let pick = null;
-  if (number) pick = results.find((r) => sameNumber(r.number, number));
-  if (!pick && setName) pick = results.find((r) => (r.set || '').toLowerCase().includes(setName.toLowerCase()));
-  if (!pick) pick = results[0];
+  // Never substitute the most expensive printing for the scanned card.
+  let candidates = results;
+  if (number) candidates = candidates.filter((r) => sameNumber(r.number, number));
+  if (setName) {
+    const inSet = candidates.filter((r) => r.set.toLowerCase().includes(setName.toLowerCase()));
+    if (inSet.length) candidates = inSet;
+    else if (!number) candidates = [];
+  }
+  if (candidates.length !== 1) return json({ ok: true, matched: false, query: name });
+  const pick = candidates[0];
 
   const price = pick.market_price;
   return json({
@@ -190,7 +210,7 @@ async function rawPath(body) {
     source: 'tcgplayer',
     query: name,
     card: {
-      card_id: pick.id || '',
+      card_id: tcgId(pick),
       description: pick.name || '',
       player: pick.name || card.player || '',
       set: pick.set || setName,
@@ -206,15 +226,55 @@ async function rawPath(body) {
       : null,
     comps: null,
     insights: null,
-    _debug_sample: results[0], // raw-ish first result, so we can confirm fields on the first live scan
   });
+}
+
+function tcgId(card) {
+  return 'tcg:' + encodeURIComponent(String(card.id)) + ':' + encodeURIComponent(card.variant || '');
+}
+
+async function pokemonSearchPath(body) {
+  const key = process.env.TCGAPI_KEY;
+  if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
+  const cards = await tcgSearch(String(body.search).trim(), key);
+  const results = cards.filter(c => c.id).map(c => ({
+    card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
+    number: c.number, variant: c.variant, category: 'pokemon', image: c.image,
+    prices: c.market_price === null ? [] : [{ grade: 'Raw', price: c.market_price }],
+  }));
+  return json({ ok: true, results, count: results.length });
+}
+
+async function pokemonPricePath(body) {
+  const key = process.env.TCGAPI_KEY;
+  if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
+  const [, encodedId, encodedPrinting = ''] = String(body.card_id).split(':');
+  const id = decodeURIComponent(encodedId || '');
+  const printing = decodeURIComponent(encodedPrinting);
+  if (!/^\d+$/.test(id)) return json({ error: 'Invalid Pokemon card ID' }, 400);
+  if (body.grade && !/^(raw|ungraded)$/i.test(body.grade)) {
+    return json({ ok: true, matched: true, source: 'tcgplayer', fmv: null, grade_prices: [], comps: null, insights: null });
+  }
+  const query = printing ? '?' + new URLSearchParams({ printing }) : '';
+  const response = await fetch('https://api.tcgapi.dev/v1/cards/' + id + '/prices' + query, {
+    headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error('Pokemon pricing provider returned ' + response.status);
+  const bodyData = await response.json();
+  const rows = Array.isArray(bodyData.data) ? bodyData.data : bodyData.data ? [bodyData.data] : [];
+  const row = printing ? rows.find(r => String(r.printing || '').toLowerCase() === printing.toLowerCase())
+    : rows.length === 1 ? rows[0] : null;
+  const price = row ? normalizeCard(row).market_price : null;
+  return json({ ok: true, matched: true, source: 'tcgplayer',
+    fmv: price === null ? null : { price, low: firstNum([row.low_price]), as_of_date: row.last_updated_at || '' },
+    grade_prices: [], comps: null, insights: null });
 }
 
 // Search tcgapi.dev, normalize each hit to the handful of fields we use.
 async function tcgSearch(q, key) {
   const url = 'https://api.tcgapi.dev/v1/search?' +
-    new URLSearchParams({ q, game: 'pokemon', sort: 'price_desc' }).toString();
-  const resp = await fetch(url, { headers: { 'X-API-Key': key } });
+    new URLSearchParams({ q, game: 'pokemon', type: 'Cards', sort: 'relevance', per_page: '100' }).toString();
+  const resp = await fetch(url, { headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000) });
   if (!resp.ok) {
     const detail = await resp.text().catch(() => '');
     throw new Error(`search ${resp.status}${detail ? ': ' + detail.slice(0, 200) : ''}`);
@@ -227,12 +287,12 @@ async function tcgSearch(q, key) {
   return list.map(normalizeCard).filter(Boolean);
 }
 
-// Field names aren't verified against a live call yet, so pull the market price from
-// every plausible path. _debug_sample above lets us lock this down after one scan.
+// Accept both the documented numeric price and market_price response formats.
 function normalizeCard(c) {
   if (!c || typeof c !== 'object') return null;
   const p = c.price || c.prices || c.pricing || {};
   const market = firstNum([
+    c.market_price, c.price,
     p.market_price, p.market, p.marketPrice,
     p.tcgplayer && (p.tcgplayer.market || p.tcgplayer.market_price),
     c.market_price, c.market,
@@ -250,9 +310,9 @@ function normalizeCard(c) {
 
 function firstNum(cands) {
   for (const v of cands) {
-    if (v == null || v === '') continue;
+    if ((typeof v !== 'number' && typeof v !== 'string') || String(v).trim() === '') continue;
     const n = Number(v);
-    if (Number.isFinite(n)) return n;
+    if (Number.isFinite(n) && n >= 0) return n;
   }
   return null;
 }
