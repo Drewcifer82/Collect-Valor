@@ -25,8 +25,8 @@ export default async (req) => {
   }
 
   const secret = process.env.SESSION_SECRET;
-  const apiKey = process.env.CARDHEDGE_API_KEY;
-  if (!secret || !apiKey) return json({ error: 'Server not configured' }, 500);
+  const apiKey = process.env.CARDHEDGE_API_KEY; // legacy paths (slab/movers/history) only
+  if (!secret) return json({ error: 'Server not configured' }, 500);
 
   // Gate on the session token BEFORE spending any paid API call.
   if (!verify(body.token, secret)) {
@@ -51,7 +51,7 @@ export default async (req) => {
     if (image) {
       return await slabPath(image, apiKey);        // slab photo -> label OCR
     }
-    return await rawPath(body, apiKey);            // scan transcription -> AI match
+    return await rawPath(body);            // scan transcription -> AI match
   } catch (err) {
     return json({ error: 'Card Hedge request failed', detail: String(err && err.message || err) }, 502);
   }
@@ -153,61 +153,113 @@ async function priceByIdPath(body, apiKey) {
   });
 }
 
-// ---- RAW card: text description -> card-match -> FMV + comps ----
-async function rawPath(body, apiKey) {
-  const query = String(body.query || buildQuery(body.card) || '').trim();
-  if (!query) return json({ error: 'No card description to match' }, 400);
+// ---- RAW card price via tcgapi.dev (TCGplayer market price). POKEMON ONLY. ----
+// Replaces the old Card Hedge match+FMV path. Returns the same shape the frontend
+// reads: data.matched + data.fmv.price. Other tabs (grades/history/sales/movers)
+// intentionally come back empty for now.
+async function rawPath(body) {
+  const tcgKey = process.env.TCGAPI_KEY;
+  if (!tcgKey) return json({ error: 'Server not configured (no TCGAPI_KEY)' }, 500);
 
-  const category = String(body.category || (body.card && (body.card.category || body.card.sport)) || '').trim();
-  const grade = String(body.grade || 'Raw').trim();
+  const card = (body && body.card) || {};
+  // Vision sets player = "Charizard ex" etc. for Pokemon; that's the best search term.
+  const name = String(body.query || card.player || card.set || '').trim();
+  const number = String(card.number || body.number || '').replace(/^#/, '').trim();
+  const setName = String(card.set || '').trim();
+  if (!name) return json({ ok: true, matched: false });
 
-  const matchReq = { query };
-  if (category) matchReq.category = category;
-  if (body.max_candidates) matchReq.max_candidates = body.max_candidates;
-
-  const matchData = await ch('/card-match', matchReq, apiKey);
-  const match = matchData && matchData.match;
-
-  if (!match || !match.card_id) {
-    return json({
-      ok: true,
-      matched: false,
-      query,
-      candidates_evaluated: matchData ? matchData.candidates_evaluated : 0,
-    });
+  let results;
+  try {
+    results = await tcgSearch(name, tcgKey);
+  } catch (err) {
+    return json({ error: 'tcgapi request failed', detail: String(err && err.message || err) }, 502);
   }
+  if (!results.length) return json({ ok: true, matched: false, query: name });
 
-  // Best-effort enrichment: never let a pricing hiccup sink the match result.
-  // 90 days of dated sales powers the 30/90-day averages + the buy/sell pressure.
-  const [fmv, comps, hist] = await Promise.all([
-    ch('/card-fmv', { card_id: match.card_id, grade }, apiKey).catch(() => null),
-    ch('/comps', { card_id: match.card_id, grade, count: 10, include_raw_prices: true }, apiKey).catch(() => null),
-    ch('/prices-by-card', { card_id: match.card_id, grade, days: 90 }, apiKey).catch(() => null),
-  ]);
-  const shapedFmv = shapeFmv(fmv);
-  const history90 = hist && Array.isArray(hist.prices) ? hist.prices : [];
+  // Pick the printing: exact collector number > set-name match > highest price (list
+  // is already sorted price_desc).
+  let pick = null;
+  if (number) pick = results.find((r) => sameNumber(r.number, number));
+  if (!pick && setName) pick = results.find((r) => (r.set || '').toLowerCase().includes(setName.toLowerCase()));
+  if (!pick) pick = results[0];
 
+  const price = pick.market_price;
   return json({
     ok: true,
     matched: true,
-    source: 'cardhedge',
-    query,
+    source: 'tcgplayer',
+    query: name,
     card: {
-      card_id: match.card_id,
-      description: match.description || '',
-      player: match.player || '',
-      set: match.set || '',
-      number: match.number || '',
-      variant: match.variant || '',
-      category: match.category || '',
-      image: match.image || '',
-      confidence: typeof match.confidence === 'number' ? match.confidence : null,
+      card_id: pick.id || '',
+      description: pick.name || '',
+      player: pick.name || card.player || '',
+      set: pick.set || setName,
+      number: pick.number || number,
+      variant: pick.variant || '',
+      category: 'pokemon',
+      image: pick.image || '',
+      confidence: null,
     },
-    grade_prices: Array.isArray(match.prices) ? match.prices : [],
-    fmv: shapedFmv,
-    comps: shapeComps(comps),
-    insights: computeInsights(history90, shapedFmv),
+    grade_prices: [],
+    fmv: price != null
+      ? { price, low: null, high: null, grade_label: '', confidence_grade: '', as_of_date: '', explanation: '', index_pct_change: null }
+      : null,
+    comps: null,
+    insights: null,
+    _debug_sample: results[0], // raw-ish first result, so we can confirm fields on the first live scan
   });
+}
+
+// Search tcgapi.dev, normalize each hit to the handful of fields we use.
+async function tcgSearch(q, key) {
+  const url = 'https://api.tcgapi.dev/v1/search?' +
+    new URLSearchParams({ q, game: 'pokemon', sort: 'price_desc' }).toString();
+  const resp = await fetch(url, { headers: { 'X-API-Key': key } });
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '');
+    throw new Error(`search ${resp.status}${detail ? ': ' + detail.slice(0, 200) : ''}`);
+  }
+  const b = await resp.json();
+  const list = Array.isArray(b && b.data) ? b.data
+    : Array.isArray(b && b.cards) ? b.cards
+    : Array.isArray(b && b.results) ? b.results
+    : Array.isArray(b) ? b : [];
+  return list.map(normalizeCard).filter(Boolean);
+}
+
+// Field names aren't verified against a live call yet, so pull the market price from
+// every plausible path. _debug_sample above lets us lock this down after one scan.
+function normalizeCard(c) {
+  if (!c || typeof c !== 'object') return null;
+  const p = c.price || c.prices || c.pricing || {};
+  const market = firstNum([
+    p.market_price, p.market, p.marketPrice,
+    p.tcgplayer && (p.tcgplayer.market || p.tcgplayer.market_price),
+    c.market_price, c.market,
+  ]);
+  return {
+    id: c.id || c.card_id || c.uuid || '',
+    name: c.name || c.card_name || '',
+    set: (c.set && (c.set.name || c.set)) || c.set_name || c.expansion || '',
+    number: c.number || c.collector_number || c.card_number || '',
+    variant: c.variant || c.printing || c.finish || '',
+    image: c.image || c.image_url || (c.images && (c.images.small || c.images.large)) || '',
+    market_price: market,
+  };
+}
+
+function firstNum(cands) {
+  for (const v of cands) {
+    if (v == null || v === '') continue;
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function sameNumber(a, b) {
+  const norm = (s) => String(s || '').replace(/^#/, '').split('/')[0].trim().toLowerCase();
+  return norm(a) === norm(b) && norm(a) !== '';
 }
 
 function shapeFmv(fmv) {

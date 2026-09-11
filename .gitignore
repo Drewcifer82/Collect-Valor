@@ -13,3 +13,8 @@ node_modules/
 .env
 .env.*
 .netlify/
+
+# API key - never commit
+TCGapi.dev.txt
+*.bak-*
+Collect Valor 2/

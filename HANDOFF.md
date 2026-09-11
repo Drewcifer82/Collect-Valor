@@ -1,21 +1,36 @@
-# ⚡ CURRENT STATE — Sep 6, 2026 — READ THIS FIRST
+# ⚡ CURRENT STATE — Sep 7, 2026 — READ THIS FIRST
 
-Everything below this block is older history (still useful for background). This block is the truth as of Sep 6, 2026.
+Everything below this block is older history (still useful for background). This block is the truth as of Sep 7, 2026.
 
 ## Where the files live (important)
-- **Working folder (the one Claude connects to): `C:\Users\Parad\OneDrive\Desktop\Sports by Josh Hart`.** This is NOT a git repo.
+- **Working folder (the one Claude connects to): `C:\Users\Parad\Downloads\Sports-by-Josh-Hart`.** ⚠️ CHANGED Sep 7: the old OneDrive\Desktop folder was REMOVED because OneDrive sync wiped the git history and spawned a duplicate 'collect valor' folder — a real mess. Do NOT use any OneDrive path for this project. **Only ONE folder connected per session** (multiple connected folders caused saves to the wrong folder repeatedly).
 - **Git repo clone: `C:\Users\Parad\OneDrive\Documents\GitHub\Collect-Valor`** (note: under OneDrive\Documents, not plain Documents). Andrew has chosen NOT to connect this folder to Claude — do not ask again. He hand-copies changed files from the working folder into the repo, then commits/pushes with **GitHub Desktop**.
 - Inside the repo the app files may sit in a `Sports by Josh Hart` SUBFOLDER (Netlify Base directory). Confirm where the live files actually are before telling Andrew where to paste.
 - ⚠️ Files in the working folder reverted to older versions once (Sep 6) — suspected OneDrive sync. **After writing files, always verify with sha256sum + a content grep before telling Andrew they're ready.**
 
-## Live site status (verified Sep 6)
-- ✅ LIVE and correct: `/faq`, `/privacy` (clean URLs work → netlify.toml deployed), `sitemap.xml` (3 URLs).
-- ❌ **STALE on the live site — still needs a push:**
-  - `index.html` — never pushed since the SEO work. Live one has the OLD title and **no FAQ link in the nav** (so /faq is orphaned).
-  - `faq.html` — live version is v1 (34 Q, no contact question).
-  - `privacy.html` — live version still shows the old gmail address.
-- The working folder DOES have the correct newest versions of all three (hash-verified Sep 6). They just need copying to the repo + push.
-- Verified hashes of the good versions (first 16 of sha256): index.html `3f5e3c5ec853f1a3` (132006 b) · faq.html `529cbe519f33e3d0` (39427 b) · privacy.html `dffe17fc6d57db3d` (16670 b) · sitemap.xml `e86241993a1ed00b` · netlify.toml `5d01e3b6a6d682ff`
+## Live site status (verified Sep 7 — ALL PUSHED, NOTHING STALE)
+- ✅ Everything is LIVE and correct. Nothing is pending a push. (Confirmed against collectvalor.com Sep 7: new title, FAQ link in nav, PWA meta tags all present.)
+- `index.html` (new SEO title + FAQ nav link), `faq.html` (35 Q + contact), `privacy.html` (info@collectvalor.com), `sitemap.xml`, `netlify.toml`, and the full PWA (manifest/sw/icons) are ALL deployed.
+- ⚠️ DO NOT re-add a "stale files" note. This was wrong three times running — the working folder and live site match. If in doubt, fetch collectvalor.com and check before claiming anything is stale.
+
+## 🚨 NEXT BIG BUILD (decided Sep 7) — PRICING PIVOT: Card Hedge → TCGplayer
+**Decision:** Replace Card Hedge as the price source with TCGplayer market prices. Card Hedge is coming out.
+
+**Why:** Over ~1 week of real scanning, ~95% of the time Collect Valor's price came in LOWER than TCGplayer — often way lower. TCG is the gold standard every pack-ripping app uses, so being 40%+ under makes us look broken and sends people to TCG. Proof case (Minior PAR #201/182, Illustration Rare, raw): our app (Card Hedge) = **$15.84**; TCGplayer market = **$27.25**; Rippz app priced it **$27.00** (confirms Rippz prices off TCG). ~42% gap on the exact same card.
+
+**SCOPE LOCKED (Sep 8): Pokémon + Magic: The Gathering only.** Andrew is happy with just these two. No sports, no other games, no paid aggregator. Both sources are FREE, no API key, and TCGplayer-derived — both verified live.
+
+**Sources (both FREE, no key):**
+- **Pokémon → `pokemontcg.io`.** Field: `tcgplayer.prices.<variant>.market` (e.g. `holofoil`). Verified: `GET api.pokemontcg.io/v2/cards/sv4-201` → holofoil.market = **27.25**, updatedAt 2026/09/06 (fresh, exact TCG match). ⚠️ IGNORE `high` (junk outlier, showed $4,321) — use `market`. SKIP `cardmarket` block (stale, Nov 2025).
+- **Magic → `api.scryfall.com`.** Field: `prices.usd` (and `prices.usd_foil`), TCGplayer-derived. Verified Sep 8: Sol Ring (CMM) usd = 2.25; Ragavan (MH2) usd = 40.70, both with tcgplayer purchase links. Lookups: `/cards/named?exact=<name>&set=<code>` or `/cards/<id>`.
+
+**⚠️ The official TCGplayer API is CLOSED to new developers** (confirmed Sep 2026: "no longer granting new API access"). We never touch it — the two free APIs above already carry TCGplayer prices.
+
+**Considered & rejected:** multi-game aggregators (tcgapi.dev = 54 games claiming TCG alignment but unverified; JustTCG = 18 games but BLENDS store + marketplace data so it won't match TCG exactly, plus $19–49/mo above the free tier). Not needed for a Pokémon + MTG build.
+
+**Timeline:** Card Hedge subscription expires ~**Sep 19** — cancel once new pricing is live. Target built before **Wed Sep 10**. Planning/build session Tuesday.
+
+**Next step (Tuesday):** wire the app's identify → price flow to route Pokémon lookups to pokemontcg.io and Magic lookups to Scryfall, replacing the Card Hedge call. Do NOT start coding yet — Andrew will say go.
 
 ## What shipped in the last two sessions
 **Sep 5 — new UI merged.** ChatGPT/"Astra" redesign (`design-preview.html`) merged over the real app logic into one `index.html`. Design = dark navy, cyan/purple/pink/gold gradient, top nav (Price desk / Collection / Watchlist / Profile), result card with Overview/History/Sales/Grades tabs, blurred member-insights teaser + "$8.99/month" unlock. All backend untouched. 77 headless-browser checks pass against a mock of every Netlify function.
@@ -35,9 +50,9 @@ Note: do NOT submit anchor URLs (/faq#scanning) to GSC — Google strips fragmen
 
 ---
 
-# ✅ PWA — BUILT Sep 6, 2026 (pending push to live)
+# ✅ PWA — BUILT & LIVE (pushed; verified on collectvalor.com Sep 7)
 
-**Status:** Built in the working folder and verified in a headless browser — service worker registers + activates (scope = root), manifest parses (name "Collect Valor", 3 icons incl. maskable, display standalone, theme #0b0f19), offline page renders, all icons load. NOT yet pushed to the repo / live.
+**Status:** LIVE on collectvalor.com (PWA meta tags confirmed Sep 7). Built + verified in a headless browser — service worker registers + activates (scope = root), manifest parses (name "Collect Valor", 3 icons incl. maskable, display standalone, theme #0b0f19), offline page renders, all icons load.
 
 **Files to copy into the repo + push (GitHub Desktop):**
 - New: manifest.json, sw.js, offline.html, icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png
