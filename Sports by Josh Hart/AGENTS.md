@@ -7,7 +7,3 @@ This is the #1 thing. Andrew is ADHD and adderall-medicated. A long message that
 - Do NOT write reports, recaps, or explain things he didn't ask to have explained.
 - When he asks "do you know about X?" that usually MEANS he already knows X — answer yes/no short, don't dump everything about X.
 - If I don't keep it short I'm wasting his time. He will ask a question if he doesn't understand something. Trust that.
-
-## Repository layout
-This repository is connected to https://github.com/Drewcifer82/Collect-Valor.git. The active website files are in the 'Sports by Josh Hart' subfolder, matching GitHub's existing layout. Edit the website there. 'Collect Valor 2' is an unused, ignored local repository; do not use it. Commit and push only when Andrew authorizes it.
-
