@@ -110,7 +110,9 @@ export default async (req) => {
     if (!resp.ok) {
       const failure = await resp.json().catch(() => ({}));
       const code = failure.error?.code;
-      const error = code === 'insufficient_quota' ? 'Scanner API credits are unavailable. Check OpenAI billing.'
+      const error = ['insufficient_quota', 'credit_balance_exhausted'].includes(code) ? 'Scanner API credits are unavailable. Check OpenAI billing.'
+        : ['organization_spend_limit_exceeded', 'project_spend_limit_exceeded', 'organization_usage_limit_exceeded'].includes(code) ? 'Scanner API usage limit reached. Check OpenAI project and organization limits.'
+        : failure.error?.type === 'insufficient_quota' ? 'Scanner API quota is unavailable. Check OpenAI billing and limits.'
         : resp.status === 401 || resp.status === 403 ? 'Scanner API access denied. Check the OpenAI key and Responses permission.'
         : resp.status === 429 ? 'Scanner is busy. Please try again shortly.'
         : 'Vision service error. Please try again.';

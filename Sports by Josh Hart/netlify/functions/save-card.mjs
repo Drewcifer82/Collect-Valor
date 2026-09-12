@@ -8,8 +8,7 @@ import crypto from 'node:crypto';
 // Flow: verify token -> check cap -> upload the image to the private 'collection'
 // bucket -> insert the collection row -> return the saved card.
 
-const SINGLES_MAX = 50;
-const SLABS_MAX = 20;
+const CARDS_MAX = 50;
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -30,22 +29,23 @@ export default async (req) => {
   if (!owner) return json({ error: 'Not signed in' }, 401);
 
   const card = (body.card && typeof body.card === 'object') ? body.card : {};
-  const isSlab = !!body.is_slab;
+  if (body.is_slab) return json({ error: 'Slab scanning and new slab saves are currently unavailable.' }, 400);
+  const isSlab = false;
 
   const imageData = String(body.image || '').replace(/^data:image\/\w+;base64,/, '');
   if (!imageData) return json({ error: 'No card image to save' }, 400);
 
-  // Enforce the per-section cap before writing anything.
+  // Enforce the total collection cap before writing anything.
   let count;
   try {
-    count = await countCards(url, key, owner, isSlab);
+    count = await countCards(url, key, owner);
   } catch {
     return json({ error: 'Could not check your collection' }, 502);
   }
-  const max = isSlab ? SLABS_MAX : SINGLES_MAX;
+  const max = CARDS_MAX;
   if (count >= max) {
     return json({
-      error: `Your ${isSlab ? 'slabs' : 'singles'} are full (${max} max). Remove one to add another.`,
+      error: `Your collection is full (${max} cards max). Remove one to add another.`,
       full: true,
     }, 409);
   }
@@ -125,8 +125,8 @@ export default async (req) => {
   }
 };
 
-async function countCards(url, key, owner, isSlab) {
-  const q = `${url}/rest/v1/collection?owner=eq.${encodeURIComponent(owner)}&is_slab=eq.${isSlab}&select=id`;
+async function countCards(url, key, owner) {
+  const q = `${url}/rest/v1/collection?owner=eq.${encodeURIComponent(owner)}&select=id`;
   const resp = await fetch(q, {
     headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: 'count=exact' },
   });

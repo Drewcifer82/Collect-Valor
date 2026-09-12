@@ -439,10 +439,6 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <div class="scan-line"></div>
     <span class="photo-caption" id="photo-caption">READY TO SCAN</span>
   </div>
-  <div class="mode-pills" role="group" aria-label="Scan mode">
-    <button type="button" id="mode-raw" aria-pressed="true">Raw card</button>
-    <button type="button" id="mode-slab" aria-pressed="false">Graded slab</button>
-  </div>
   <div class="actions">
     <button class="secondary" id="camera-button" type="button">Take photo</button>
     <button class="secondary" id="upload-button" type="button">Upload photo</button>
@@ -491,7 +487,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
         <section class="pressure-panel hidden" id="pressure-wrap" aria-label="Buying and selling pressure">
           <div class="pressure-labels"><span>Buying <strong id="buy-pct"></strong></span><span>Selling <strong id="sell-pct"></strong></span></div>
           <div class="pressure-track" role="img" id="pressure-track"><span id="buy-fill"></span><span id="sell-fill"></span></div>
-          <p id="pr-verdict"></p><small>Card Hedge momentum estimate · not measured order flow</small>
+          <p id="pr-verdict"></p><small>Provider momentum estimate · not measured order flow</small>
         </section>
         <div class="insight-tabs" role="tablist" aria-label="Card insights">
           <button type="button" role="tab" id="insight-tab-overview" aria-controls="pane-overview" aria-selected="true" data-pane="overview">Overview</button>
@@ -515,7 +511,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
           <div id="grades-table"></div>
           <details class="grading-calculator" id="roi-wrap">
             <summary>Worth grading? <span>Compare a graded price with your costs</span></summary>
-            <p class="insight-note">Pick a grade Card Hedge has a price for and enter your costs. What-if scenarios, not promised returns — no grade is guaranteed.</p>
+            <p class="insight-note">Graded pricing is currently unavailable. What-if scenarios, not promised returns — no grade is guaranteed.</p>
             <div class="grading-inputs">
               <label>Possible grade<select id="grade-choice"></select></label>
               <label>Grading fee ($)<input id="roi-fee" type="number" inputmode="decimal" min="0" max="100000" step="0.01" value="25"></label>
@@ -537,7 +533,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
-  <p class="insight-note">Identification by Claude Vision. Prices, grades, and sales history from Card Hedge. Check the matched card, year, and variation before trusting a price.</p>
+  <p class="insight-note">Identification by OpenAI. Pokémon market prices from TCG API. Graded prices, sales history, and pricing for other categories are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
   <div class="matches-head hidden" id="matches-head"><span class="label">CHOOSE YOUR EXACT CARD</span><span id="matches-note">Tap your card for its real price</span></div>
   <div class="cards" id="fix-results"></div>
   <div class="movers hidden" id="market"><span class="label">MARKET MOVERS · BIGGEST WEEKLY GAINS</span><div id="market-list"></div></div>
@@ -548,7 +544,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 <section id="collection" class="page" hidden aria-label="Your collection">
   <div class="collection-summary">
     <article class="collection-stat total"><span class="label">COLLECTION VALUE</span><strong id="stat-value">$0</strong><p>A little history. A lot of possibility.</p></article>
-    <article class="collection-stat"><span class="label">CARDS COLLECTED</span><strong id="stat-count">0</strong><p id="collection-breakdown">0 singles · 0 slabs</p></article>
+    <article class="collection-stat"><span class="label">CARDS COLLECTED</span><strong id="stat-count">0</strong><p id="collection-breakdown">0 / 50 cards saved</p></article>
     <article class="collection-stat"><span class="label">IN YOUR SHOWCASE</span><strong id="collection-showcase-count">0</strong><p>The finds you love most.</p></article>
   </div>
   <div class="collection-toolbar"><div><h2>Your personal lineup</h2><p>Find a favorite. Make room for the next one.</p></div><button class="primary" data-page="scan" type="button">+ Scan a card</button></div>
@@ -558,16 +554,13 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </div>
   <div class="collection-filters" role="group" aria-label="Filter collection">
     <button type="button" data-coll="all" aria-pressed="true">All cards</button>
-    <button type="button" data-coll="singles" aria-pressed="false">Singles</button>
-    <button type="button" data-coll="slabs" aria-pressed="false">Slabs</button>
     <button type="button" data-coll="showcase" aria-pressed="false">&#9733; Showcase</button>
-    <button type="button" data-coll="trade" aria-pressed="false">Tradeable</button>
     <button type="button" data-coll="binders" aria-pressed="false">&#9636; Community binders</button>
   </div>
   <p class="collection-status" id="collection-status" role="status" aria-live="polite"></p>
   <div class="collection-grid" id="coll-list"></div>
   <div class="collection-empty" id="coll-empty" hidden><h3 id="empty-title">No cards saved yet</h3><p id="empty-sub">Scan a card and tap Save to add it here.</p><button class="secondary" id="collection-clear" type="button">Clear search &amp; filters</button></div>
-  <p class="footnote">Singles cap at 50, slabs at 20. Values refresh nightly from Card Hedge.</p>
+  <p class="footnote">Save up to 50 cards. Values reflect saved prices; automatic collection price updates are not currently available.</p>
 </section>
 <dialog class="collection-dialog" id="collection-dialog" aria-labelledby="collection-dialog-name">
   <header><span class="label">FROM YOUR COLLECTION</span><button class="secondary" id="collection-dialog-close" type="button" aria-label="Close card details">&times;</button></header>
@@ -595,7 +588,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <div id="watch-list" class="watch-list"></div>
       <div id="watch-empty" class="watch-empty" hidden><h3 id="watch-empty-title">Nothing here yet.</h3><p id="watch-empty-text"></p><button id="watch-empty-action" class="secondary">Find a card</button></div>
     </div>
-    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try LeBron, Pikachu, or baseball" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Prices from Card Hedge and TCG API. Use Refresh prices to check for changes.</p></aside>
+    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try LeBron, Pikachu, or baseball" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Pokémon prices from TCG API. Use Refresh prices to check for changes. Other categories may have no verified price.</p></aside>
   </div>
   <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p>
 </section>
@@ -608,7 +601,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <div class="profile-main">
       <article class="prize-panel" aria-labelledby="prize-heading">
         <div class="prize-heading"><div><span class="eyebrow">THE STANDOUT</span><h2 id="prize-heading">Your prize card.</h2></div><span class="prize-medal" aria-hidden="true">&#10022;</span></div>
-        <p class="prize-rule">Highest market value in your collection · Card Hedge pricing</p>
+        <p class="prize-rule">Highest saved value in your collection</p>
         <div id="prize-content" class="prize-content" hidden><div id="prize-art" class="prize-art"></div><div class="prize-info"><span class="prize-source" id="prize-source">FROM YOUR COLLECTION</span><h3 id="prize-name"></h3><p id="prize-meta"></p><div class="prize-gain"><strong id="prize-value"></strong><span>MARKET VALUE</span></div><p id="prize-share" class="prize-dollar-change"></p><button class="secondary" id="prize-open" type="button">View in collection</button></div></div>
         <div id="prize-empty" class="prize-empty"><h3>A standout is waiting.</h3><p>Save a priced card to your collection and your most valuable card takes this spot.</p><button class="secondary" data-page="scan" type="button">Scan a card</button></div>
       </article>
@@ -622,8 +615,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <article class="profile-panel"><span class="eyebrow">YOUR ACCOUNT</span><h2>Collector details</h2>
         <div class="kv-row"><span class="k">Signed in as</span><span class="v" id="acct-email">Guest</span></div>
         <div class="kv-row"><span class="k">Plan</span><span class="v" id="acct-plan">Free</span></div>
-        <div class="kv-row"><span class="k">Singles</span><span class="v" id="prof-singles">0 / 50</span></div>
-        <div class="kv-row"><span class="k">Slabs</span><span class="v" id="prof-slabs">0 / 20</span></div>
+        <div class="kv-row"><span class="k">Cards saved</span><span class="v" id="prof-singles">0 / 50</span></div>
         <button class="secondary hidden" id="signout" type="button">Sign out</button>
         <button class="secondary hidden" id="manage-sub" type="button">Manage subscription</button>
         <p class="insight-note hidden" id="manage-sub-msg"></p>
@@ -634,7 +626,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </div>
 </section>
 
-<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by Claude Vision · Market data by Card Hedge</span></footer>
+<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by OpenAI · Pokémon prices via TCG API</span></footer>
 </main>
 
 <!-- ============ PAYWALL ============ -->
@@ -992,7 +984,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   // ===== Navigation =====
   const COPY = {
     scan: ['Scan a card, get the market.', 'A free sports card and Pokémon card price checker: snap a photo, see the market value, price history, and graded prices in seconds.'],
-    collection: ['Your cards. Your story.', 'Everything you’ve saved, priced by Card Hedge.'],
+    collection: ['Your cards. Your story.', 'Your saved cards and the stories still to come.'],
     watch: ['The next one is out there.', 'Follow cards you don’t own yet and track changes in their price.'],
     profile: ['Make room for great finds.', 'Your account, your standout card, your membership.'],
   };
@@ -1051,7 +1043,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // ===== Collection =====
   let collFilter = 'all';
-  const CAP = { singles: 50, slabs: 20 };
+  const CARD_CAP = 50;
   function setCollFilter(f) {
     collFilter = f;
     document.querySelectorAll('[data-coll]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.coll === f)));
@@ -1082,13 +1074,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const c = collection.counts || {};
     setText('stat-value', '$' + money(collection.value));
     setText('stat-count', String(c.total || 0));
-    setText('collection-breakdown', (c.singles || 0) + ' singles · ' + (c.slabs || 0) + ' slabs');
+    setText('collection-breakdown', (c.total || 0) + ' / ' + CARD_CAP + ' cards saved');
     const showcased = collection.cards.filter((x) => x.is_showcase).length;
     setText('collection-showcase-count', String(showcased));
     setText('profile-showcased', String(showcased));
     setText('profile-owned', String(c.total || 0));
-    setText('prof-singles', (c.singles || 0) + ' / ' + CAP.singles);
-    setText('prof-slabs', (c.slabs || 0) + ' / ' + CAP.slabs);
+    setText('prof-singles', (c.total || 0) + ' / ' + CARD_CAP);
   }
 
   function cardName(card) { return [card.year, card.player].filter(Boolean).join(' ').trim() || card.player || 'Card'; }
@@ -1099,12 +1090,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   function visibleCards() {
     const q = $('collection-search').value.trim().toLowerCase();
-    let list = collection.cards.filter((x) =>
-      collFilter === 'all' ? true :
-      collFilter === 'slabs' ? x.is_slab :
-      collFilter === 'showcase' ? x.is_showcase :
-      collFilter === 'trade' ? x.is_tradeable :
-      !x.is_slab);
+    let list = collection.cards.filter((x) => collFilter === 'showcase' ? x.is_showcase : true);
     if (q) list = list.filter((x) => [x.player, x.set, x.brand, x.category, x.year, x.number, x.grade, x.team].join(' ').toLowerCase().includes(q));
     const order = $('collection-sort').value;
     const val = (x) => (x.value == null ? -1 : Number(x.value));
@@ -1119,15 +1105,14 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (collFilter === 'binders') { renderBinders(); return; }
     const list = visibleCards();
     const c = collection.counts || {};
-    setText('collection-status', 'Showing ' + list.length + ' of ' + (c.total || 0) + ' cards · Singles ' +
-      (c.singles || 0) + '/' + CAP.singles + ' · Slabs ' + (c.slabs || 0) + '/' + CAP.slabs);
+    setText('collection-status', 'Showing ' + list.length + ' of ' + (c.total || 0) + ' cards · ' + (c.total || 0) + '/' + CARD_CAP + ' saved');
     grid.replaceChildren();
     if (!list.length) {
       empty.hidden = false;
       const hasAny = collection.cards.length > 0;
       setText('empty-title', hasAny ? 'No cards match just yet.' : (session && session.token ? 'No cards saved yet' : 'Sign in to see your collection'));
       setText('empty-sub', hasAny ? 'Try a different name or explore another part of your collection.' :
-        (session && session.token ? 'Scan a card and tap Save to collection to add it here.' : 'Members can save up to 50 singles and 20 slabs. Unlock with the email you subscribed with.'));
+        (session && session.token ? 'Scan a card and tap Save to collection to add it here.' : 'Members can save up to 50 cards. Unlock with the email you subscribed with.'));
       $('collection-clear').classList.toggle('hidden', !hasAny);
       return;
     }
@@ -1163,8 +1148,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const amt = document.createElement('strong');
     if (card.value != null) amt.textContent = '$' + money(card.value);
     else { amt.textContent = card.is_slab ? '—' : 'No price yet'; amt.classList.add('none'); }
-    const st = document.createElement('span'); st.textContent = card.is_tradeable ? 'TRADEABLE' : 'KEEPER';
-    val.append(amt, st);
+    val.append(amt);
     open.append(artFrame(card), grade, h, meta, val);
     art.appendChild(open);
     if (readOnly) { open.disabled = true; open.style.cursor = 'default'; return art; }
@@ -1304,7 +1288,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let lastData = null;     // last Card Hedge pricing payload
   let histCache = null;
   let busyFlag = false;
-  let scanMode = 'raw';
 
   function say(msg, cls) { notice.className = 'msg' + (cls ? ' ' + cls : ''); notice.textContent = msg || ''; }
   function setBusy(on, label) {
@@ -1314,16 +1297,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (on) { setText('photo-caption', label || 'IDENTIFYING CARD'); readout.textContent = (label || 'Identifying card') + '…'; }
     else setText('photo-caption', pendingImage ? 'PHOTO READY' : 'READY TO SCAN');
   }
-  function setMode(m) {
-    scanMode = m;
-    $('mode-raw').setAttribute('aria-pressed', String(m === 'raw'));
-    $('mode-slab').setAttribute('aria-pressed', String(m === 'slab'));
-    if (!pendingImage) $('photo-empty').innerHTML = m === 'slab'
-      ? '<b>Slab goes here.</b>Fill the frame with the slab — label sharp, no glare — then tap Identify &amp; price.'
-      : '<b>Your card goes here.</b>Take or upload a clear photo of the front of the card, then tap Identify &amp; price.';
-  }
-  $('mode-raw').addEventListener('click', () => setMode('raw'));
-  $('mode-slab').addEventListener('click', () => setMode('slab'));
   $('camera-button').addEventListener('click', () => $('camera-input').click());
   $('upload-button').addEventListener('click', () => $('upload-input').click());
   photo.addEventListener('click', () => { if (!busyFlag) $('upload-input').click(); });
@@ -1349,7 +1322,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     say('');
     result.classList.add('hidden');
     clearCandidates();
-    if (scanMode === 'slab') { handleSlab(dataUrl); return; }
     setBusy(true, 'IDENTIFYING CARD');
     try {
       const { res, data } = await post('identify', { image: dataUrl });
@@ -1376,71 +1348,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       readout.textContent = 'Could not reach the server.';
       say('Could not reach the server — check your connection and try again.', 'error');
     }
-  }
-
-  // ---- Graded slab: photo -> Card Hedge label OCR -> cert + price history ----
-  async function handleSlab(dataUrl) {
-    setBusy(true, 'READING SLAB LABEL');
-    try {
-      const { res, data } = await post('cardhedge', { image: dataUrl });
-      setBusy(false);
-      if (!res.ok || !data || !data.ok || !data.matched) {
-        readout.textContent = 'Could not read the grading label.';
-        say('Get closer, keep the label sharp, avoid glare, then try again.', 'error'); return;
-      }
-      renderSlab(data, dataUrl);
-      bumpScanCount();
-    } catch (err) {
-      setBusy(false);
-      readout.textContent = 'Could not reach the server.';
-      say('Could not reach the server — try again.', 'error');
-    }
-  }
-
-  function renderSlab(data, dataUrl) {
-    const cert = data.cert || {}, card = data.card || {};
-    const gradeLabel = [cert.grader, cert.grade].filter(Boolean).join(' ');
-    current = {
-      card: {
-        card_type: card.category === 'Pokemon' ? 'pokemon' : 'sports',
-        category: card.category || '', player: card.player || '', set: card.set || '',
-        number: card.number || '', variation: card.variant || '', cert_number: cert.cert || '',
-        grade: gradeLabel, card_id: card.card_id || '',
-      },
-      image: dataUrl,
-      value: data.last_sale && data.last_sale.price != null ? Number(data.last_sale.price) : null,
-      is_slab: true,
-    };
-    resetSaveStar();
-    resetResultData();
-    clearCandidates();
-    setText('r-tag', 'SLAB VERIFIED · ' + (cert.grader || 'GRADED').toUpperCase());
-    setText('r-name', card.description || cert.description || 'Graded card');
-    const num = card.number ? '#' + String(card.number).replace(/^#/, '') : '';
-    setText('r-detail', [card.set, num, card.variant].filter(Boolean).join(' · '));
-    const chips = $('r-chips'); chips.replaceChildren();
-    if (gradeLabel) addChip(chips, gradeLabel, 'slab');
-    if (card.category) addChip(chips, card.category);
-    hide('r-highlights'); hide('r-notes');
-    setPriceLabel('LAST SALE · ' + (gradeLabel || 'GRADED'), 'slab');
-    if (current.value != null) {
-      setText('r-estimate', '$' + money(current.value));
-      const when = data.last_sale && data.last_sale.date ? ' · ' + String(data.last_sale.date).slice(0, 10) : '';
-      setText('r-price', 'Card Hedge · cert ' + (cert.cert || '—') + when);
-    } else {
-      setText('r-estimate', '—');
-      setText('r-price', 'Label read, but no recorded sales for this card yet.');
-    }
-    setText('ov-grade', gradeLabel || '—');
-    setText('ov-cert', cert.cert || '—');
-    setText('ov-lastsale', current.value != null ? '$' + money(current.value) : '—');
-    histCache = Array.isArray(data.history) ? data.history.filter((h) => h.price != null) : [];
-    if (histCache.length) renderHistory(histCache);
-    readout.textContent = 'Slab verified.';
-    showLinks();
-    result.classList.remove('hidden');
-    setPane('overview');
-    revealResult();
   }
 
   // ---- Result card ----
@@ -1844,8 +1751,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
     hide('pressure-wrap'); hide('avgs-wrap'); hide('links-wrap');
     setText('ov-avg30', '—'); setText('ov-avg90', '—'); setText('ov-vol', '—');
-    $('pane-sales').innerHTML = '<div class="panel-empty"><b>Recent sales</b>Real recent-sale comps with dates and grades appear here when Card Hedge has them for this card.</div>';
-    $('pane-history').innerHTML = '<div class="panel-empty"><b>Price history</b>Recent sale history appears here when Card Hedge has it for this card.</div>';
+    $('pane-sales').innerHTML = '<div class="panel-empty"><b>Recent sales</b>Individual recent sales are currently unavailable.</div>';
+    $('pane-history').innerHTML = '<div class="panel-empty"><b>Price history</b>Price history is currently unavailable.</div>';
     $('r-debug').classList.add('hidden');
   }
 
@@ -1977,7 +1884,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       wrap.classList.add('hidden'); return;
     }
     if (!gradeRows.length) {
-      table.innerHTML = '<div class="panel-empty"><b>Prices by grade</b>Card Hedge has no graded prices for this card yet — match a card first, or check back after more sales.</div>';
+      table.innerHTML = '<div class="panel-empty"><b>Prices by grade</b>Graded pricing is currently unavailable.</div>';
       wrap.classList.add('hidden'); return;
     }
     table.innerHTML = '<span class="label">PRICES BY REPORTED GRADE · CARD HEDGE</span><table><thead><tr><th>Grade</th><th>Value</th><th>Vs. raw</th></tr></thead><tbody>' +
@@ -2135,7 +2042,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     canWatch: () => !busyFlag && (!saveStar.disabled || saveStar.classList.contains('saved')), post, showPaywall, artFrame });
 
   // ===== Boot =====
-  setMode('raw');
   resetResultData();
   updateSessionUI();
   updateHeader(); renderCollection(); renderPrize();

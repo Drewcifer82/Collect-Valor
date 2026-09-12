@@ -64,7 +64,7 @@ test('OpenAI scanner integration', async t => {
     }
   });
   await t.test('quota failure gives actionable error without exposing provider details', async () => {
-    globalThis.fetch = async () => Response.json({ error: { code: 'insufficient_quota', message: 'private provider details' } }, { status: 429 });
+    globalThis.fetch = async () => Response.json({ error: { code: 'credit_balance_exhausted', type: 'insufficient_quota', message: 'private provider details' } }, { status: 429 });
     const result = await scan();
     assert.equal(result.status, 502);
     assert.match(result.data.error, /billing/i);

@@ -140,7 +140,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <thead><tr><th style="width:26%">What</th><th>Why</th><th style="width:26%">How long</th></tr></thead>
     <tbody>
       <tr><td><strong>Your email</strong> (members)</td><td>It's how we know your subscription is active. It's also your sign-in — there's no password.</td><td>While you're a member. Removed after your membership ends.</td></tr>
-      <tr><td><strong>Cards you save</strong></td><td>Your saved card details, the value at the time you saved it, and the photo you scanned, so your Collection page works and nightly repricing can update it.</td><td>Until you remove the card or delete your account.</td></tr>
+      <tr><td><strong>Cards you save</strong></td><td>Your saved card details, the value at the time you saved it, and the photo you scanned, so your Collection page can display it.</td><td>Until you remove the card or delete your account.</td></tr>
       <tr><td><strong>Card photos you don't save</strong></td><td>Sent to our identification service to read the card, then shown back to you. Not kept.</td><td>Not stored.</td></tr>
       <tr><td><strong>A scrambled version of your IP address</strong> (guests)</td><td>To count your 7 free scans without making you create an account. It's hashed, so it isn't a readable address.</td><td>Only as a counter.</td></tr>
       <tr><td><strong>Basic site analytics</strong></td><td>Page views and which features get used, so we know what to improve. Plausible is cookieless and doesn't track you across sites.</td><td>Aggregate stats only.</td></tr>
@@ -164,8 +164,8 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   <h2>The services that make the scanner work</h2>
   <p>A card scanner app needs a few partners. These are ours and what each one receives:</p>
   <ul>
-    <li><strong>Anthropic (Claude Vision)</strong> — identifies the card from your photo. Photos are processed to produce the identification and are not used to train AI models.</li>
-    <li><strong>Card Hedge</strong> — provides market prices, sales history, and graded values. It receives the card description (player, set, number), never your personal information.</li>
+    <li><strong>OpenAI</strong> — identifies the card from your photo. Photos are processed to produce the identification and are not used to train AI models.</li>
+    <li><strong>TCG API</strong> — provides Pokémon market prices. It receives the card description (player, set, number), never your personal information.</li>
     <li><strong>Supabase</strong> — securely stores members' saved cards and photos in a private bucket that isn't publicly reachable.</li>
     <li><strong>Netlify</strong> — hosts the site.</li>
     <li><strong>Stripe</strong> — processes membership payments.</li>
@@ -194,7 +194,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 </section>
 </article><aside class="toc"><span class="label">ON THIS PAGE</span><a href="#short">The short version</a><a href="#collect">What we collect</a><a href="#never">What we never do</a><a href="#services">Services we use</a><a href="#control">Your controls</a><a href="#details">The details</a></aside></div>
 <div class="scan-cta"><h2>Got a card in your hand right now?</h2><p>Snap it and see what it's worth. Sports and Pokémon, raw or graded. Your first 7 scans are free — no account needed.</p><a class="cta" href="/">Open the scanner →</a></div>
-<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/">Price desk</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by Claude Vision · Market data by Card Hedge</span></footer>
+<footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/">Price desk</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by OpenAI · Pokémon prices via TCG API</span></footer>
 </main>
 </body>
 </html>
