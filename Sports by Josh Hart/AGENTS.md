@@ -7,3 +7,6 @@ This is the #1 thing. Andrew is ADHD and adderall-medicated. A long message that
 - Do NOT write reports, recaps, or explain things he didn't ask to have explained.
 - When he asks "do you know about X?" that usually MEANS he already knows X — answer yes/no short, don't dump everything about X.
 - If I don't keep it short I'm wasting his time. He will ask a question if he doesn't understand something. Trust that.
+
+## Latest session handoff
+Before starting work, read `../SESSION-HANDOFF.md` at the repository root (saved September 12, 2026). It supersedes older provider, folder, and deployment notes. Next focus: collection area.

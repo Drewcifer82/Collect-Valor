@@ -11,3 +11,6 @@ This is the #1 thing. Andrew is ADHD and adderall-medicated. A long message that
 ## Repository layout
 This repository is connected to https://github.com/Drewcifer82/Collect-Valor.git. The active website files are in the 'Sports by Josh Hart' subfolder, matching GitHub's existing layout. Edit the website there. 'Collect Valor 2' is an unused, ignored local repository; do not use it. Commit and push only when Andrew authorizes it.
 
+
+## Latest session handoff
+Before starting work, read `SESSION-HANDOFF.md` at the repository root (saved September 12, 2026). It supersedes older provider, folder, and deployment notes. Next focus: collection area.

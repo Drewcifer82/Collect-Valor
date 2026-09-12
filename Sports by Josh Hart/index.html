@@ -1498,8 +1498,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     try {
       const cc = current.card || {};
       const cat = cc.category ? String(cc.category) : '';
-      let data = await chSearch(q, cat);
-      if (!hasResults(data) && cat) data = await chSearch(q, '');
+      let data = await chSearch(q, cat, auto ? cc.number : '');
+      if (!hasResults(data) && cat) data = await chSearch(q, '', auto ? cc.number : '');
       if (!hasResults(data)) { status('No cards found — try just the player/character name and year.'); return; }
       const ranked = data.results
         .map((c, i) => ({ c, i, s: scoreCandidate(c, cc) }))
@@ -1514,7 +1514,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       $('matches-head').classList.remove('hidden');
       if (!auto) { try { $('matches-head').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
     } catch (err) {
-      status('Could not reach the server — try again.');
+      status(err.message === 'refine_search' ? 'Please narrow your search with the card name and number.' : 'Could not load card finishes — try again.');
     } finally {
       fixBtn.disabled = false; fixBtn.textContent = 'Go';
     }
@@ -1532,10 +1532,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (card.variation && d.includes(String(card.variation).toLowerCase())) s += 1;
     return s;
   }
-  async function chSearch(q, category) {
+  async function chSearch(q, category, number) {
     const body = { search: q, page_size: 100 };
+    if (number) body.number = number;
     if (category) body.category = category;
     const { res, data } = await post('cardhedge', body);
+    if (data && data.code === 'refine_search') throw new Error('refine_search');
     if (!res.ok) throw new Error('Pricing provider unavailable');
     return data;
   }

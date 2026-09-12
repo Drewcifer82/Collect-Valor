@@ -207,7 +207,11 @@ async function rawPath(body) {
     else if (!number) candidates = [];
   }
   if (candidates.length !== 1) return json({ ok: true, matched: false, query: name });
-  const pick = candidates[0];
+  // Search can expose only one finish for a product. Verify its complete
+  // printing list before treating a single search hit as an exact match.
+  const printings = await expandPrintings(candidates, tcgKey);
+  if (printings.length !== 1) return json({ ok: true, matched: false, query: name });
+  const pick = printings[0];
 
   const price = pick.market_price;
   return json({
@@ -242,13 +246,49 @@ function tcgId(card) {
 async function pokemonSearchPath(body) {
   const key = process.env.TCGAPI_KEY;
   if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
-  const cards = await tcgSearch(String(body.search).trim(), key);
+  const hits = await tcgSearch(String(body.search).trim(), key);
+  // A scan's collector number narrows expensive printing lookups to its card.
+  const exact = body.number ? hits.filter(c => sameNumber(c.number, String(body.number))) : [];
+  const candidates = exact.length ? exact : hits;
+  if (new Set(candidates.map(c => String(c.id))).size > 12) {
+    return json({ error: 'Please narrow your search with the card name and number.', code: 'refine_search' }, 422);
+  }
+  const cards = await expandPrintings(candidates, key);
   const results = cards.filter(c => c.id).map(c => ({
     card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
     number: c.number, variant: c.variant, category: 'pokemon', image: c.image,
     prices: c.market_price === null ? [] : [{ grade: 'Raw', price: c.market_price }],
   }));
   return json({ ok: true, results, count: results.length });
+}
+
+async function expandPrintings(cards, key) {
+  const products = new Map();
+  for (const card of cards) if (/^\d+$/.test(String(card.id))) products.set(String(card.id), card);
+  // Process in small batches to avoid flooding the provider. One request per
+  // product, rather than per finish; never invent a missing finish or its price.
+  const expanded = [];
+  const entries = [...products.values()];
+  for (let i = 0; i < entries.length; i += 4) {
+    const batch = await Promise.all(entries.slice(i, i + 4).map(async card => {
+      const response = await fetch('https://api.tcgapi.dev/v1/cards/' + encodeURIComponent(card.id) + '/prices', {
+        headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error('Pokemon finish lookup returned ' + response.status);
+      const data = await response.json();
+      const rows = Array.isArray(data.data) ? data.data : data.data ? [data.data] : [];
+      const finishes = new Map();
+      for (const row of rows) {
+        if (!row || typeof row.printing !== 'string' || !row.printing.trim()) continue;
+        if (row.card_id != null && String(row.card_id) !== String(card.id)) continue;
+        const variant = row.printing.trim();
+        finishes.set(variant.toLowerCase(), { ...card, variant, market_price: normalizeCard(row).market_price });
+      }
+      return finishes.size ? [...finishes.values()] : [{ ...card, market_price: null }];
+    }));
+    expanded.push(...batch.flat());
+  }
+  return expanded;
 }
 
 async function pokemonPricePath(body) {

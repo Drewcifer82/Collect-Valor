@@ -51,11 +51,13 @@ test('Pokemon pricing integration', async t => {
         : [{ ...card, price: 12.47 }] });
     };
     const search = await request({ search: 'Charizard', category: 'Pokémon' });
-    assert.equal(search.data.results[0].prices[0].price, 12.47);
+    assert.equal(search.data.results[0].prices[0].price, 24.99);
+    assert.equal(search.data.results[1].variant, 'Foil');
     const selected = await request({ card_id: search.data.results[0].card_id, grade: 'Raw' });
     assert.equal(selected.data.fmv.price, 24.99);
-    assert.equal(calls.length, 2);
-    assert.match(calls[1], /\/cards\/12345\/prices\?printing=Normal$/);
+    assert.equal(calls.length, 3);
+    assert.match(calls[1], /\/cards\/12345\/prices$/);
+    assert.match(calls[2], /\/cards\/12345\/prices\?printing=Normal$/);
   });
   await t.test('general search includes Pokemon without relying on Card Hedge', async () => {
     globalThis.fetch = async url => {
@@ -73,6 +75,51 @@ test('Pokemon pricing integration', async t => {
     globalThis.fetch = async () => Response.json({ error: 'X-PAYMENT header is required' }, { status: 402 });
     assert.equal((await request(scan)).status, 502);
     assert.equal((await request({ search: 'Charizard', category: 'pokemon' })).status, 502);
+  });
+  await t.test('Koraidon search expands regular and reverse holo without mixing promos', async () => {
+    const calls = [];
+    globalThis.fetch = async url => {
+      calls.push(String(url));
+      if (String(url).includes('/search?')) return Response.json({ data: [
+        { ...card, id: 111, name: 'Koraidon', number: '119/162', printing: 'Reverse Holofoil' },
+        { ...card, id: 111, name: 'Koraidon', number: '119/162', printing: 'Reverse Holofoil' },
+        { ...card, id: 222, name: 'Koraidon (Cosmos Holo)', number: '119/162' },
+        { ...card, id: 333, number: '001/100' },
+      ] });
+      if (String(url).includes('/111/prices')) return Response.json({ data: [
+        { printing: 'Holofoil', market_price: 0.08 },
+        { printing: 'Reverse Holofoil', market_price: 0.13 },
+      ] });
+      assert.match(String(url), /222\/prices$/);
+      return Response.json({ data: { printing: 'Holofoil', market_price: 2.50 } });
+    };
+    const result = await request({ search: 'Koraidon', category: 'pokemon', number: '119/162' });
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.data.results.map(c => [c.card_id, c.prices[0].price]), [
+      ['tcg:111:Holofoil', 0.08], ['tcg:111:Reverse%20Holofoil', 0.13], ['tcg:222:Holofoil', 2.50],
+    ]);
+    assert.equal(calls.length, 3);
+    const selected = await request({ card_id: 'tcg:111:Holofoil', grade: 'Raw' });
+    assert.equal(selected.data.fmv.price, 0.08);
+  });
+  await t.test('single search hit with multiple finishes requires selection', async () => {
+    globalThis.fetch = async url => Response.json({ data: String(url).includes('/prices')
+      ? [{ printing: 'Holofoil', market_price: 0.08 }, { printing: 'Reverse Holofoil', market_price: 0.13 }]
+      : [{ ...card, printing: 'Reverse Holofoil', price: 0.13 }] });
+    assert.equal((await request(scan)).data.matched, false);
+  });
+  await t.test('failed finish lookup is an error, never an incomplete successful list', async () => {
+    globalThis.fetch = async url => String(url).includes('/prices')
+      ? Response.json({ error: 'quota' }, { status: 429 }) : Response.json({ data: [card] });
+    assert.equal((await request({ search: 'Charizard', category: 'pokemon' })).status, 502);
+  });
+  await t.test('broad searches request refinement before spending on finishes', async () => {
+    let calls = 0;
+    globalThis.fetch = async () => { calls++; return Response.json({ data: Array.from({ length: 13 }, (_, id) => ({ ...card, id: id + 1 })) }); };
+    const result = await request({ search: 'Charizard', category: 'pokemon' });
+    assert.equal(result.status, 422);
+    assert.equal(result.data.code, 'refine_search');
+    assert.equal(calls, 1);
   });
   await t.test('unauthenticated requests spend no API calls', async () => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };

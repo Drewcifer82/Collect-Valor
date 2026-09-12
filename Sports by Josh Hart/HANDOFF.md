@@ -1,3 +1,9 @@
+# Current handoff — September 12, 2026
+
+Read [the latest session handoff](../SESSION-HANDOFF.md) first. The older notes below are historical and contain obsolete repository/provider instructions. Current scanner: OpenAI GPT-5 Mini. Current Pokemon pricing: TCG API. Next work: collection area.
+
+---
+
 # ⚡ CURRENT STATE — Sep 7, 2026 — READ THIS FIRST
 
 Everything below this block is older history (still useful for background). This block is the truth as of Sep 7, 2026.
