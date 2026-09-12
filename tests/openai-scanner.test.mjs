@@ -6,7 +6,7 @@ import identify from '../Sports by Josh Hart/netlify/functions/identify.mjs';
 const card = {
   identified: true, confidence: 'high', card_type: 'pokemon', category: 'Pokemon',
   player: "Hop's Dubwool", team: '', sport: '', position: '', year: '', brand: 'Pokemon',
-  set: '', number: '136/159', variation: 'holo', language: 'English', rookie: false, estimate: '',
+  set: '', number: '136/159', variation: '', finish: 'Holofoil', rarity: 'Rare', rarity_mark: 'black star', special_stamp: '', language: 'English', rookie: false, estimate: '',
 };
 const secret = 'test-session-secret';
 const payload = Buffer.from(JSON.stringify({ u: 'test@example.com' })).toString('base64url');
@@ -45,6 +45,8 @@ test('OpenAI scanner integration', async t => {
       assert.equal(request.input[0].content[1].image_url, 'data:image/jpeg;base64,dGVzdA==');
       assert.equal(request.text.format.strict, true);
       assert.equal(request.text.format.schema.additionalProperties, false);
+      assert.ok(request.text.format.schema.properties.finish);
+      assert.ok(request.text.format.schema.properties.rarity_mark);
       return Response.json(completed());
     };
     const result = await scan();

@@ -1361,7 +1361,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const chips = $('r-chips'); chips.replaceChildren();
     if (card.rookie === true) addChip(chips, 'ROOKIE', 'rookie');
     [card.sport || card.category, card.team, card.position].filter(Boolean).forEach((c) => addChip(chips, c));
-    if (card.variation) addChip(chips, card.variation, 'mag');
+    [card.finish, card.rarity, card.rarity_mark, card.special_stamp, card.variation].filter(Boolean).forEach((c) => addChip(chips, c, 'mag'));
     addChip(chips, 'RAW / UNGRADED');
     const hl = $('r-highlights'); hl.replaceChildren();
     if (Array.isArray(card.highlights) && card.highlights.length) {

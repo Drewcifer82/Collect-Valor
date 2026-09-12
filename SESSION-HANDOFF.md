@@ -22,6 +22,7 @@ Andrew reported the following after the previous chat was lost. This section sup
 - Older uncommitted scanner-error notes below are stale: that fix is now in committed cleanup. Preserve the current holo edits and documentation edits.
 - Also noticed legacy visible Card Hedge search wording remains; recorded for later cleanup, not edited in this inspection.
 - Personal card-back notes and the PWA opening redesign remain future work. No app code changed during this recovered-session inspection.
+- September 12 follow-up, uncommitted: scanner schema and instructions now separately read Pokemon `finish` (Normal/Holofoil/Reverse Holofoil), printed rarity, bottom-left rarity mark (including color/star count), and special stamps. These show as result tags. Automatic TCG pricing uses a clearly read exact finish; it still refuses ambiguous printings rather than guessing. All 28 scanner/pricing tests passed. Await Andrew's live testing and commit/push authorization.
 
 
 This is the current session summary, not a verbatim transcript. Read this before older project notes: several older instructions about folders, providers, and deployment are obsolete.

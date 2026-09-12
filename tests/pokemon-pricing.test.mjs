@@ -108,6 +108,15 @@ test('Pokemon pricing integration', async t => {
       : [{ ...card, printing: 'Reverse Holofoil', price: 0.13 }] });
     assert.equal((await request(scan)).data.matched, false);
   });
+  await t.test('a clearly read finish selects its exact TCG API price', async () => {
+    globalThis.fetch = async url => Response.json({ data: String(url).includes('/prices')
+      ? [{ printing: 'Normal', market_price: 0.08 }, { printing: 'Holofoil', market_price: 1.13 }]
+      : [card] });
+    const result = await request({ card: { ...scan.card, finish: 'Holofoil' } });
+    assert.equal(result.data.matched, true);
+    assert.equal(result.data.card.card_id, 'tcg:12345:Holofoil');
+    assert.equal(result.data.fmv.price, 1.13);
+  });
   await t.test('failed finish lookup is an error, never an incomplete successful list', async () => {
     globalThis.fetch = async url => String(url).includes('/prices')
       ? Response.json({ error: 'quota' }, { status: 429 }) : Response.json({ data: [card] });

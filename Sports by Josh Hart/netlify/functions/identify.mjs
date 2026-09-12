@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 // Reads card photos with OpenAI Responses. Pricing remains a separate lookup.
 // OPENAI_API_KEY stays server-side. Override OPENAI_VISION_MODEL to compare models.
 const MODEL = 'gpt-5-mini';
-const STRING_FIELDS = ['category', 'player', 'team', 'sport', 'position', 'year', 'brand', 'set', 'number', 'variation', 'language', 'estimate'];
+const STRING_FIELDS = ['category', 'player', 'team', 'sport', 'position', 'year', 'brand', 'set', 'number', 'variation', 'finish', 'rarity', 'rarity_mark', 'special_stamp', 'language', 'estimate'];
 const CARD_SCHEMA = {
   type: 'object', additionalProperties: false,
   properties: {
@@ -52,14 +52,15 @@ export default async (req) => {
   // SPEED NOTE (Aug 18): trimmed to only the fields needed to name + price the card.
   // The slow part of a scan is how much text the model has to WRITE, so the verbose
   // fields (highlights / visible_text / notes) were removed from this blocking call.
-  // Accuracy-critical fields (number, variation) are kept and emphasized — that read
+  // Accuracy-critical fields (number, finish, rarity and stamps) are kept and emphasized — that read
   // is our edge over apps that default cards to "holo". Output is one compact line.
   const prompt =
     'You are an expert trading-card identifier covering BOTH sports cards ' +
     '(baseball, basketball, football, hockey, soccer, etc.) AND Pokemon cards. ' +
     'Decide which kind it is, then read it carefully. Be exact on the collector "number" ' +
-    'and the "variation" (holo vs non-holo, parallel, refractor, insert, serial #) — do NOT ' +
-    'assume a card is holo/special unless the card clearly shows it. ' +
+    'and the "variation" (parallel, refractor, insert, serial #). For Pokemon, separately read ' +
+    'the finish, printed rarity, rarity mark, and special stamp. Do NOT assume a card is holo/special ' +
+    'unless the card clearly shows it. ' +
     'Read "set" exactly as printed on the card INCLUDING any insert or parallel subset name ' +
     '(e.g. "Prizm Stained Glass", "Donruss Optic", "Select", "Mosaic") — use the full specific ' +
     'set name, not just the base brand. Read "year" from the card itself (copyright/design), not a guess. ' +
@@ -67,7 +68,8 @@ export default async (req) => {
     'no extra whitespace, exactly this shape: ' +
     '{"identified":boolean,"confidence":"high"|"medium"|"low","card_type":"sports"|"pokemon"|"other",' +
     '"category":string,"player":string,"team":string,"sport":string,"position":string,' +
-    '"year":string,"brand":string,"set":string,"number":string,"variation":string,"language":string,' +
+    '"year":string,"brand":string,"set":string,"number":string,"variation":string,"finish":string,' +
+    '"rarity":string,"rarity_mark":string,"special_stamp":string,"language":string,' +
     '"rookie":boolean,"estimate":string}. ' +
     'Use empty strings for unknowns. "category" MUST be set — it drives the price lookup: for a ' +
     'sports card the specific sport capitalized ("Baseball","Basketball","Football","Hockey","Soccer"), ' +
@@ -77,8 +79,14 @@ export default async (req) => {
     '"variation"=parallel/insert/refractor/serial/auto/relic note. ' +
     'POKEMON: "player"=Pokemon plus card name (e.g. "Charizard ex","Pikachu VMAX"), "brand"="Pokemon", ' +
     '"set"=set/expansion (e.g. "151","Base Set"), "number"=collector number exactly as printed ' +
-    '(e.g. "199/165","4/102"), "variation"=rarity/parallel (holo, reverse holo, full art, illustration ' +
-    'rare, 1st edition, promo, etc.); leave "team","sport","position" empty and "rookie" false. ' +
+    '(e.g. "199/165","4/102"). "finish" must be one of: "Normal", "Holofoil", "Reverse Holofoil", ' +
+    'or empty if it cannot be seen. "rarity"=the printed rarity words when present (such as "Illustration Rare", ' +
+    '"Ultra Rare", "Double Rare", or "Special Illustration Rare"). "rarity_mark"=the exact bottom-left ' +
+    'mark, including color and count when visible (examples: "black circle", "black diamond", "black star", ' +
+    '"silver star", "gold star", "two gold stars"). "special_stamp"=any stamp or symbol that distinguishes ' +
+    'the printing (such as "1st Edition", "Prerelease", "Staff", "Black Star Promo", or "W"), otherwise empty. ' +
+    '"variation"=other parallel or card-style detail such as full art, illustration rare, promo, radiant, ' +
+    'or trainer gallery; do not repeat finish, rarity mark, or special stamp there. Leave "team","sport","position" empty and "rookie" false. ' +
     'Read the collector number digit by digit from the bottom edge and then recheck it against the photo. ' +
     'Do not substitute a familiar card number, set, year, or English card title based on the artwork. ' +
     'If any number digit is obscured, blurred, or uncertain, leave number empty and lower confidence. ' +

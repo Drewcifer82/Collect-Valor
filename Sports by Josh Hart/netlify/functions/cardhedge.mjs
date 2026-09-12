@@ -210,8 +210,10 @@ async function rawPath(body) {
   // Search can expose only one finish for a product. Verify its complete
   // printing list before treating a single search hit as an exact match.
   const printings = await expandPrintings(candidates, tcgKey);
-  if (printings.length !== 1) return json({ ok: true, matched: false, query: name });
-  const pick = printings[0];
+  const finishMatches = matchingFinish(printings, card.finish);
+  const pricedCandidates = finishMatches === null ? printings : finishMatches;
+  if (pricedCandidates.length !== 1) return json({ ok: true, matched: false, query: name });
+  const pick = pricedCandidates[0];
 
   const price = pick.market_price;
   return json({
@@ -241,6 +243,18 @@ async function rawPath(body) {
 
 function tcgId(card) {
   return 'tcg:' + encodeURIComponent(String(card.id)) + ':' + encodeURIComponent(card.variant || '');
+}
+
+// TCG API calls these price printings Normal, Holofoil, and Reverse Holofoil.
+// Only narrow an automatic match when vision made one of those exact calls; other
+// details (full art, rarity mark, stamp) identify the product, not its price finish.
+function matchingFinish(printings, finish) {
+  const read = String(finish || '').trim().toLowerCase();
+  if (!read) return null;
+  const wanted = read === 'normal' || read === 'non-holo' || read === 'non holo' ? 'normal'
+    : read === 'holofoil' || read === 'holo' || read === 'holographic' ? 'holofoil'
+    : read === 'reverse holofoil' || read === 'reverse holo' ? 'reverse holofoil' : '';
+  return wanted ? printings.filter(card => String(card.variant || '').trim().toLowerCase() === wanted) : null;
 }
 
 async function pokemonSearchPath(body) {
