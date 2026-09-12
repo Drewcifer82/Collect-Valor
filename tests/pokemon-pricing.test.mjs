@@ -110,12 +110,31 @@ test('Pokemon pricing integration', async t => {
   });
   await t.test('a clearly read finish selects its exact TCG API price', async () => {
     globalThis.fetch = async url => Response.json({ data: String(url).includes('/prices')
-      ? [{ printing: 'Normal', market_price: 0.08 }, { printing: 'Holofoil', market_price: 1.13 }]
+      ? [{ printing: 'Normal', market_price: 0.08 }, { printing: 'Foil', market_price: 1.13 }]
       : [card] });
     const result = await request({ card: { ...scan.card, finish: 'Holofoil' } });
     assert.equal(result.data.matched, true);
-    assert.equal(result.data.card.card_id, 'tcg:12345:Holofoil');
+    assert.equal(result.data.card.card_id, 'tcg:12345:Foil');
     assert.equal(result.data.fmv.price, 1.13);
+  });
+  await t.test('scan identity maps set name to set ID and sends rarity and printing filters', async () => {
+    globalThis.fetch = async url => {
+      const target = String(url);
+      if (target.includes('/games/pokemon/sets?')) return Response.json({ data: [
+        { id: 777, name: 'Obsidian Flames', abbreviation: 'OBF' },
+      ] });
+      if (target.includes('/search?')) {
+        const params = new URL(target).searchParams;
+        assert.equal(params.get('set_id'), '777');
+        assert.equal(params.get('rarity'), 'Double Rare');
+        assert.equal(params.get('printing'), 'Foil');
+        return Response.json({ data: [{ ...card, rarity: 'Double Rare' }] });
+      }
+      return Response.json({ data: [{ printing: 'Foil', market_price: 9.99 }] });
+    };
+    const result = await request({ card: { ...scan.card, set: 'Obsidian Flames', rarity: 'Double Rare', finish: 'Holofoil' } });
+    assert.equal(result.data.matched, true);
+    assert.equal(result.data.fmv.price, 9.99);
   });
   await t.test('failed finish lookup is an error, never an incomplete successful list', async () => {
     globalThis.fetch = async url => String(url).includes('/prices')

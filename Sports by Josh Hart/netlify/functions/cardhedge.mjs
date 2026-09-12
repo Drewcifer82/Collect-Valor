@@ -13,6 +13,7 @@ import crypto from 'node:crypto';
 // vision step (identify.mjs) does that transcription first.
 
 const API = 'https://api.cardhedger.com/v1/cards';
+const pokemonSetCache = { expiresAt: 0, sets: [] };
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -192,7 +193,19 @@ async function rawPath(body) {
 
   let results;
   try {
-    results = await tcgSearch(name, tcgKey);
+    const setId = setName ? await pokemonSetId(setName, tcgKey) : '';
+    // These are TCG API's actual identity filters. The collector number and a
+    // stamp are not API parameters, so those are verified against its results.
+    results = await tcgSearch(name, tcgKey, {
+      setId,
+      rarity: card.rarity,
+      printing: searchPrinting(card.finish),
+    });
+    // Rarity wording varies across eras. Keep the set/number safeguards but
+    // retry without a rarity filter if the provider found nothing.
+    if (!results.length && card.rarity) results = await tcgSearch(name, tcgKey, {
+      setId, printing: searchPrinting(card.finish),
+    });
   } catch (err) {
     return json({ error: 'tcgapi request failed', detail: String(err && err.message || err) }, 502);
   }
@@ -205,6 +218,17 @@ async function rawPath(body) {
     const inSet = candidates.filter((r) => r.set.toLowerCase().includes(setName.toLowerCase()));
     if (inSet.length) candidates = inSet;
     else if (!number) candidates = [];
+  }
+  // TCG API includes the catalog rarity in search results. Use an exact matching
+  // rarity when it is available, but never reject an otherwise valid card merely
+  // because older sets describe rarity differently.
+  if (card.rarity) {
+    const sameRarity = candidates.filter((r) => comparable(r.rarity) === comparable(card.rarity));
+    if (sameRarity.length) candidates = sameRarity;
+  }
+  if (card.special_stamp) {
+    const stamped = candidates.filter((r) => stampAppearsOnProduct(r, card.special_stamp));
+    if (stamped.length) candidates = stamped;
   }
   if (candidates.length !== 1) return json({ ok: true, matched: false, query: name });
   // Search can expose only one finish for a product. Verify its complete
@@ -245,16 +269,38 @@ function tcgId(card) {
   return 'tcg:' + encodeURIComponent(String(card.id)) + ':' + encodeURIComponent(card.variant || '');
 }
 
-// TCG API calls these price printings Normal, Holofoil, and Reverse Holofoil.
-// Only narrow an automatic match when vision made one of those exact calls; other
+// TCG API documentation uses both "Foil" and "Holofoil" for the same Pokemon
+// finish. Treat those as equal; only narrow an automatic match when vision made
+// a clear call. Other
 // details (full art, rarity mark, stamp) identify the product, not its price finish.
 function matchingFinish(printings, finish) {
-  const read = String(finish || '').trim().toLowerCase();
-  if (!read) return null;
-  const wanted = read === 'normal' || read === 'non-holo' || read === 'non holo' ? 'normal'
-    : read === 'holofoil' || read === 'holo' || read === 'holographic' ? 'holofoil'
-    : read === 'reverse holofoil' || read === 'reverse holo' ? 'reverse holofoil' : '';
-  return wanted ? printings.filter(card => String(card.variant || '').trim().toLowerCase() === wanted) : null;
+  const wanted = finishKey(finish);
+  return wanted ? printings.filter(card => finishKey(card.variant) === wanted) : null;
+}
+
+function finishKey(value) {
+  const read = String(value || '').trim().toLowerCase();
+  if (read === 'normal' || read === 'non-holo' || read === 'non holo') return 'normal';
+  if (read === 'holofoil' || read === 'holo' || read === 'holographic' || read === 'foil') return 'foil';
+  if (read === 'reverse holofoil' || read === 'reverse holo') return 'reverse-foil';
+  return '';
+}
+
+function comparable(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function searchPrinting(finish) {
+  const key = finishKey(finish);
+  // The documented search filter is Normal or Foil. Reverse holo has no
+  // documented filter, so it remains in the result list and is matched later.
+  return key === 'normal' ? 'Normal' : key === 'foil' ? 'Foil' : '';
+}
+
+function stampAppearsOnProduct(card, stamp) {
+  const wanted = comparable(stamp);
+  if (!wanted) return false;
+  return comparable(card.name).includes(wanted) || comparable(card.set).includes(wanted);
 }
 
 async function pokemonSearchPath(body) {
@@ -331,9 +377,12 @@ async function pokemonPricePath(body) {
 }
 
 // Search tcgapi.dev, normalize each hit to the handful of fields we use.
-async function tcgSearch(q, key) {
-  const url = 'https://api.tcgapi.dev/v1/search?' +
-    new URLSearchParams({ q, game: 'pokemon', type: 'Cards', sort: 'relevance', per_page: '100' }).toString();
+async function tcgSearch(q, key, filters = {}) {
+  const params = new URLSearchParams({ q, game: 'pokemon', type: 'Cards', sort: 'relevance', per_page: '100' });
+  if (/^\d+$/.test(String(filters.setId || ''))) params.set('set_id', String(filters.setId));
+  if (String(filters.rarity || '').trim()) params.set('rarity', String(filters.rarity).trim());
+  if (String(filters.printing || '').trim()) params.set('printing', String(filters.printing).trim());
+  const url = 'https://api.tcgapi.dev/v1/search?' + params.toString();
   const resp = await fetch(url, { headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000) });
   if (!resp.ok) {
     const detail = await resp.text().catch(() => '');
@@ -361,11 +410,37 @@ function normalizeCard(c) {
     id: c.id || c.card_id || c.uuid || '',
     name: c.name || c.card_name || '',
     set: (c.set && (c.set.name || c.set)) || c.set_name || c.expansion || '',
+    set_id: c.set_id || (c.set && c.set.id) || '',
     number: c.number || c.collector_number || c.card_number || '',
+    rarity: c.rarity || '',
     variant: c.variant || c.printing || c.finish || '',
     image: c.image || c.image_url || (c.images && (c.images.small || c.images.large)) || '',
     market_price: market,
   };
+}
+
+async function pokemonSetId(name, key) {
+  const wanted = comparable(name);
+  if (!wanted) return '';
+  if (Date.now() > pokemonSetCache.expiresAt) {
+    const sets = [];
+    for (let page = 1; page <= 5; page++) {
+      const response = await fetch('https://api.tcgapi.dev/v1/games/pokemon/sets?' +
+        new URLSearchParams({ page: String(page), per_page: '100' }), {
+        headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) break;
+      const body = await response.json();
+      const rows = Array.isArray(body.data) ? body.data : [];
+      sets.push(...rows.filter(set => set && set.name && (set.abbreviation || set.slug || set.card_count != null)));
+      if (!body.meta?.has_more && rows.length < 100) break;
+    }
+    pokemonSetCache.sets = sets;
+    pokemonSetCache.expiresAt = sets.length ? Date.now() + 24 * 60 * 60 * 1000 : 0;
+  }
+  const exact = pokemonSetCache.sets.find(set => [set.name, set.abbreviation, set.slug]
+    .some(value => comparable(value) === wanted));
+  return exact && /^\d+$/.test(String(exact.id)) ? String(exact.id) : '';
 }
 
 function firstNum(cands) {
