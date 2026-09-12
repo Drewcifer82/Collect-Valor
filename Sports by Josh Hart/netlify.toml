@@ -1,4 +1,6 @@
 [build]
+  # Build Git pushes even when Netlify's change detection reports no changes.
+  ignore = "exit 1"
   publish = "."
   functions = "netlify/functions"
 
