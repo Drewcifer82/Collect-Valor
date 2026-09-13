@@ -40,6 +40,12 @@ create index if not exists collection_owner_idx on public.collection (owner);
 create index if not exists collection_owner_slab_idx on public.collection (owner, is_slab);
 
 alter table public.collection add column if not exists tcgplayer_id text;
+alter table public.collection add column if not exists story_origin text;
+alter table public.collection add column if not exists story_place text;
+alter table public.collection add column if not exists story_year integer;
+alter table public.collection add column if not exists story_age integer;
+alter table public.collection add column if not exists story_price_paid numeric(12,2);
+alter table public.collection add column if not exists story_note text;
 
 -- Public-facing collector names. Account emails stay private; only a chosen
 -- display name is returned by Community binders.

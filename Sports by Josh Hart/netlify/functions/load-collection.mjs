@@ -61,6 +61,12 @@ export default async (req) => {
     value: r.value == null ? null : Number(r.value),
     is_showcase: r.is_showcase === true,
     is_tradeable: r.is_tradeable === true,
+    story_origin: r.story_origin || '',
+    story_place: r.story_place || '',
+    story_year: r.story_year == null ? null : Number(r.story_year),
+    story_age: r.story_age == null ? null : Number(r.story_age),
+    story_price_paid: r.story_price_paid == null ? null : Number(r.story_price_paid),
+    story_note: r.story_note || '',
     image_url: r.image_path && signed[r.image_path] ? signed[r.image_path] : '',
   }));
 

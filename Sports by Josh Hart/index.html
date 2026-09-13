@@ -385,6 +385,7 @@ td,th{overflow-wrap:anywhere}
 .collection-dialog .danger.arm{color:#ff9ba6;border-color:#ff9ba666}
 .collection-dialog .collection-art-frame img.thumb{max-width:230px;margin:auto}
 .collection-dialog .msg{margin-top:10px}
+.story-back{margin:18px 0;padding:18px;border:1px solid #a894ff55;border-radius:15px;background:linear-gradient(145deg,#22223e,#151b31)}.story-back h3{margin:0 0 4px}.story-back>p{font-size:12px;color:var(--muted);margin:0 0 16px}.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.story-grid label{font:10px monospace;letter-spacing:1px;color:var(--muted)}.story-grid input,.story-grid select,.story-back textarea{width:100%;margin-top:6px;border:1px solid var(--line);background:#0e1625;color:var(--text);padding:10px;border-radius:9px;font:13px Inter,Arial,sans-serif}.story-back textarea{resize:vertical;min-height:90px}.story-back .story-full{display:block;margin-top:12px}.story-actions{display:flex;gap:10px;margin-top:14px}.story-actions button{flex:1!important;margin:0!important}.story-private{font:10px monospace;color:#b8a7f5;margin:13px 0 0}.story-toggle{width:100%;margin:0 0 8px}.dialog-front[hidden],.story-back[hidden]{display:none}
 /* Paywall dialog */
 .pw-badge{display:inline-block;font:9px monospace;letter-spacing:1.5px;color:#deca95;border:1px solid #9d815645;border-radius:6px;padding:7px 9px;margin:14px 0 6px}
 .pw-fine{color:var(--muted);font-size:12px;line-height:1.65;margin:0 0 18px}
@@ -565,10 +566,11 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 </section>
 <dialog class="collection-dialog" id="collection-dialog" aria-labelledby="collection-dialog-name">
   <header><span class="label">FROM YOUR COLLECTION</span><button class="secondary" id="collection-dialog-close" type="button" aria-label="Close card details">&times;</button></header>
-  <div id="collection-dialog-art"></div><h2 id="collection-dialog-name"></h2><p class="detail" id="collection-dialog-set"></p>
+  <div class="dialog-front" id="collection-dialog-front"><div id="collection-dialog-art"></div><h2 id="collection-dialog-name"></h2><p class="detail" id="collection-dialog-set"></p>
   <dl><dt>Value</dt><dd id="collection-dialog-value"></dd><dt>Card type</dt><dd id="collection-dialog-type"></dd><dt>Category</dt><dd id="collection-dialog-category"></dd><dt>Cert #</dt><dd id="collection-dialog-cert"></dd></dl>
-  <button class="primary" id="collection-dialog-star" type="button">Add to showcase</button>
-  <button class="danger" id="collection-dialog-delete" type="button">Remove from collection</button>
+  <button class="secondary story-toggle" id="collection-story-open" type="button">↻ Flip to back story</button><button class="primary" id="collection-dialog-star" type="button">Add to showcase</button>
+  <button class="danger" id="collection-dialog-delete" type="button">Remove from collection</button></div>
+  <form class="story-back" id="collection-story" hidden><span class="label">PRIVATE BACK STORY</span><h3>The back story behind this card.</h3><p>This stays private, including when the card is in your Showcase.</p><div class="story-grid"><label>HOW YOU GOT IT<select id="story-origin"><option value="">Choose one</option><option>Pulled it</option><option>Bought it</option><option>Traded for it</option><option>Gift</option><option>Found it</option><option>Other</option></select></label><label>YEAR<input id="story-year" type="number" min="1900" max="2100" placeholder="2002"></label><label>WHERE FROM<input id="story-place" maxlength="120" placeholder="Convention, shop, friend…"></label><label>YOUR AGE<input id="story-age" type="number" min="0" max="120" placeholder="12"></label><label>PRICE PAID<input id="story-price" type="number" min="0" max="1000000" step="0.01" placeholder="0.00"></label></div><label class="story-full">PERSONAL NOTE<textarea id="story-note" maxlength="2000" placeholder="What do you remember about getting this card?"></textarea></label><div class="story-actions"><button class="secondary" id="collection-story-close" type="button">↻ Card front</button><button class="primary" type="submit">Save back story</button></div><p class="story-private">Only you can see this back story.</p></form>
   <p class="msg" id="collection-dialog-msg"></p>
 </dialog>
 
@@ -1210,6 +1212,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   const cdlg = $('collection-dialog');
   function openCard(card) {
     detailCard = card;
+    showStory(false);
     setText('collection-dialog-name', cardName(card));
     setText('collection-dialog-set', [cardMeta(card), card.category].filter(Boolean).join(' · ') || '—');
     $('collection-dialog-art').replaceChildren(artFrame(card));
@@ -1223,12 +1226,42 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const m = $('collection-dialog-msg'); m.className = 'msg'; m.textContent = '';
     if (!cdlg.open) cdlg.showModal();
   }
+  function showStory(open) {
+    $('collection-dialog-front').hidden = open;
+    $('collection-story').hidden = !open;
+    if (!open || !detailCard) return;
+    $('story-origin').value = detailCard.story_origin || '';
+    $('story-place').value = detailCard.story_place || '';
+    $('story-year').value = detailCard.story_year == null ? '' : detailCard.story_year;
+    $('story-age').value = detailCard.story_age == null ? '' : detailCard.story_age;
+    $('story-price').value = detailCard.story_price_paid == null ? '' : detailCard.story_price_paid;
+    $('story-note').value = detailCard.story_note || '';
+  }
   function paintDetailStar() {
     const b = $('collection-dialog-star');
     b.textContent = detailCard && detailCard.is_showcase ? '★ In showcase' : '☆ Add to showcase';
     b.setAttribute('aria-pressed', String(!!(detailCard && detailCard.is_showcase)));
   }
   $('collection-dialog-close').addEventListener('click', () => cdlg.close());
+  $('collection-story-open').addEventListener('click', () => showStory(true));
+  $('collection-story-close').addEventListener('click', () => showStory(false));
+  $('collection-story').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!detailCard) return;
+    const message = $('collection-dialog-msg'); message.className = 'msg'; message.textContent = 'Saving your story…';
+    const form = $('collection-story');
+    const submit = form.querySelector('[type="submit"]'); submit.disabled = true;
+    try {
+      const story = { origin: $('story-origin').value, place: $('story-place').value, year: $('story-year').value, age: $('story-age').value, price_paid: $('story-price').value, note: $('story-note').value };
+      const { res, data } = await post('update-card', { id: detailCard.id, story });
+      if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not save your story.');
+      Object.assign(detailCard, { story_origin: story.origin, story_place: story.place, story_year: story.year === '' ? null : Number(story.year), story_age: story.age === '' ? null : Number(story.age), story_price_paid: story.price_paid === '' ? null : Number(story.price_paid), story_note: story.note });
+      const saved = collection.cards.find((card) => card.id === detailCard.id); if (saved) Object.assign(saved, detailCard);
+      message.className = 'msg ok'; message.textContent = 'Story saved privately.';
+      showStory(false);
+    } catch (err) { message.className = 'msg error'; message.textContent = err.message || 'Could not save your story.'; }
+    finally { submit.disabled = false; }
+  });
   $('collection-dialog-star').addEventListener('click', async () => {
     if (!detailCard) return;
     const b = $('collection-dialog-star'); b.disabled = true;
