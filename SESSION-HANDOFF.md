@@ -97,6 +97,14 @@ All five are English. The first four appeared holo in the chat comparison; Heatr
 
 ## Pricing plan / product direction
 
+### September 12 evening live pricing test
+
+- The direct TCG ID/price work and the shared six-hour `tcg_price_cache` were committed and pushed as `b7cff1d` (`Cache TCG prices and retain provider card IDs`).
+- Live scan test: the app correctly matched raw **Oricorio ex — ME: Mega Evolution Promo #024, Holofoil**, but displayed **$8.77**. TCGplayer's live product page at the same time showed **$9.41 market**. This was the first scan of that card, so cache age cannot explain the initial difference; TCG API supplied $8.77.
+- A repeat scan still prompted Andrew to select the card. The current cache stores only exact price rows after a card match; it does not cache card identity/search matches. Do not claim it avoids repeat selection.
+- Andrew does **not** want identity-match caching. The six-hour price cache was removed locally after this test, so every scan and selected-card price lookup now requests fresh provider data. Continue investigating why TCG API's market price can differ from the current TCGplayer page.
+- Scope reminder: Collect Valor currently handles raw cards only. Do not add slab pricing or discuss the Oricorio as a slab feature.
+
 As checked September 11 at https://tcgapi.dev/pricing/:
 
 - Free: 100 pricing API requests/day; these are NOT necessarily 100 scans. Search, selection, and refresh can consume separate requests.

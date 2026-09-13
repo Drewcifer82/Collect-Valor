@@ -59,6 +59,45 @@ test('Pokemon pricing integration', async t => {
     assert.match(calls[1], /\/cards\/12345\/prices$/);
     assert.match(calls[2], /\/cards\/12345\/prices\?printing=Normal$/);
   });
+  await t.test('repeat searches fetch all editions and selected prices stay fresh with database configured', async () => {
+    const envKeys = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+    const saved = envKeys.map(k => process.env[k]);
+    process.env.SUPABASE_URL = 'https://db.example.test';
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-db-key';
+    let reads = 0;
+    globalThis.fetch = async url => {
+      const parsed = new URL(url);
+      assert.equal(parsed.hostname, 'api.tcgapi.dev');
+      if (parsed.pathname === '/v1/search') return Response.json({ data: [
+        { ...card, name: 'Unown S', number: '87/105', printing: '1st Edition' },
+      ] });
+      assert.equal(parsed.pathname, '/v1/cards/12345/prices');
+      reads++;
+      const rows = [
+        { printing: '1st Edition', market_price: 5 },
+        { printing: 'Unlimited', market_price: reads },
+      ];
+      return Response.json({ data: parsed.searchParams.has('printing')
+        ? rows.filter(r => r.printing === parsed.searchParams.get('printing')) : rows });
+    };
+    try {
+      for (let i = 1; i <= 2; i++) {
+        const result = await request({ search: 'Unown S', category: 'pokemon', number: '87/105' });
+        assert.equal(result.status, 200);
+        assert.deepEqual(result.data.results.map(c => c.variant), ['1st Edition', 'Unlimited']);
+        assert.equal(result.data.results[1].prices[0].price, i);
+      }
+      for (let i = 3; i <= 4; i++) {
+        const result = await request({ card_id: 'tcg:12345:Unlimited', grade: 'Raw' });
+        assert.equal(result.data.fmv.price, i);
+      }
+      assert.equal(reads, 4);
+    } finally {
+      envKeys.forEach((k, i) => {
+        if (saved[i] === undefined) delete process.env[k]; else process.env[k] = saved[i];
+      });
+    }
+  });
   await t.test('general search includes Pokemon without relying on Card Hedge', async () => {
     globalThis.fetch = async url => {
       if (String(url).includes('cardhedger')) return Response.json({ error: 'unavailable' }, { status: 503 });

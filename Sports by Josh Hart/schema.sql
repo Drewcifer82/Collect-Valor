@@ -41,17 +41,6 @@ create index if not exists collection_owner_slab_idx on public.collection (owner
 
 alter table public.collection add column if not exists tcgplayer_id text;
 
--- Shared TCG API price cache. The same matched card + printing is priced once,
--- then reused for six hours instead of spending another provider request.
-create table if not exists public.tcg_price_cache (
-  card_id      text not null,
-  printing     text not null,
-  market_price numeric(12,2),
-  low_price    numeric(12,2),
-  checked_at   timestamptz not null default now(),
-  primary key (card_id, printing)
-);
-
 alter table public.collection enable row level security;
 -- Intentionally no policies for anon/authenticated: direct client access is denied.
 -- The Netlify functions use the service_role key (which bypasses RLS) and enforce
