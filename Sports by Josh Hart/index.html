@@ -1442,6 +1442,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       if (m.variant) current.card.variation = m.variant;
       if (m.category) current.card.category = m.category;
       if (m.card_id) current.card.card_id = m.card_id;
+      if (m.tcgplayer_id) current.card.tcgplayer_id = m.tcgplayer_id;
       if (fromManual) {
         setText('r-name', m.description || [current.card.year, m.player].filter(Boolean).join(' '));
         const num = m.number ? '#' + String(m.number).replace(/^#/, '') : '';

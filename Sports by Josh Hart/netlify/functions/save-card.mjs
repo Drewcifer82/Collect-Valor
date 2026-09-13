@@ -94,6 +94,7 @@ export default async (req) => {
     cert_number: str(body.cert_number || card.cert_number),
     grade: str(body.grade || card.grade),
     card_id: str(body.card_id || card.card_id),
+    tcgplayer_id: str(body.tcgplayer_id || card.tcgplayer_id),
     value: numOrNull(body.value),
     image_path: imagePath,
     is_showcase: false,

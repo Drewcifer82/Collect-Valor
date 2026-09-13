@@ -136,6 +136,19 @@ test('Pokemon pricing integration', async t => {
     assert.equal(result.data.matched, true);
     assert.equal(result.data.fmv.price, 9.99);
   });
+  await t.test('exact match resolves TCG and TCGplayer IDs before price lookup', async () => {
+    globalThis.fetch = async url => {
+      const target = String(url);
+      if (target.includes('/games/pokemon/sets?')) return Response.json({ data: [] });
+      if (target.includes('/search?')) return Response.json({ data: [card] });
+      if (/\/cards\/12345$/.test(target)) return Response.json({ data: { ...card, tcgplayer_id: 987654 } });
+      return Response.json({ data: [{ printing: 'Normal', market_price: 3.21 }] });
+    };
+    const result = await request({ card: { ...scan.card, set: '' } });
+    assert.equal(result.data.card.card_id, 'tcg:12345:Normal');
+    assert.equal(result.data.card.tcgplayer_id, 987654);
+    assert.equal(result.data.fmv.price, 3.21);
+  });
   await t.test('failed finish lookup is an error, never an incomplete successful list', async () => {
     globalThis.fetch = async url => String(url).includes('/prices')
       ? Response.json({ error: 'quota' }, { status: 429 }) : Response.json({ data: [card] });

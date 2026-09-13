@@ -14,6 +14,7 @@ import crypto from 'node:crypto';
 
 const API = 'https://api.cardhedger.com/v1/cards';
 const pokemonSetCache = { expiresAt: 0, sets: [] };
+const PRICE_CACHE_MS = 6 * 60 * 60 * 1000;
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -233,7 +234,10 @@ async function rawPath(body) {
   if (candidates.length !== 1) return json({ ok: true, matched: false, query: name });
   // Search can expose only one finish for a product. Verify its complete
   // printing list before treating a single search hit as an exact match.
-  const printings = await expandPrintings(candidates, tcgKey);
+  // Resolve the provider's canonical record before pricing it. This keeps the
+  // TCG card ID and its TCGplayer product ID together for later cache/lookups.
+  const resolved = await tcgCardById(candidates[0], tcgKey);
+  const printings = await expandPrintings([resolved], tcgKey, priceCache());
   const finishMatches = matchingFinish(printings, card.finish);
   const pricedCandidates = finishMatches === null ? printings : finishMatches;
   if (pricedCandidates.length !== 1) return json({ ok: true, matched: false, query: name });
@@ -254,6 +258,7 @@ async function rawPath(body) {
       variant: pick.variant || '',
       category: 'pokemon',
       image: pick.image || '',
+      tcgplayer_id: pick.tcgplayer_id || '',
       confidence: null,
     },
     grade_prices: [],
@@ -313,7 +318,7 @@ async function pokemonSearchPath(body) {
   if (new Set(candidates.map(c => String(c.id))).size > 12) {
     return json({ error: 'Please narrow your search with the card name and number.', code: 'refine_search' }, 422);
   }
-  const cards = await expandPrintings(candidates, key);
+  const cards = await expandPrintings(candidates, key, priceCache());
   const results = cards.filter(c => c.id).map(c => ({
     card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
     number: c.number, variant: c.variant, category: 'pokemon', image: c.image,
@@ -322,7 +327,7 @@ async function pokemonSearchPath(body) {
   return json({ ok: true, results, count: results.length });
 }
 
-async function expandPrintings(cards, key) {
+async function expandPrintings(cards, key, cache) {
   const products = new Map();
   for (const card of cards) if (/^\d+$/.test(String(card.id))) products.set(String(card.id), card);
   // Process in small batches to avoid flooding the provider. One request per
@@ -331,6 +336,8 @@ async function expandPrintings(cards, key) {
   const entries = [...products.values()];
   for (let i = 0; i < entries.length; i += 4) {
     const batch = await Promise.all(entries.slice(i, i + 4).map(async card => {
+      const cached = await cachedPrintings(card, cache);
+      if (cached) return cached;
       const response = await fetch('https://api.tcgapi.dev/v1/cards/' + encodeURIComponent(card.id) + '/prices', {
         headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
       });
@@ -344,7 +351,9 @@ async function expandPrintings(cards, key) {
         const variant = row.printing.trim();
         finishes.set(variant.toLowerCase(), { ...card, variant, market_price: normalizeCard(row).market_price });
       }
-      return finishes.size ? [...finishes.values()] : [{ ...card, market_price: null }];
+      const expanded = finishes.size ? [...finishes.values()] : [{ ...card, market_price: null }];
+      await storePrintings(expanded, cache);
+      return expanded;
     }));
     expanded.push(...batch.flat());
   }
@@ -361,6 +370,9 @@ async function pokemonPricePath(body) {
   if (body.grade && !/^(raw|ungraded)$/i.test(body.grade)) {
     return json({ ok: true, matched: true, source: 'tcgplayer', fmv: null, grade_prices: [], comps: null, insights: null });
   }
+  const cache = priceCache();
+  const cached = printing ? await cachedPrinting(id, printing, cache) : null;
+  if (cached) return priceResponse(cached.market_price, cached.low_price, cached.checked_at);
   const query = printing ? '?' + new URLSearchParams({ printing }) : '';
   const response = await fetch('https://api.tcgapi.dev/v1/cards/' + id + '/prices' + query, {
     headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
@@ -371,9 +383,47 @@ async function pokemonPricePath(body) {
   const row = printing ? rows.find(r => String(r.printing || '').toLowerCase() === printing.toLowerCase())
     : rows.length === 1 ? rows[0] : null;
   const price = row ? normalizeCard(row).market_price : null;
+  if (row && printing) await storePrintings([{ id, variant: printing, market_price: price, low_price: firstNum([row.low_price]) }], cache);
+  return priceResponse(price, row && firstNum([row.low_price]), row && row.last_updated_at);
+}
+
+function priceResponse(price, low, asOf) {
   return json({ ok: true, matched: true, source: 'tcgplayer',
-    fmv: price === null ? null : { price, low: firstNum([row.low_price]), as_of_date: row.last_updated_at || '' },
+    fmv: price === null ? null : { price, low: low ?? null, as_of_date: asOf || '' },
     grade_prices: [], comps: null, insights: null });
+}
+
+function priceCache() {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return url && key ? { url, key } : null;
+}
+
+async function cachedPrintings(card, cache) {
+  if (!cache) return null;
+  try {
+    const rows = await cacheRead('card_id=eq.' + encodeURIComponent(String(card.id)), cache);
+    if (!rows.length || rows.some(row => Date.now() - Date.parse(row.checked_at || '') > PRICE_CACHE_MS)) return null;
+    return rows.map(row => ({ ...card, variant: row.printing, market_price: numOrNull(row.market_price), low_price: numOrNull(row.low_price) }));
+  } catch { return null; }
+}
+async function cachedPrinting(id, printing, cache) {
+  if (!cache) return null;
+  try {
+    const rows = await cacheRead('card_id=eq.' + encodeURIComponent(id) + '&printing=eq.' + encodeURIComponent(printing), cache);
+    const row = rows[0];
+    return row && Date.now() - Date.parse(row.checked_at || '') <= PRICE_CACHE_MS ? row : null;
+  } catch { return null; }
+}
+async function cacheRead(filter, cache) {
+  const r = await fetch(cache.url + '/rest/v1/tcg_price_cache?' + filter + '&select=printing,market_price,low_price,checked_at', { headers: { apikey: cache.key, Authorization: 'Bearer ' + cache.key } });
+  if (!r.ok) throw new Error('cache unavailable');
+  const rows = await r.json(); return Array.isArray(rows) ? rows : [];
+}
+async function storePrintings(cards, cache) {
+  if (!cache) return;
+  const rows = cards.filter(card => card.id && card.variant).map(card => ({ card_id: String(card.id), printing: String(card.variant), market_price: card.market_price, low_price: card.low_price ?? null, checked_at: new Date().toISOString() }));
+  if (!rows.length) return;
+  try { await fetch(cache.url + '/rest/v1/tcg_price_cache?on_conflict=card_id,printing', { method: 'POST', headers: { apikey: cache.key, Authorization: 'Bearer ' + cache.key, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) }); } catch {}
 }
 
 // Search tcgapi.dev, normalize each hit to the handful of fields we use.
@@ -396,6 +446,18 @@ async function tcgSearch(q, key, filters = {}) {
   return list.map(normalizeCard).filter(Boolean);
 }
 
+async function tcgCardById(candidate, key) {
+  try {
+    const response = await fetch('https://api.tcgapi.dev/v1/cards/' + encodeURIComponent(candidate.id), {
+      headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) return candidate;
+    const body = await response.json();
+    const resolved = normalizeCard(body && body.data);
+    return resolved && String(resolved.id) === String(candidate.id) ? { ...candidate, ...resolved } : candidate;
+  } catch { return candidate; }
+}
+
 // Accept both the documented numeric price and market_price response formats.
 function normalizeCard(c) {
   if (!c || typeof c !== 'object') return null;
@@ -408,6 +470,7 @@ function normalizeCard(c) {
   ]);
   return {
     id: c.id || c.card_id || c.uuid || '',
+    tcgplayer_id: c.tcgplayer_id || c.tcgplayerId || '',
     name: c.name || c.card_name || '',
     set: (c.set && (c.set.name || c.set)) || c.set_name || c.expansion || '',
     set_id: c.set_id || (c.set && c.set.id) || '',

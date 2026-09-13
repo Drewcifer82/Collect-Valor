@@ -57,6 +57,7 @@ export default async (req) => {
     cert_number: r.cert_number || '',
     grade: r.grade || '',
     card_id: r.card_id || '',
+    tcgplayer_id: r.tcgplayer_id || '',
     value: r.value == null ? null : Number(r.value),
     is_showcase: r.is_showcase === true,
     is_tradeable: r.is_tradeable === true,
