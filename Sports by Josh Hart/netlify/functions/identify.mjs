@@ -77,17 +77,26 @@ export default async (req) => {
     'SPORTS: "player"=athlete, "team"=team, "sport"=sport, "position"=position, "brand"=manufacturer ' +
     '(Topps, Panini, Upper Deck, Bowman, Fleer, Donruss, etc.), "rookie"=true only if a rookie card, ' +
     '"variation"=parallel/insert/refractor/serial/auto/relic note. ' +
-    'POKEMON: "player"=Pokemon plus card name (e.g. "Charizard ex","Pikachu VMAX"), "brand"="Pokemon", ' +
+    'POKEMON: "player"=Pokemon plus card name (e.g. "Charizard ex","Pikachu VMAX"), "brand"="Pokemon". ' +
+    'For Unown, carefully read and preserve the letter or punctuation form printed beside its name ' +
+    '(including bracketed letters): output a name such as "Unown H", never just "Unown" when the form is visible. ' +
+    'Do not take letters from attack or Pokemon Power text as the card name; if the name form is unreadable, ' +
+    'do not guess it and lower confidence. ' +
     '"set"=set/expansion (e.g. "151","Base Set"), "number"=collector number exactly as printed ' +
     '(e.g. "199/165","4/102"). "finish" must be one of: "Normal", "Holofoil", "Reverse Holofoil", ' +
     'or empty if it cannot be seen. "rarity"=the printed rarity words when present (such as "Illustration Rare", ' +
-    '"Ultra Rare", "Double Rare", or "Special Illustration Rare"). "rarity_mark"=the exact bottom-left ' +
+    '"Ultra Rare", "Double Rare", or "Special Illustration Rare"). "rarity_mark"=the exact rarity ' +
     'mark, including color and count when visible (examples: "black circle", "black diamond", "black star", ' +
     '"silver star", "gold star", "two gold stars"). "special_stamp"=any stamp or symbol that distinguishes ' +
     'the printing (such as "1st Edition", "Prerelease", "Staff", "Black Star Promo", or "W"), otherwise empty. ' +
     '"variation"=other parallel or card-style detail such as full art, illustration rare, promo, radiant, ' +
     'or trainer gallery; do not repeat finish, rarity mark, or special stamp there. Leave "team","sport","position" empty and "rookie" false. ' +
+    'Check BOTH bottom corners for collector number and rarity mark: older layouts may place them at the ' +
+    'bottom right, while newer layouts may place them at the bottom left. Do not require printed rarity words. ' +
     'Read the collector number digit by digit from the bottom edge and then recheck it against the photo. ' +
+    'Do not confuse a Pokedex number such as #201 or a level with the collector number. ' +
+    'Older cards may identify the expansion with a set symbol near the artwork rather than a printed set code. ' +
+    'Use that symbol only when confidently recognized; otherwise leave set empty. Do not confuse it with rarity. ' +
     'Do not substitute a familiar card number, set, year, or English card title based on the artwork. ' +
     'If any number digit is obscured, blurred, or uncertain, leave number empty and lower confidence. ' +
     '"language"=the language printed on the card, such as English, Japanese, Simplified Chinese, or Traditional Chinese. ' +
