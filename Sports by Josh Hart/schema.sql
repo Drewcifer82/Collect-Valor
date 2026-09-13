@@ -41,6 +41,17 @@ create index if not exists collection_owner_slab_idx on public.collection (owner
 
 alter table public.collection add column if not exists tcgplayer_id text;
 
+-- Public-facing collector names. Account emails stay private; only a chosen
+-- display name is returned by Community binders.
+create table if not exists public.collector_profiles (
+  owner        text primary key,
+  display_name text not null unique,
+  updated_at   timestamptz not null default now(),
+  constraint collector_profiles_display_name_length check (char_length(display_name) between 3 and 24),
+  constraint collector_profiles_display_name_format check (display_name ~ '^[A-Za-z0-9][A-Za-z0-9 _-]*[A-Za-z0-9]$')
+);
+alter table public.collector_profiles enable row level security;
+
 alter table public.collection enable row level security;
 -- Intentionally no policies for anon/authenticated: direct client access is denied.
 -- The Netlify functions use the service_role key (which bypasses RLS) and enforce

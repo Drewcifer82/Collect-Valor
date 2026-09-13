@@ -36,6 +36,11 @@ export default async (req) => {
     return json({ error: 'Could not load binders' }, 502);
   }
   if (!Array.isArray(rows)) rows = [];
+  // Retired launch/demo binders are never shown publicly.
+  rows = rows.filter((r) => !['andrew', 'josh'].includes(String(r.owner || '').trim().toLowerCase()));
+
+  const owners = [...new Set(rows.map((r) => String(r.owner || '').trim().toLowerCase()).filter(Boolean))];
+  const names = await displayNames(url, key, owners);
 
   const paths = rows.map((r) => r.image_path).filter(Boolean);
   const signed = paths.length ? await signPaths(url, key, paths) : {};
@@ -63,7 +68,7 @@ export default async (req) => {
   }
 
   const binders = Object.keys(byOwner).sort().map((o) => ({
-    owner: o,
+    owner: names[o] || 'Collector',
     is_you: o === viewer,
     cards: byOwner[o],
     count: byOwner[o].length,
@@ -72,6 +77,16 @@ export default async (req) => {
 
   return json({ ok: true, binders });
 };
+
+async function displayNames(url, key, owners) {
+  if (!owners.length) return {};
+  try {
+    const response = await fetch(`${url}/rest/v1/collector_profiles?owner=in.(${owners.map(encodeURIComponent).join(',')})&select=owner,display_name`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    if (!response.ok) return {};
+    const rows = await response.json();
+    return Object.fromEntries((Array.isArray(rows) ? rows : []).map((r) => [String(r.owner || '').toLowerCase(), r.display_name]));
+  } catch { return {}; }
+}
 
 async function signPaths(url, key, paths) {
   const out = {};

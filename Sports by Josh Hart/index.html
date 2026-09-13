@@ -400,6 +400,7 @@ td,th{overflow-wrap:anywhere}
 .profile-panel .kv-row:last-of-type{border-bottom:0}
 .profile-panel .kv-row .k{color:var(--muted)}.profile-panel .kv-row .v{font-family:monospace;text-align:right;overflow-wrap:anywhere;min-width:0}
 .profile-panel .secondary{width:100%;min-height:44px;margin-top:14px;font-size:12px}
+.profile-name-form{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.profile-name-form label{display:block;font:10px monospace;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}.profile-name-row{display:flex;gap:8px}.profile-name-row input{min-width:0;flex:1;border:1px solid var(--line);background:#0e1625;color:var(--text);padding:10px;border-radius:9px;font:14px monospace}.profile-name-row button{margin:0!important;width:auto!important;min-height:0!important;padding:10px 13px}.profile-name-msg{margin:8px 0 0;font-size:11px;color:var(--muted)}
 /* Nav link to static pages + footer links */
 nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
 nav a:hover{color:white}
@@ -614,6 +615,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <aside class="profile-settings">
       <article class="profile-panel"><span class="eyebrow">YOUR ACCOUNT</span><h2>Collector details</h2>
         <div class="kv-row"><span class="k">Signed in as</span><span class="v" id="acct-email">Guest</span></div>
+        <form class="profile-name-form" id="profile-name-form" hidden><label for="profile-name">YOUR PUBLIC COLLECTOR NAME</label><div class="profile-name-row"><input id="profile-name" type="text" minlength="3" maxlength="24" autocomplete="nickname" placeholder="Choose a name"><button class="secondary" type="submit">Save</button></div><p class="profile-name-msg" id="profile-name-msg">Shown in Community binders instead of your email.</p></form>
         <div class="kv-row"><span class="k">Plan</span><span class="v" id="acct-plan">Free</span></div>
         <div class="kv-row"><span class="k">Cards saved</span><span class="v" id="prof-singles">0 / 50</span></div>
         <button class="secondary hidden" id="signout" type="button">Sign out</button>
@@ -923,7 +925,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   function updateSessionUI() {
     const isMember = entitled();
-    const name = (session && (session.email || session.username)) || '';
+    const name = (session && (session.display_name || session.email || session.username)) || '';
     const initials = name ? name.replace(/@.*$/, '').slice(0, 2).toUpperCase() : 'CV';
     setText('who', name || 'Guest collector');
     setText('acct-email', name || 'Guest');
@@ -940,6 +942,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('manage-sub').classList.toggle('hidden', !(isMember && plan !== 'comp'));
     { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
     $('acct-unlock').classList.toggle('hidden', isMember);
+    $('profile-name-form').hidden = !name;
+    if (name) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
       setText('membership-title', 'You’re in.');
@@ -1069,6 +1073,32 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       renderPrize();
     } catch (e) { /* keep whatever we had */ }
   }
+
+  async function loadProfileName() {
+    if (!session || !session.token) return;
+    try {
+      const { res, data } = await post('collector-profile', { action: 'get' });
+      if (!res.ok || !data || !data.ok) return;
+      session.display_name = data.display_name || '';
+      localStorage.setItem('cv_session', JSON.stringify(session));
+      updateSessionUI();
+    } catch (e) { /* Profile names are optional until the schema is installed. */ }
+  }
+  $('profile-name-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = $('profile-name'), msg = $('profile-name-msg'), name = input.value.trim();
+    msg.className = 'profile-name-msg';
+    if (!name) { msg.textContent = 'Enter a collector name.'; return; }
+    msg.textContent = 'Saving…';
+    try {
+      const { res, data } = await post('collector-profile', { action: 'set', display_name: name });
+      if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not save that name.');
+      session.display_name = data.display_name;
+      localStorage.setItem('cv_session', JSON.stringify(session));
+      updateSessionUI();
+      msg.textContent = 'Saved. This is what people will see in Community binders.';
+    } catch (err) { msg.textContent = err.message || 'Could not save that name.'; }
+  });
 
   function updateHeader() {
     const c = collection.counts || {};
@@ -1219,7 +1249,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const { res, data } = await post('delete-card', { id: detailCard.id });
       if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not remove the card');
       cdlg.close();
-      loadCollection();
+      loadCollection(); loadProfileName();
     } catch (err) {
       del.disabled = false; del.classList.remove('arm'); del.textContent = 'Remove from collection';
       m.className = 'msg error'; m.textContent = err.message || 'Could not reach the server';
@@ -2048,7 +2078,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   resetResultData();
   updateSessionUI();
   updateHeader(); renderCollection(); renderPrize();
-  if (session && session.token) { loadCollection(); setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0); }
+  if (session && session.token) { loadCollection(); loadProfileName(); setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0); }
   // Deep links from the FAQ/privacy pages (e.g. /#collection).
   const goHash = () => { try { const h = location.hash.replace('#', ''); if (COPY[h]) navigate(h); } catch (e) {} };
   goHash(); window.addEventListener('hashchange', goHash);
