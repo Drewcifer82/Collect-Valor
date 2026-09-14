@@ -1,5 +1,16 @@
 # Collect Valor — handoff saved September 12, 2026
 
+## September 13, 2026 — latest work (supersedes stale pending-work notes below)
+
+- Current `main` is clean and pushed through `cc15c3b` (`Add private card back stories`). No code is pending locally.
+- Scanner update `7c14449` tells the vision reader to check both bottom corners on older Pokemon layouts, preserve Unown's bracketed letter form, avoid mistaking Pokedex numbers for collector numbers, and recognize older set symbols. Andrew confirmed the Unown [H] scan improved. It still needs broader live testing on older cards.
+- Price cache removal `67eff70` means searches and selected-card price reads always request fresh TCG API data. All 31 tests passed. Keep it removed unless Andrew explicitly changes his mind.
+- Unown [S] / 87/105: competitor Double Holo's manual results included the Unlimited Neo Destiny version at $2.24, but its camera scanner repeatedly identified the same card as unrelated cards. The exact TCG API result behavior remains unresolved; Andrew is content to leave pricing as-is for now.
+- Community binder work `a02e951`: profiles use a public collector name instead of exposing an email. Andrew ran the `collector_profiles` SQL and confirmed the Profile name field appeared after refreshing. The old `andrew` and `josh` demo binders are hidden from the public binder view; their underlying rows were not deleted.
+- Private back stories `cc15c3b`: each saved card can use **Flip to back story** and save acquisition method, place, year, age, amount paid, and a personal note. These fields never appear in Community binders, even if the card is showcased. Andrew ran the six `story_*` column statements in Supabase and confirmed saving works.
+- Product direction: the collection is a personal space first. Back stories must stay private. Community binders should later be simple, safe for all ages, and give people a reason to return for end-of-week results; wait for Andrew's ideas before expanding it.
+- Andrew submitted an eBay Developer registration using the Collect Valor business email. No production/marketplace data approval exists yet; do not assume eBay sales API access.
+
 ## Recovered session decisions — September 12, 2026 (latest)
 
 Andrew reported the following after the previous chat was lost. This section supersedes conflicting older next-step notes below. Save decisions promptly to prevent further loss.

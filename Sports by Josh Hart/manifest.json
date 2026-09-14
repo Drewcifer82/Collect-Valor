@@ -1,7 +1,7 @@
 {
   "name": "Collect Valor",
   "short_name": "Collect Valor",
-  "description": "Snap a photo of any Pokemon or sports card and see what it's worth right now — market value, recent sales, and graded prices.",
+  "description": "Snap a photo of any Pokemon card and see what it's worth right now — market value, recent sales, and graded prices.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
