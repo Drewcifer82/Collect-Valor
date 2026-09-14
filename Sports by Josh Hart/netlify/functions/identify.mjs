@@ -13,8 +13,6 @@ const CARD_SCHEMA = {
   },
   required: ['identified', 'confidence', 'card_type', 'rookie', ...STRING_FIELDS],
 };
-const FREE_LIMIT = 7; // free trial scans per guest, counted server-side by IP
-
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
@@ -27,26 +25,16 @@ export default async (req) => {
 
   const secret = process.env.SESSION_SECRET;
   const apiKey = process.env.OPENAI_API_KEY;
-  const sbUrl = process.env.SUPABASE_URL;
-  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!secret || !apiKey) return json({ error: 'Server not configured' }, 500);
 
   const image = String(body.image || '').replace(/^data:image\/\w+;base64,/, '');
   if (!image) return json({ error: 'No image provided' }, 400);
 
-  // Members (token decodes to an email) scan unlimited. Guests get FREE_LIMIT free
-  // scans, counted server-side by IP so clearing cookies / reopening can't reset it.
+  // Collect Valor is private during development. Only an existing account holder
+  // with a signed session can send a card photo to the paid vision service.
   const member = memberFromToken(body.token, secret);
-  let guestHash = null, guestUsed = 0, freeRemaining = null, guestToken = null;
   if (!member) {
-    if (!sbUrl || !sbKey) return json({ error: 'Server not configured' }, 500);
-    guestHash = hashIp(clientIp(req), secret);
-    try { guestUsed = await getFreeCount(sbUrl, sbKey, guestHash); } catch { guestUsed = 0; }
-    if (guestUsed >= FREE_LIMIT) {
-      return json({ ok: false, paywall: true, free_remaining: 0, error: 'Free scans used up' });
-    }
-    freeRemaining = FREE_LIMIT - (guestUsed + 1);
-    guestToken = signGuest(guestHash, secret);
+    return json({ ok: false, access_required: true, error: 'Collect Valor is currently available to account holders only.' }, 403);
   }
 
   // SPEED NOTE (Aug 18): trimmed to only the fields needed to name + price the card.
@@ -148,8 +136,7 @@ export default async (req) => {
 
   const card = parseCard(text);
   if (!card) return json({ error: 'Scanner could not read the card reliably. Try a clearer photo.' }, 502);
-  if (!member && guestHash) { try { await bumpFreeCount(sbUrl, sbKey, guestHash, guestUsed); } catch {} }
-  return json({ ok: true, card, raw: text, member: !!member, free_remaining: freeRemaining, guestToken, model, usage });
+  return json({ ok: true, card, raw: text, member: true, model, usage });
 };
 
 function parseCard(text) {
@@ -189,34 +176,6 @@ function memberFromToken(token, secret) {
     if (d && d.u && !d.guest) return String(d.u).toLowerCase();
     return null;
   } catch { return null; }
-}
-
-function signGuest(iphash, secret) {
-  const payload = Buffer.from(JSON.stringify({ guest: true, ip: iphash, iat: Date.now() })).toString('base64url');
-  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
-  return `${payload}.${sig}`;
-}
-
-function clientIp(req) {
-  return req.headers.get('x-nf-client-connection-ip')
-    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
-    || 'unknown';
-}
-function hashIp(ip, secret) { return crypto.createHmac('sha256', secret).update('ip:' + ip).digest('hex'); }
-
-async function getFreeCount(url, key, id) {
-  const r = await fetch(`${url}/rest/v1/free_scans?id=eq.${encodeURIComponent(id)}&select=count`,
-    { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-  if (!r.ok) return 0;
-  const rows = await r.json();
-  return (Array.isArray(rows) && rows[0] && Number(rows[0].count)) || 0;
-}
-async function bumpFreeCount(url, key, id, used) {
-  await fetch(`${url}/rest/v1/free_scans?on_conflict=id`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}`, Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ id, count: used + 1, last_at: new Date().toISOString() }),
-  });
 }
 
 function json(obj, status = 200) {

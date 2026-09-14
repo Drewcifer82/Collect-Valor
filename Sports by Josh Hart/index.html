@@ -430,7 +430,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </nav>
   <button class="who-pill" id="who-pill" type="button">GUEST</button>
 </header>
-<section class="intro"><span class="eyebrow">A LITTLE CARD. A BIG DISCOVERY.</span><h1 id="heading">Scan a card, get the market.</h1><p id="subtitle">A free Pokémon card price checker: snap a photo, see the market value, price history, and graded prices in seconds.</p></section>
+<section class="intro"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h1 id="heading">Collect Valor is coming soon.</h1><p id="subtitle">We are not operational yet. The app is currently available to account holders only. Expect our Grand Opening by October 5th.</p></section>
 
 <!-- ============ PRICE DESK ============ -->
 <section id="scan" class="page workspace">
@@ -454,10 +454,9 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </form>
   <p id="notice" class="msg" role="status" aria-live="polite"></p>
   <div class="member-line hidden" id="sub-card">
-    <span class="eyebrow">EARLY BETA · FOUNDING MEMBER</span>
-    <p>Lock in <b>$8.99/mo for life</b> — as long as you stay a member. Unlimited scanning, full price insights.</p>
-    <div class="row"><button class="primary" id="sc-subscribe" type="button">Subscribe — $8.99/mo</button></div>
-    <button class="link" id="sc-verify" type="button">Already subscribed? Unlock</button>
+    <span class="eyebrow">DEVELOPMENT PREVIEW</span>
+    <p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
+    <button class="link" id="sc-verify" type="button">Account holder sign in</button>
   </div>
 </div>
 <div>
@@ -525,7 +524,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
           </details>
         </section>
       </div>
-      <div class="insight-unlock" id="insight-unlock" hidden><span class="eyebrow">THE FULL PICTURE</span><h3>There’s more to this card.</h3><p>Price history, recent sales, market signals, and grading scenarios — every card, unlimited scans.</p><button class="primary" id="unlock-insights" type="button">Unlock full insights — $8.99/month</button><small>Founding-member rate · locked in for life</small></div>
+      <div class="insight-unlock" id="insight-unlock" hidden><span class="eyebrow">DEVELOPMENT PREVIEW</span><h3>We’re still building.</h3><p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p><button class="primary" id="unlock-insights" type="button">Account holder sign in</button></div>
     </div>
     <div class="result-bottom">
       <button class="save" id="save-star" type="button">☆ Save to collection</button>
@@ -623,9 +622,9 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
         <button class="secondary hidden" id="signout" type="button">Sign out</button>
         <button class="secondary hidden" id="manage-sub" type="button">Manage subscription</button>
         <p class="insight-note hidden" id="manage-sub-msg"></p>
-        <button class="secondary" id="acct-unlock" type="button">Already subscribed? Unlock</button>
+        <button class="secondary" id="acct-unlock" type="button">Account holder sign in</button>
       </article>
-      <article class="profile-panel profile-membership" id="membership-panel"><span class="eyebrow">EARLY BETA · FOUNDING MEMBER</span><h2 id="membership-title">Full insights.</h2><p id="membership-copy">Sign up during the beta and keep this rate for life, as long as you stay a member.</p><div class="profile-plan-price">$8.99<span>/ month</span></div><ul><li>Unlimited scanning &amp; pricing</li><li>Price history &amp; recent sales</li><li>Market signals &amp; grading scenarios</li></ul><button id="membership-cta" class="primary" type="button">Subscribe — $8.99/mo</button><p class="insight-note" id="membership-note">Secure checkout by Stripe. Cancel anytime.</p></article>
+      <article class="profile-panel profile-membership" id="membership-panel"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h2 id="membership-title">We’re still building.</h2><p id="membership-copy">Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p><p class="insight-note" id="membership-note">Public memberships are not available yet.</p></article>
     </aside>
   </div>
 </section>
@@ -636,17 +635,15 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 <!-- ============ PAYWALL ============ -->
 <dialog id="paywall" class="collection-dialog" aria-labelledby="pw-title">
   <header><span class="label">COLLECT VALOR</span><button class="secondary" id="pw-close" type="button" aria-label="Close">&times;</button></header>
-  <span class="pw-badge">FOUNDING MEMBER · EARLY BETA</span>
+  <span class="pw-badge">DEVELOPMENT PREVIEW</span>
   <div id="pw-stage-intro">
-    <h2 id="pw-title">See the full picture.</h2>
-    <p class="subscription-price">$8.99 <span>/ month</span></p>
-    <p class="pw-fine">We’re in an early testing beta — sign up now and <b>keep this $8.99/mo rate for life</b>, as long as you stay a member. Unlimited scanning &amp; pricing, full insights on every card.</p>
-    <button class="primary" id="pw-subscribe" type="button">Subscribe — $8.99/mo</button>
-    <button class="pw-link" id="pw-have-paid" type="button">I already paid — verify my email</button>
+    <h2 id="pw-title">We’re still building.</h2>
+    <p class="pw-fine">Collect Valor is not operational yet and is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
+    <button class="primary" id="pw-have-paid" type="button">Account holder sign in</button>
   </div>
   <div id="pw-stage-verify" hidden>
-    <h2>Unlock with your email.</h2>
-    <p class="pw-fine">Enter the email you subscribed with.</p>
+    <h2>Account holder sign in</h2>
+    <p class="pw-fine">Enter the email connected to your account.</p>
     <input class="text" id="pw-email" type="email" placeholder="you@email.com" autocomplete="email" />
     <button class="primary" id="pw-continue" type="button">Unlock</button>
     <p class="msg" id="pw-msg"></p>
@@ -932,31 +929,30 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('who', name || 'Guest collector');
     setText('acct-email', name || 'Guest');
     setText('profile-avatar', initials);
-    setText('profile-eyebrow', isMember ? 'FOUNDING MEMBER' : 'YOUR COLLECTOR SPACE');
-    setText('plan-name', isMember ? 'FOUNDING MEMBER' : 'FREE PREVIEW');
+    setText('profile-eyebrow', isMember ? 'ACCOUNT HOLDER' : 'DEVELOPMENT PREVIEW');
+    setText('plan-name', isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW');
     const plan = session && session.plan;
     setText('acct-plan', isMember
-      ? (plan === 'comp' ? 'Comp · free for life' : 'Founding member · $8.99/mo')
-      : 'Free · 7 trial scans');
+      ? 'Account holder'
+      : 'Account holder access required');
     const pill = $('who-pill');
-    if (pill) { pill.textContent = isMember ? 'FOUNDING MEMBER' : 'GUEST'; pill.classList.toggle('member', isMember); }
+    if (pill) { pill.textContent = isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW'; pill.classList.toggle('member', isMember); }
     $('signout').classList.toggle('hidden', !name);
     $('manage-sub').classList.toggle('hidden', !(isMember && plan !== 'comp'));
     { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
     $('acct-unlock').classList.toggle('hidden', isMember);
+    $('acct-unlock').textContent = 'Account holder sign in';
     $('profile-name-form').hidden = !name;
     if (name) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
-      setText('membership-title', 'You’re in.');
-      setText('membership-copy', 'Your founding-member rate is locked in for as long as you stay a member. Thank you for being early.');
-      $('membership-cta').classList.add('hidden');
-      setText('membership-note', 'Unlimited scanning and full insights are on for this account.');
+      setText('membership-title', 'You have private access.');
+      setText('membership-copy', 'Thank you for helping us build Collect Valor before the Grand Opening.');
+      setText('membership-note', 'Account-holder access is on for this device.');
     } else {
-      setText('membership-title', 'Full insights.');
-      setText('membership-copy', 'Sign up during the beta and keep this rate for life, as long as you stay a member.');
-      $('membership-cta').classList.remove('hidden');
-      setText('membership-note', 'Secure checkout by Stripe. Cancel anytime.');
+      setText('membership-title', 'We’re still building.');
+      setText('membership-copy', 'Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.');
+      setText('membership-note', 'Public memberships are not available yet.');
     }
     setLocked(!isMember);
     if (watchlist) watchlist.sessionChanged();
@@ -1144,7 +1140,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const hasAny = collection.cards.length > 0;
       setText('empty-title', hasAny ? 'No cards match just yet.' : (session && session.token ? 'No cards saved yet' : 'Sign in to see your collection'));
       setText('empty-sub', hasAny ? 'Try a different name or explore another part of your collection.' :
-        (session && session.token ? 'Scan a card and tap Save to collection to add it here.' : 'Members can save up to 50 cards. Unlock with the email you subscribed with.'));
+        (session && session.token ? 'Scan a card and tap Save to collection to add it here.' : 'Collection access is currently limited to account holders.'));
       $('collection-clear').classList.toggle('hidden', !hasAny);
       return;
     }
@@ -1389,23 +1385,17 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     try {
       const { res, data } = await post('identify', { image: dataUrl });
       setBusy(false);
-      if (data && data.paywall) { readout.textContent = 'Free scans used up.'; showPaywall('intro'); return; }
+      if (data && data.access_required) { readout.textContent = 'Account holder access required.'; showPaywall('intro'); return; }
       if (!res.ok || !data || !data.ok) {
         readout.textContent = 'Could not identify the card.';
         say((data && data.error) || 'Could not identify the card — try a sharper, straight-on photo.', 'error'); return;
       }
-      if (data.guestToken) { if (!session) session = guestSession(); session.token = data.guestToken; session.guest = true; }
       current = { card: data.card, image: dataUrl };
       resetSaveStar();
       renderCard(data.card);
       showLinks();
       bumpScanCount();
       fetchPrice(data.card);
-      if (session && !session.entitled && typeof data.free_remaining === 'number') {
-        say(data.free_remaining > 0
-          ? (data.free_remaining + ' free scan' + (data.free_remaining === 1 ? '' : 's') + ' left')
-          : 'That was your last free scan — subscribe to keep scanning.', 'ok');
-      }
     } catch (err) {
       setBusy(false);
       readout.textContent = 'Could not reach the server.';
@@ -1550,7 +1540,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function clearCandidates() { $('fix-results').replaceChildren(); $('matches-head').classList.add('hidden'); }
 
   async function manualSearch(auto) {
-    if (PAYWALL_ON && !entitled()) { showPaywall('intro'); return; }
+    if (!entitled()) { showPaywall('intro'); return; }
     const q = fixInput.value.trim();
     if (!q) { fixInput.focus(); return; }
     if (!current) current = { card: {}, image: pendingImage || null };
@@ -2053,11 +2043,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     });
   }
 
-  // ===== Paywall (Stripe payment link + email unlock) =====
-  const PAYWALL_ON = true;
-  // OLD $16 live link (archived): https://buy.stripe.com/eVq28r3nN8Ci5sMdJ20gw03
-  // TEST link: https://buy.stripe.com/test_14AdR9bUjbOubRa34o0gw02
-  const PAYMENT_LINK = 'https://buy.stripe.com/8x2cN54rRbOug7q8oI0gw04'; // LIVE link, $8.99/mo recurring
+  // ===== Private-preview account access =====
+  const PAYWALL_ON = false;
   const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email');
   function showPaywall(stage) { setPwStage(stage || 'intro'); if (!pw.open) { try { pw.showModal(); } catch (e) {} } }
   function hidePaywall() { if (pw.open) pw.close(); }
@@ -2067,24 +2054,16 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('pw-stage-verify').hidden = stage !== 'verify';
     if (stage === 'verify') setTimeout(() => { try { pwEmail.focus(); } catch (e) {} }, 50);
   }
-  function openCheckout() {
-    if (!PAYMENT_LINK || PAYMENT_LINK.indexOf('REPLACE_') === 0) { alert('Payment link not set yet.'); return; }
-    window.open(PAYMENT_LINK, '_blank'); try { fbq('track', 'InitiateCheckout', { value: 8.99, currency: 'USD' }); } catch (e) {}
-    showPaywall('verify');
-  }
   $('pw-close').addEventListener('click', hidePaywall);
   $('pw-back').addEventListener('click', () => setPwStage('intro'));
   $('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
-  $('pw-subscribe').addEventListener('click', openCheckout);
-  $('sc-subscribe').addEventListener('click', openCheckout);
-  $('membership-cta').addEventListener('click', openCheckout);
   $('sc-verify').addEventListener('click', () => showPaywall('verify'));
   $('pw-continue').addEventListener('click', unlockWithEmail);
   pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
 
   async function unlockWithEmail() {
     const email = (pwEmail.value || '').trim().toLowerCase();
-    if (!email || email.indexOf('@') < 0) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Enter the email you subscribed with.'; return; }
+    if (!email || email.indexOf('@') < 0) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Enter the email connected to your account.'; return; }
     pwMsg.className = 'msg'; pwMsg.textContent = 'Checking…';
     try {
       const res = await fetch('/.netlify/functions/start-session', {

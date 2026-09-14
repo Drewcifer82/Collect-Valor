@@ -76,33 +76,10 @@ test('OpenAI scanner integration', async t => {
     globalThis.fetch = async () => { throw new Error('Unexpected request'); };
     assert.equal((await scan({ image: '' })).status, 400);
   });
-  await t.test('guest limit still prevents a scan before the provider is called', async () => {
-    globalThis.fetch = async url => {
-      assert.ok(String(url).startsWith('https://db.example.test/'));
-      return Response.json([{ count: 7 }]);
-    };
-    assert.equal((await scan({ token: '' })).data.paywall, true);
-  });
-  await t.test('guest success counts once and retains guest-token response', async () => {
-    let writes = 0;
-    globalThis.fetch = async (url, options) => {
-      if (String(url).includes('api.openai.com')) return Response.json(completed());
-      if (options.method === 'POST') { writes++; return new Response(null, { status: 204 }); }
-      return Response.json([{ count: 2 }]);
-    };
+  await t.test('private preview prevents a guest scan before the provider is called', async () => {
+    globalThis.fetch = async () => { throw new Error('The provider must not be called for guests'); };
     const result = await scan({ token: '' });
-    assert.equal(result.data.free_remaining, 4);
-    assert.equal(writes, 1);
-    assert.ok(result.data.guestToken.includes('.'));
-  });
-  await t.test('failed guest scan does not consume a free scan', async () => {
-    let writes = 0;
-    globalThis.fetch = async (url, options) => {
-      if (String(url).includes('api.openai.com')) return Response.json({ error: {} }, { status: 503 });
-      if (options.method === 'POST') writes++;
-      return Response.json([{ count: 2 }]);
-    };
-    assert.equal((await scan({ token: '' })).status, 502);
-    assert.equal(writes, 0);
+    assert.equal(result.status, 403);
+    assert.equal(result.data.access_required, true);
   });
 });
