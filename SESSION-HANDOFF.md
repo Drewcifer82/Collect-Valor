@@ -1,5 +1,14 @@
 # Collect Valor — handoff saved September 12, 2026
 
+## September 14–15, 2026 — latest work
+
+- Pushed `d56ae91` — removed visible sports-card references from the active site, FAQ, privacy copy, manifest, and search examples. Pokémon is now the public focus.
+- Pushed `2eb5bc1` — the site is now a private development preview. Public scans are blocked server-side; only a signed-in existing account holder can scan. The app says it is not operational and expects a Grand Opening by October 5th. Scanner/pricing tests passed before this push.
+- Pushed `3861682` — added `netlify/functions/ebay-account-deletion.mjs`, an eBay Marketplace Account Deletion callback endpoint plus its test. The deployed version expects the Netlify environment variable `EBAY_DELETION_VERIFICATION_TOKEN`; it was not configured and the eBay setup was not completed.
+- Current **uncommitted** edits change that eBay endpoint and its test to use a fixed verification token instead of the missing Netlify variable. Do not commit/push this blindly; reconsider the token handling and verify eBay's exact current setup screen first.
+- eBay developer account approval was reported by Andrew. Official eBay documentation says Sandbox is optional; Production activation requires Marketplace Account Deletion compliance through either a subscription endpoint or an approved exemption. No eBay credentials were copied into the repository or chat. Do not claim that eBay sold-listing data is available until the correct production API and its permissions have been verified.
+- Product direction: Andrew eventually wants Magic: The Gathering support, but has no cards to test yet. Do not begin it without direction. He also asked about restoring Pokémon top movers from TCG API, but no work was started; wait until the commercial TCG API plan is in place.
+
 ## September 13, 2026 — latest work (supersedes stale pending-work notes below)
 
 - Current `main` is clean and pushed through `cc15c3b` (`Add private card back stories`). No code is pending locally.
@@ -143,3 +152,9 @@ This handoff and its pointers are also new local documentation work. The request
 - After the local billing-message fix, `node --test tests/openai-scanner.test.mjs` passed all eight tests.
 - These are mocked integration/regression tests, not live model accuracy tests. Live five-card success was reported by Andrew.
 - Start with `git status` to preserve pending edits. Review collection UI and save/load/update functions before making a collection plan. Recheck applicable AGENTS.md instructions.
+
+## September 15, 2026 — authorized pending batch
+
+- Andrew explicitly authorized committing and pushing all three pending files: this handoff, the eBay deletion endpoint, and its test.
+- Both eBay deletion tests passed before committing. This batch retains the fixed verification token described above. eBay dashboard setup and live verification remain unconfirmed.
+

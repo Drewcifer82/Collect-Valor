@@ -6,12 +6,11 @@ import handler from '../Sports by Josh Hart/netlify/functions/ebay-account-delet
 const endpoint = 'https://collectvalor.com/.netlify/functions/ebay-account-deletion';
 
 test('eBay challenge response uses the required SHA-256 input order', async () => {
-  process.env.EBAY_DELETION_VERIFICATION_TOKEN = 'CollectValor_EbayPreview_2026_Andrew';
   const challenge = 'ebay-challenge-123';
   const response = await handler(new Request(`${endpoint}?challenge_code=${challenge}`));
   const body = await response.json();
   const expected = crypto.createHash('sha256')
-    .update(challenge + process.env.EBAY_DELETION_VERIFICATION_TOKEN + endpoint)
+    .update(challenge + 'CV_eBayDelete_2026_7kQ4mP9xR2vN8dL5sH1wT6y' + endpoint)
     .digest('hex');
 
   assert.equal(response.status, 200);
