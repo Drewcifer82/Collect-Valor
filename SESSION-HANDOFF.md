@@ -2,11 +2,14 @@
 
 ## September 14–15, 2026 — latest work
 
+- Pushed `5eece16` — added a **Find this card on eBay** button beside the existing TCGplayer search on each verified Pokémon result. It opens a normal eBay active-listing search using the card name, set, and collector number. Andrew live-tested it successfully with Minior 201/182. It uses no eBay API, account connection, or user data.
+- eBay production keyset is now active. Andrew completed Marketplace Account Deletion setup at eBay using `https://collectvalor.com/.netlify/functions/ebay-account-deletion`, supplied the fixed verification token from the function, and eBay's test notification succeeded. The fixed-token change was committed and pushed as `abb53ec`.
+- Important eBay limitation: Marketplace Insights (sold-item history) is restricted and unavailable to new developers. Browse API access for public active-listing search needs separate eBay Buy API/Partner Network approval, so do not build against it unless approval is confirmed. The deployed eBay search button intentionally needs neither approval nor API credentials.
+- Future eBay direction: a "Sell this card" feature is technically possible via Inventory API, but would require each seller to connect their eBay account, plus secure storage of access tokens and ongoing listing management. Park it until Andrew explicitly chooses to take on that scope.
 - Pushed `d56ae91` — removed visible sports-card references from the active site, FAQ, privacy copy, manifest, and search examples. Pokémon is now the public focus.
 - Pushed `2eb5bc1` — the site is now a private development preview. Public scans are blocked server-side; only a signed-in existing account holder can scan. The app says it is not operational and expects a Grand Opening by October 5th. Scanner/pricing tests passed before this push.
 - Pushed `3861682` — added `netlify/functions/ebay-account-deletion.mjs`, an eBay Marketplace Account Deletion callback endpoint plus its test. The deployed version expects the Netlify environment variable `EBAY_DELETION_VERIFICATION_TOKEN`; it was not configured and the eBay setup was not completed.
-- Current **uncommitted** edits change that eBay endpoint and its test to use a fixed verification token instead of the missing Netlify variable. Do not commit/push this blindly; reconsider the token handling and verify eBay's exact current setup screen first.
-- eBay developer account approval was reported by Andrew. Official eBay documentation says Sandbox is optional; Production activation requires Marketplace Account Deletion compliance through either a subscription endpoint or an approved exemption. No eBay credentials were copied into the repository or chat. Do not claim that eBay sold-listing data is available until the correct production API and its permissions have been verified.
+- The older `3861682` environment-variable note is superseded by `abb53ec` above. No eBay credentials were copied into the repository or chat.
 - Product direction: Andrew eventually wants Magic: The Gathering support, but has no cards to test yet. Do not begin it without direction. He also asked about restoring Pokémon top movers from TCG API, but no work was started; wait until the commercial TCG API plan is in place.
 
 ## September 13, 2026 — latest work (supersedes stale pending-work notes below)
