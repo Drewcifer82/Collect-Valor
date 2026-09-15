@@ -476,7 +476,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <p class="price-note" id="r-price"></p>
     <div class="rdebug hidden" id="r-debug"></div>
     <button class="fixlink" id="fix-link" type="button">Wrong card or no price? Search by name ↓</button>
-    <div class="marketplace-links hidden" id="links-wrap"><a id="lnk-tcg" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Search TCGplayer ↗</a></div>
+    <div class="marketplace-links hidden" id="links-wrap"><a id="lnk-tcg" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Search TCGplayer ↗</a><a id="lnk-ebay" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Find this card on eBay ↗</a></div>
 
     <div class="insight-gate" id="insight-gate">
       <div id="paid-insights">
@@ -1787,17 +1787,26 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     showLinks();
   }
 
-  // TCGplayer link — Pokémon only (matches best on just the card name). eBay stays off:
-  // its sold-price pages now force a sign-in.
+  // Marketplace links use only the card's visible identity. They open a normal
+  // active-listing search and never access an eBay account or sold listings.
   function showLinks() {
     const c = (current && current.card) || {};
     const isPoke = c.card_type === 'pokemon' || /pokemon/i.test(c.category || '');
     const name = String(c.player || '').trim();
     const tcg = $('lnk-tcg');
+    const ebay = $('lnk-ebay');
     if (isPoke && name) {
       tcg.href = 'https://www.tcgplayer.com/search/all/product?q=' + encodeURIComponent(name);
-      tcg.classList.remove('hidden'); show('links-wrap');
-    } else { tcg.classList.add('hidden'); hide('links-wrap'); }
+      tcg.classList.remove('hidden');
+      const ebayQuery = [name, c.set, c.number ? '#' + String(c.number).replace(/^#/, '') : ''].filter(Boolean).join(' ');
+      ebay.href = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(ebayQuery);
+      ebay.classList.remove('hidden');
+      show('links-wrap');
+    } else {
+      tcg.classList.add('hidden');
+      ebay.classList.add('hidden');
+      hide('links-wrap');
+    }
   }
 
   function resetResultData() {
