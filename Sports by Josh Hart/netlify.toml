@@ -89,6 +89,19 @@ status = 200
 from = "/blog/what-is-my-pokemon-card-worth"
 to = "/blog-what-is-my-pokemon-card-worth.html"
 status = 200
+
+[[headers]]
+for = "/blog/welcome"
+  [headers.values]
+  Link = "<https://collectvalor.com/blog/welcome>; rel=canonical"
+[[headers]]
+for = "/blog/30th-anniversary-patience"
+  [headers.values]
+  Link = "<https://collectvalor.com/blog/30th-anniversary-patience>; rel=canonical"
+[[headers]]
+for = "/blog/what-is-my-pokemon-card-worth"
+  [headers.values]
+  Link = "<https://collectvalor.com/blog/what-is-my-pokemon-card-worth>; rel=canonical"
 [[redirects]]
   from = "/index.html.bak-preui"
   to = "/"
