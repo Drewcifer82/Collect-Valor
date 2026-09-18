@@ -70,9 +70,25 @@
   to = "/faq.html"
   status = 200
 [[redirects]]
-  from = "/privacy"
-  to = "/privacy.html"
-  status = 200
+from = "/privacy"
+to = "/privacy.html"
+status = 200
+[[redirects]]
+from = "/blog"
+to = "/blog.html"
+status = 200
+[[redirects]]
+from = "/blog/welcome"
+to = "/blog-welcome.html"
+status = 200
+[[redirects]]
+from = "/blog/30th-anniversary-patience"
+to = "/blog-30th-anniversary-patience.html"
+status = 200
+[[redirects]]
+from = "/blog/what-is-my-pokemon-card-worth"
+to = "/blog-what-is-my-pokemon-card-worth.html"
+status = 200
 [[redirects]]
   from = "/index.html.bak-preui"
   to = "/"
