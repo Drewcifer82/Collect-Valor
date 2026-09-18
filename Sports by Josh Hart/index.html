@@ -624,11 +624,19 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   </div>
   <div id="pw-stage-verify" hidden>
     <h2>Account holder sign in</h2>
-    <p class="pw-fine">Enter the email connected to your account.</p>
+    <p class="pw-fine">Enter the email connected to your account. We’ll send a sign-in code.</p>
     <input class="text" id="pw-email" type="email" placeholder="you@email.com" autocomplete="email" />
-    <button class="primary" id="pw-continue" type="button">Unlock</button>
+    <button class="primary" id="pw-continue" type="button">Send code</button>
     <p class="msg" id="pw-msg"></p>
     <button class="pw-link" id="pw-back" type="button">&larr; Back</button>
+  </div>
+  <div id="pw-stage-code" hidden>
+    <h2>Check your email</h2>
+    <p class="pw-fine">Enter the 6-digit sign-in code we sent you.</p>
+    <input class="text" id="pw-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" />
+    <button class="primary" id="pw-verify-code" type="button">Unlock</button>
+    <p class="msg" id="pw-code-msg"></p>
+    <button class="pw-link" id="pw-code-back" type="button">&larr; Use a different email</button>
   </div>
 </dialog>
 <script>
@@ -2025,41 +2033,61 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // ===== Private-preview account access =====
   const PAYWALL_ON = false;
-  const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email');
+  const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email'), pwCode = $('pw-code'), pwCodeMsg = $('pw-code-msg');
   function showPaywall(stage) { setPwStage(stage || 'intro'); if (!pw.open) { try { pw.showModal(); } catch (e) {} } }
   function hidePaywall() { if (pw.open) pw.close(); }
   function setPwStage(stage) {
     pwMsg.textContent = ''; pwMsg.className = 'msg';
-    $('pw-stage-intro').hidden = stage === 'verify';
+    $('pw-stage-intro').hidden = stage !== 'intro';
     $('pw-stage-verify').hidden = stage !== 'verify';
+    $('pw-stage-code').hidden = stage !== 'code';
     if (stage === 'verify') setTimeout(() => { try { pwEmail.focus(); } catch (e) {} }, 50);
+    if (stage === 'code') setTimeout(() => { try { pwCode.focus(); } catch (e) {} }, 50);
   }
   $('pw-close').addEventListener('click', hidePaywall);
   $('pw-back').addEventListener('click', () => setPwStage('intro'));
+  $('pw-code-back').addEventListener('click', () => setPwStage('verify'));
   $('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
   $('sc-verify').addEventListener('click', () => showPaywall('verify'));
   $('pw-continue').addEventListener('click', unlockWithEmail);
   pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
+  $('pw-verify-code').addEventListener('click', verifyEmailCode);
+  pwCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); verifyEmailCode(); } });
 
   async function unlockWithEmail() {
     const email = (pwEmail.value || '').trim().toLowerCase();
     if (!email || email.indexOf('@') < 0) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Enter the email connected to your account.'; return; }
-    pwMsg.className = 'msg'; pwMsg.textContent = 'Checking…';
+    pwMsg.className = 'msg'; pwMsg.textContent = 'Sending code…';
     try {
       const res = await fetch('/.netlify/functions/start-session', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) { pwMsg.className = 'msg error'; pwMsg.textContent = data.error || 'Could not unlock.'; return; }
+      if (!res.ok || !data.ok) { pwMsg.className = 'msg error'; pwMsg.textContent = data.error || 'Could not send a code.'; return; }
+      pwCode.value = ''; pwCodeMsg.className = 'msg'; pwCodeMsg.textContent = '';
+      setPwStage('code');
+    } catch (e) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Could not reach the server.'; }
+  }
+
+  async function verifyEmailCode() {
+    const email = (pwEmail.value || '').trim().toLowerCase(), code = (pwCode.value || '').trim();
+    if (!/^\d{6}$/.test(code)) { pwCodeMsg.className = 'msg error'; pwCodeMsg.textContent = 'Enter the 6-digit code.'; return; }
+    pwCodeMsg.className = 'msg'; pwCodeMsg.textContent = 'Verifying…';
+    try {
+      const res = await fetch('/.netlify/functions/start-session', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'verify', email, code }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { pwCodeMsg.className = 'msg error'; pwCodeMsg.textContent = data.error || 'Could not unlock.'; return; }
       session = { email: data.email, token: data.token, plan: data.plan || 'beta', entitled: true };
       try { if ((data.plan || '') !== 'comp') fbq('track', 'Purchase', { value: 8.99, currency: 'USD' }); } catch (e) {}
       localStorage.setItem('cv_session', JSON.stringify(session));
       updateSessionUI();
-      pwMsg.className = 'msg ok'; pwMsg.textContent = 'Unlocked!';
+      pwCodeMsg.className = 'msg ok'; pwCodeMsg.textContent = 'Unlocked!';
       loadCollection();
       setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0);
       setTimeout(hidePaywall, 700);
-    } catch (e) { pwMsg.className = 'msg error'; pwMsg.textContent = 'Could not reach the server.'; }
+    } catch (e) { pwCodeMsg.className = 'msg error'; pwCodeMsg.textContent = 'Could not reach the server.'; }
   }
 
   // ===== Watchlist: isolated browser saves, using the existing pricing endpoint =====
