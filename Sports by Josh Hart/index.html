@@ -21,7 +21,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=917040513943761&ev=PageView&noscript=1"/></noscript>
 <!-- End Meta Pixel Code -->
 <title>Pokémon Card Price Checker + Scanner | Collect Valor</title>
-<meta name="description" content="The free Pokémon card price checker. Snap a photo to see what your card is worth right now — market value, recent sales, and graded prices." />
+<meta name="description" content="The Pokémon card price checker. Snap a photo to see what your raw card is worth right now with current market values." />
 <link rel="canonical" href="https://collectvalor.com/" />
 <meta name="robots" content="index, follow" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -34,7 +34,7 @@ src="https://www.facebook.com/tr?id=917040513943761&ev=PageView&noscript=1"/></n
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Collect Valor" />
 <meta property="og:title" content="Pokémon Card Price Checker + Scanner | Collect Valor" />
-<meta property="og:description" content="Snap a photo of any Pokémon card and see what it&#39;s worth right now — market value, recent sales, and graded prices. First 7 scans free." />
+<meta property="og:description" content="Snap a photo of any Pokémon card and see its current raw-card market value. First 7 scans free." />
 <meta property="og:url" content="https://collectvalor.com/" />
 <meta property="og:image" content="https://collectvalor.com/og-image.png" />
 <meta property="og:image:width" content="1200" />
@@ -181,7 +181,7 @@ td,th{overflow-wrap:anywhere}
 .pressure-track{display:flex;height:10px;border-radius:10px;overflow:hidden;margin:14px 0}
 .pressure-track span{min-width:0}#buy-fill{background:linear-gradient(90deg,#299dd6,#4bd6e4)}#sell-fill{background:linear-gradient(90deg,#b68bef,#ed88d2)}
 .pressure-panel p{margin:0 0 8px;font-size:12px}.pressure-panel small{color:var(--muted);font-size:10px}
-.insight-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;padding-bottom:8px}
+.insight-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px;padding-bottom:8px}
 .insight-tabs button{min-width:0;min-height:44px;padding:10px 3px;font-size:12px;border:0;border-radius:8px;background:none;color:var(--muted)}
 .insight-tabs button[aria-selected=true]{color:#eee9ff;background:#b197ff1a}
 [data-insight-panel]{min-width:0;min-height:190px}
@@ -485,43 +485,24 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
           <div><span>90-DAY AVG.</span><strong id="ov-avg90">—</strong></div>
           <div><span>SALES / 90D</span><strong id="ov-vol">—</strong></div>
         </div>
-        <section class="pressure-panel hidden" id="pressure-wrap" aria-label="Buying and selling pressure">
-          <div class="pressure-labels"><span>Buying <strong id="buy-pct"></strong></span><span>Selling <strong id="sell-pct"></strong></span></div>
+        <section class="pressure-panel" id="pressure-wrap" aria-label="Buying and selling pressure">
+          <div class="pressure-labels"><span>Buying <strong id="buy-pct">—</strong></span><span>Selling <strong id="sell-pct">—</strong></span></div>
           <div class="pressure-track" role="img" id="pressure-track"><span id="buy-fill"></span><span id="sell-fill"></span></div>
-          <p id="pr-verdict"></p><small>Provider momentum estimate · not measured order flow</small>
+          <p id="pr-verdict">Buying and selling activity will appear here with price-history data.</p><small>Sales activity estimate · not measured order flow</small>
         </section>
         <div class="insight-tabs" role="tablist" aria-label="Card insights">
           <button type="button" role="tab" id="insight-tab-overview" aria-controls="pane-overview" aria-selected="true" data-pane="overview">Overview</button>
           <button type="button" role="tab" id="insight-tab-history" aria-controls="pane-history" aria-selected="false" tabindex="-1" data-pane="history">History</button>
-          <button type="button" role="tab" id="insight-tab-sales" aria-controls="pane-sales" aria-selected="false" tabindex="-1" data-pane="sales">Sales</button>
-          <button type="button" role="tab" id="insight-tab-grades" aria-controls="pane-grades" aria-selected="false" tabindex="-1" data-pane="grades">Grades</button>
         </div>
         <section id="pane-overview" role="tabpanel" tabindex="0" data-insight-panel>
           <span class="label">PRICE OVERVIEW · USD</span>
           <table class="kv"><tbody>
-            <tr><td>Grade</td><td id="ov-grade">Raw</td></tr>
-            <tr><td>Cert #</td><td id="ov-cert">—</td></tr>
             <tr><td>Fair asking range</td><td id="ov-range">—</td></tr>
-            <tr><td>Last sale</td><td id="ov-lastsale">—</td></tr>
             <tr><td>30-day trend</td><td id="ov-trend">—</td></tr>
           </tbody></table>
         </section>
-        <section id="pane-history" role="tabpanel" tabindex="0" data-insight-panel hidden></section>
-        <section id="pane-sales" role="tabpanel" tabindex="0" data-insight-panel hidden></section>
-        <section id="pane-grades" role="tabpanel" tabindex="0" data-insight-panel hidden>
-          <div id="grades-table"></div>
-          <details class="grading-calculator" id="roi-wrap">
-            <summary>Worth grading? <span>Compare a graded price with your costs</span></summary>
-            <p class="insight-note">Graded pricing is currently unavailable. What-if scenarios, not promised returns — no grade is guaranteed.</p>
-            <div class="grading-inputs">
-              <label>Possible grade<select id="grade-choice"></select></label>
-              <label>Grading fee ($)<input id="roi-fee" type="number" inputmode="decimal" min="0" max="100000" step="0.01" value="25"></label>
-              <label>Total shipping ($)<input id="grading-shipping" type="number" inputmode="decimal" min="0" max="100000" step="0.01" value="10"></label>
-              <label>Selling fees (%)<input id="grading-selling" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="13"></label>
-            </div>
-            <div class="grading-comparison"><div><span>RAW VALUE</span><strong id="grading-raw">—</strong></div><span aria-hidden="true">→</span><div><span>GRADED SCENARIO</span><strong id="grading-graded">—</strong></div></div>
-            <div class="grading-outcome" role="status" aria-live="polite"><span>Potential gain / loss vs. raw value</span><strong id="grading-net">—</strong><small id="grading-explanation"></small></div>
-          </details>
+        <section id="pane-history" role="tabpanel" tabindex="0" data-insight-panel hidden>
+          <div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>Charts will appear here when price-history data is connected.</div>
         </section>
       </div>
       <div class="insight-unlock" id="insight-unlock" hidden><span class="eyebrow">DEVELOPMENT PREVIEW</span><h3>We’re still building.</h3><p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p><button class="primary" id="unlock-insights" type="button">Account holder sign in</button></div>
@@ -534,7 +515,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
-  <p class="insight-note">Identification by OpenAI. Pokémon market prices from TCG API. Graded prices, sales history, and pricing for other categories are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
+  <p class="insight-note">Identification by OpenAI. Pokémon market prices from TCG API. Price history and sales activity are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
   <div class="matches-head hidden" id="matches-head"><span class="label">CHOOSE YOUR EXACT CARD</span><span id="matches-note">Tap your card for its real price</span></div>
   <div class="cards" id="fix-results"></div>
   <div class="movers hidden" id="market"><span class="label">MARKET MOVERS · BIGGEST WEEKLY GAINS</span><div id="market-list"></div></div>
@@ -1016,7 +997,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
       if (on && focus) b.focus();
     });
-    ['overview', 'history', 'sales', 'grades'].forEach((p) => { $('pane-' + p).hidden = p !== name; });
+    ['overview', 'history'].forEach((p) => { $('pane-' + p).hidden = p !== name; });
     if (name === 'history') maybeLoadHistory();
   }
   document.querySelectorAll('[data-pane]').forEach((b, i, all) => {
@@ -1504,10 +1485,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       }
     }
     fillOverview(data, picked);
-    fillSales(data);
     fillInsights(data);
     lastData = data;
-    renderGrades();
   }
 
   // No exact Card Hedge match: make the pick-list the hero, don't fake a value.
@@ -1658,8 +1637,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
           setText('r-price', 'Card matched, but no raw price is available yet.');
           current.value = null;
         }
-        fillOverview(data, picked); fillSales(data); fillInsights(data);
-        lastData = data; renderGrades();
+        fillOverview(data, picked); fillInsights(data);
+        lastData = data;
       } else {
         setText('r-price', 'Could not get a price — you can still save the card.'); current.value = null;
       }
@@ -1736,9 +1715,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
 
   function fillOverview(data, picked) {
-    setText('ov-grade', (data.fmv && data.fmv.grade_label) || 'Raw');
-    const last = latestSale(data);
-    setText('ov-lastsale', last && last.price != null ? '$' + money(last.price) + (last.date ? ' · ' + String(last.date).slice(0, 10) : '') : '—');
     let trend = '—';
     const pct = data.fmv && data.fmv.index_pct_change;
     const el = $('ov-trend'); el.className = '';
@@ -1747,9 +1723,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       el.className = Number(pct) > 0 ? 'pos' : Number(pct) < 0 ? 'neg' : '';
     }
     el.textContent = trend;
-    let lo = picked && picked.low, hi = picked && picked.high;
-    if (!(lo != null && hi != null && hi > lo) && data.fmv && data.fmv.low != null && data.fmv.high != null) { lo = Number(data.fmv.low); hi = Number(data.fmv.high); }
-    setText('ov-range', lo != null && hi != null && hi > lo ? '$' + money(lo) + ' – $' + money(hi) : '—');
+    const market = picked && Number(picked.value);
+    setText('ov-range', Number.isFinite(market) && market > 0 ? 'About $' + money(market * 0.8) + ' · 80% of market' : '—');
   }
 
   function fillSales(data) {
@@ -1767,7 +1742,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const hasAvg = ins && (ins.avg_30 != null || ins.avg_90 != null);
     const hasPressure = ins && ins.pressure_buy != null;
     if (hasPressure) {
-      show('pressure-wrap');
       const buy = Math.max(0, Math.min(100, Math.round(ins.pressure_buy))), sell = 100 - buy;
       setText('buy-pct', buy + '%'); setText('sell-pct', sell + '%');
       $('buy-fill').style.width = buy + '%'; $('sell-fill').style.width = sell + '%';
@@ -1777,7 +1751,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         buy >= 55 ? 'Leaning up — more buyers than sellers' :
         buy > 45 ? 'Balanced — no clear pressure' :
         buy >= 30 ? 'Leaning down — sellers outweigh buyers' : 'Weak — sellers in control');
-    } else hide('pressure-wrap');
+    } else {
+      setText('buy-pct', '—'); setText('sell-pct', '—');
+      $('buy-fill').style.width = '50%'; $('sell-fill').style.width = '50%';
+      $('pressure-track').setAttribute('aria-label', 'Buying and selling activity will appear with price history data');
+      setText('pr-verdict', 'Buying and selling activity will appear here with price-history data.');
+    }
     if (hasAvg) {
       show('avgs-wrap');
       setText('ov-avg30', ins.avg_30 != null ? '$' + money(ins.avg_30) : '—');
@@ -1811,31 +1790,22 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   function resetResultData() {
     lastData = null; histCache = null;
-    renderGrades();
-    setText('ov-grade', 'Raw'); setText('ov-cert', '—'); setText('ov-lastsale', '—'); setText('ov-range', '—');
+    setText('ov-range', '—');
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
-    hide('pressure-wrap'); hide('avgs-wrap'); hide('links-wrap');
+    hide('avgs-wrap'); hide('links-wrap');
     setText('ov-avg30', '—'); setText('ov-avg90', '—'); setText('ov-vol', '—');
-    $('pane-sales').innerHTML = '<div class="panel-empty"><b>Recent sales</b>Individual recent sales are currently unavailable.</div>';
-    $('pane-history').innerHTML = '<div class="panel-empty"><b>Price history</b>Price history is currently unavailable.</div>';
+    $('pane-history').innerHTML = historyPlaceholderHtml();
     $('r-debug').classList.add('hidden');
   }
 
   // ---- Price history: chart + recent sales, loaded on demand ----
   async function maybeLoadHistory() {
-    if (histCache && histCache.length) { renderHistory(histCache); return; }
-    const cardId = current && current.card && current.card.card_id;
-    if (!cardId) return;
     const pane = $('pane-history');
-    pane.innerHTML = '<div class="panel-empty"><b>Loading price history…</b></div>';
-    try {
-      const { res, data } = await post('cardhedge', { history_for: cardId, grade: (current.card.grade || 'Raw'), days: 365 });
-      const rows = res.ok && data && data.ok && Array.isArray(data.history) ? data.history.filter((h) => h.price != null) : [];
-      if (rows.length) { histCache = rows; renderHistory(rows); }
-      else pane.innerHTML = '<div class="panel-empty"><b>Price history</b>No recorded sales for this card at this grade in the last year.</div>';
-    } catch (err) {
-      pane.innerHTML = '<div class="panel-empty"><b>Price history</b>Could not load history — tap the History tab to retry.</div>';
-    }
+    pane.innerHTML = historyPlaceholderHtml();
+  }
+
+  function historyPlaceholderHtml() {
+    return '<div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>Charts will appear here when price-history data is connected.</div>';
   }
 
   let chartSpanMonths = 6;
@@ -1933,10 +1903,11 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
 
   // ---- Grades tab: real per-grade prices + "Worth grading?" calculator ----
-  ['grade-choice', 'roi-fee', 'grading-shipping', 'grading-selling'].forEach((id) => $(id).addEventListener('input', renderCalc));
+  ['grade-choice', 'roi-fee', 'grading-shipping', 'grading-selling'].map($).filter(Boolean).forEach((el) => el.addEventListener('input', renderCalc));
   let gradeRows = [], rawForCalc = null;
   function renderGrades() {
     const table = $('grades-table'), wrap = $('roi-wrap');
+    if (!table || !wrap) return;
     const gp = lastData && Array.isArray(lastData.grade_prices) ? lastData.grade_prices : [];
     const rows = gp.map((p) => ({ grade: String(p.grade || '').trim(), price: Number(p.price) })).filter((p) => p.grade && Number.isFinite(p.price));
     const rawEntry = rows.find((p) => /^(raw|ungraded)$/i.test(p.grade));
