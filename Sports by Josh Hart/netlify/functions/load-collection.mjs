@@ -59,6 +59,8 @@ export default async (req) => {
     card_id: r.card_id || '',
     tcgplayer_id: r.tcgplayer_id || '',
     value: r.value == null ? null : Number(r.value),
+    previous_value: r.previous_value == null ? null : Number(r.previous_value),
+    price_updated_at: r.price_updated_at || '',
     is_showcase: r.is_showcase === true,
     is_tradeable: r.is_tradeable === true,
     story_origin: r.story_origin || '',

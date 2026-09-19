@@ -96,6 +96,7 @@ export default async (req) => {
     card_id: str(body.card_id || card.card_id),
     tcgplayer_id: str(body.tcgplayer_id || card.tcgplayer_id),
     value: numOrNull(body.value),
+    price_updated_at: numOrNull(body.value) == null ? null : new Date().toISOString(),
     image_path: imagePath,
     is_showcase: false,
     is_tradeable: false,

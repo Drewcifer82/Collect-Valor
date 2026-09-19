@@ -34,14 +34,14 @@ src="https://www.facebook.com/tr?id=917040513943761&ev=PageView&noscript=1"/></n
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Collect Valor" />
 <meta property="og:title" content="Pokémon Card Price Checker + Scanner | Collect Valor" />
-<meta property="og:description" content="Snap a photo of any Pokémon card and see its current raw-card market value. First 7 scans free." />
+<meta property="og:description" content="Snap a photo of any Pokémon card and see its current raw-card market value. First 35 scans free." />
 <meta property="og:url" content="https://collectvalor.com/" />
 <meta property="og:image" content="https://collectvalor.com/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Pokémon Card Price Checker — Collect Valor" />
-<meta name="twitter:description" content="Snap a photo, see what your card is worth. Free for your first 7 scans." />
+<meta name="twitter:description" content="Snap a photo, see what your card is worth. Free for your first 35 scans." />
 <meta name="twitter:image" content="https://collectvalor.com/og-image.png" />
 <script type="application/ld+json">
 {
@@ -126,7 +126,7 @@ td,th{overflow-wrap:anywhere}
 .collection-open h3{font-size:16px;margin:0 0 6px;overflow-wrap:anywhere}
 .collection-card-meta{font-size:11px;color:var(--muted);line-height:1.6;min-height:36px;margin:0}
 .collection-card-value{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:16px}
-.collection-card-value strong{font:700 19px monospace;color:#32d6ac}
+.collection-card-value strong{font:700 19px monospace;color:#32d6ac}.collection-card-value .collection-move{font:9px monospace}.collection-card-value .collection-move.up{color:#64dabd}.collection-card-value .collection-move.down{color:#f394b8}.collection-card-value .collection-move.flat{color:var(--muted)}
 .collection-card-value span{font:9px monospace;color:var(--muted)}
 .collection-star{width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--muted);min-height:44px;font-size:12px;padding:10px}
 .collection-star[aria-pressed=true]{color:#f0cc79;background:#f0cc7909}
@@ -245,7 +245,7 @@ td,th{overflow-wrap:anywhere}
 .watch-search-label{display:block;font:10px monospace;letter-spacing:1px;color:var(--muted);margin:22px 0 9px}
 #watch-search{width:100%;min-width:0;background:#0d1625;border:1px solid var(--line);border-radius:10px;min-height:46px;padding:12px;color:var(--text);font:16px Arial,sans-serif}
 .watch-catalog{display:grid;gap:0;margin-top:12px;max-height:570px;overflow-y:auto;scrollbar-width:thin}
-.watch-catalog-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:16px 0}
+.watch-catalog-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;border-bottom:1px solid var(--line);padding:12px 0}.watch-catalog-thumb{width:42px;aspect-ratio:.71;object-fit:cover;border-radius:5px;background:#0d1625}.watch-catalog-thumb-ph{width:42px;aspect-ratio:.71;border-radius:5px;background:#0d1625}
 .watch-catalog-row h3{font-size:13px;margin:0 0 6px;overflow-wrap:anywhere}
 .watch-catalog-row p{font-size:10px;margin:0;overflow-wrap:anywhere}
 .watch-catalog-row strong{font:12px monospace;display:block;margin-top:8px}
@@ -450,7 +450,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   <input class="file" id="camera-input" type="file" accept="image/*" capture="environment">
   <input class="file" id="upload-input" type="file" accept="image/*">
   <form class="search" id="search">
-    <label class="label" for="fix-input">OR SEARCH CARD HEDGE BY NAME</label>
+    <label class="label" for="fix-input">OR SEARCH TCG API BY NAME</label>
     <div class="search-row"><input id="fix-input" placeholder="e.g. Pikachu 025/165" autocapitalize="none" autocorrect="off"><button class="secondary" id="fix-btn" type="submit">Go</button></div>
   </form>
   <p id="notice" class="msg" role="status" aria-live="polite"></p>
@@ -513,7 +513,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <button class="save" id="save-star" type="button">☆ Save to collection</button>
       <button class="save" id="watch-current" type="button" disabled>☆ Watch this card</button>
       <span id="watch-current-message" class="save-msg" role="status" aria-live="polite"></span>
-      <span class="updated" id="r-source">CARD HEDGE</span>
+      <span class="updated" id="r-source">TCGPLAYER · TCG API</span>
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
@@ -573,7 +573,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <div id="watch-list" class="watch-list"></div>
       <div id="watch-empty" class="watch-empty" hidden><h3 id="watch-empty-title">Nothing here yet.</h3><p id="watch-empty-text"></p><button id="watch-empty-action" class="secondary">Find a card</button></div>
     </div>
-    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH CARDS</label><input id="watch-search" type="search" placeholder="Try Pikachu, Charizard, or Eevee" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Member search · Pokémon prices from TCG API. Use Refresh prices to check for changes. Other categories may have no verified price.</p></aside>
+    <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH POKÉMON CARDS</label><input id="watch-search" type="search" placeholder="Try Lugia or Lugia 149/147" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Enter a card name, or a card name plus its card number for an exact match. Pokémon prices from TCG API.</p></aside>
   </div>
   <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p>
 </section>
@@ -704,7 +704,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const c = current.card;
     return { card_id: String(c.card_id), player: $('r-name').textContent || c.player || 'Card', set: c.set || '',
       number: c.number || '', year: c.year || '', variation: c.variation || '', category: c.category || '',
-      grade: current.is_slab ? c.grade : 'Raw', is_slab: !!current.is_slab, image_url: '' };
+      grade: current.is_slab ? c.grade : 'Raw', is_slab: !!current.is_slab,
+      image_url: /^https?:\/\//i.test(c.image || '') ? c.image : (current.image || '') };
   }
   function sync() {
     const card = currentCard(), watching = card && entries.some(e => identity(e) === identity(card));
@@ -748,6 +749,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const b = button(watched ? 'Following' : adding.has(id) ? 'Adding…' : '+ Watch', 'watch-add', () => add(card));
       b.disabled = watched || adding.has(id); b.setAttribute('aria-disabled', String(b.disabled));
       b.setAttribute('aria-label', (watched ? 'Following ' : 'Watch ') + card.player + ', ' + meta(card));
+      if (card.image_url) {
+        const img = el('img', 'watch-catalog-thumb'); img.src = card.image_url; img.alt = ''; img.loading = 'lazy'; r.append(img);
+      } else r.append(el('div', 'watch-catalog-thumb-ph'));
       r.append(text, b); return r;
     }));
   }
@@ -845,7 +849,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const version = ++searchVersion; $('watch-search-submit').disabled = true;
     catalog = []; renderCatalog(); $('watch-search-status').textContent = 'Searching…';
     try {
-      const { res, data } = await post('cardhedge', { search: query, page_size: 20 });
+      const match = query.match(/(?:^|\s)#?(\d{1,4}\s*\/\s*\d{1,4}|\d{1,4})(?:\s|$)/);
+      const cardNumber = match ? match[1].replace(/\s/g, '') : '';
+      const cardName = cardNumber ? query.replace(match[0], ' ').trim() : query;
+      const { res, data } = await post('cardhedge', { search: cardName, number: cardNumber, category: 'pokemon', page_size: 20 });
       if (version !== searchVersion) return;
       if (!res.ok || !data || !data.ok) throw new Error();
       const seen = new Set();
@@ -1182,6 +1189,14 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (card.value != null) amt.textContent = '$' + money(card.value);
     else { amt.textContent = card.is_slab ? '—' : 'No price yet'; amt.classList.add('none'); }
     val.append(amt);
+    if (card.value != null && card.previous_value != null && Number(card.previous_value) > 0) {
+      const pct = (Number(card.value) / Number(card.previous_value) - 1) * 100;
+      const move = document.createElement('span'); move.className = 'collection-move ' + (pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat');
+      move.textContent = (pct > 0 ? '↑ +' : pct < 0 ? '↓ ' : '→ ') + pct.toFixed(1) + '% in 24h';
+      val.append(move);
+    } else if (card.value != null) {
+      const move = document.createElement('span'); move.className = 'collection-move flat'; move.textContent = '24h movement available after tomorrow’s update'; val.append(move);
+    }
     open.append(artFrame(card), grade, h, meta, val);
     art.appendChild(open);
     if (readOnly) { open.disabled = true; open.style.cursor = 'default'; return art; }
@@ -1500,6 +1515,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       if (m.variant) current.card.variation = m.variant;
       if (m.category) current.card.category = m.category;
       if (m.card_id) current.card.card_id = m.card_id;
+      if (m.image) current.card.image = m.image;
       if (m.tcgplayer_id) current.card.tcgplayer_id = m.tcgplayer_id;
       if (fromManual) {
         setText('r-name', m.description || [current.card.year, m.player].filter(Boolean).join(' '));
@@ -1626,6 +1642,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (c.number) current.card.number = c.number;
     if (c.variant) current.card.variation = c.variant;
     if (c.category) current.card.category = c.category;
+    if (c.image) current.card.image = c.image;
     current.card.card_id = c.card_id;
     if (c.rookie != null) current.card.rookie = c.rookie === true;
     document.querySelectorAll('.candidate').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));

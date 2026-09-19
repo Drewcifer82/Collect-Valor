@@ -311,7 +311,9 @@ function stampAppearsOnProduct(card, stamp) {
 async function pokemonSearchPath(body) {
   const key = process.env.TCGAPI_KEY;
   if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
-  const hits = await tcgSearch(String(body.search).trim(), key);
+  const search = String(body.search).trim();
+  if (!search) return json({ error: 'Nothing to search for' }, 400);
+  const hits = await tcgSearch(search, key);
   // A scan's collector number narrows expensive printing lookups to its card.
   const exact = body.number ? hits.filter(c => sameNumber(c.number, String(body.number))) : [];
   const candidates = exact.length ? exact : hits;

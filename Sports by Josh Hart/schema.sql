@@ -30,6 +30,8 @@ create table if not exists public.collection (
   card_id      text,                          -- Card Hedge card_id
   tcgplayer_id text,                          -- TCGplayer product ID returned by TCG API
   value        numeric(12,2),                 -- market value captured at save time
+  previous_value numeric(12,2),               -- prior daily market value, for 24-hour movement
+  price_updated_at timestamptz,               -- when the market value was last checked
   image_path   text,                          -- path inside the 'collection' storage bucket
   is_showcase  boolean not null default false,
   is_tradeable boolean not null default false,
@@ -40,6 +42,8 @@ create index if not exists collection_owner_idx on public.collection (owner);
 create index if not exists collection_owner_slab_idx on public.collection (owner, is_slab);
 
 alter table public.collection add column if not exists tcgplayer_id text;
+alter table public.collection add column if not exists previous_value numeric(12,2);
+alter table public.collection add column if not exists price_updated_at timestamptz;
 alter table public.collection add column if not exists story_origin text;
 alter table public.collection add column if not exists story_place text;
 alter table public.collection add column if not exists story_year integer;

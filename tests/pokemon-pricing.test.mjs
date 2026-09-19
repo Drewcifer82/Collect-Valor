@@ -6,7 +6,8 @@ import handler from '../Sports by Josh Hart/netlify/functions/cardhedge.mjs';
 // Provider contract examples: https://tcgapi.dev/api/search/ and /api/cards/.
 const card = { id: 12345, name: 'Charizard ex', number: '125/197', set_name: 'Obsidian Flames', printing: 'Normal' };
 const secret = 'local-test-secret';
-const token = 'test.' + crypto.createHmac('sha256', secret).update('test').digest('base64url');
+const tokenPayload = Buffer.from(JSON.stringify({ u: 'test@example.com' })).toString('base64url');
+const token = tokenPayload + '.' + crypto.createHmac('sha256', secret).update(tokenPayload).digest('base64url');
 async function request(body) {
   const response = await handler(new Request('http://localhost/cardhedge', {
     method: 'POST', body: JSON.stringify({ token, ...body }),
@@ -200,6 +201,22 @@ test('Pokemon pricing integration', async t => {
     assert.equal(result.status, 422);
     assert.equal(result.data.code, 'refine_search');
     assert.equal(calls, 1);
+  });
+  await t.test('card number narrows a watchlist search before its finish prices are requested', async () => {
+    const calls = [];
+    globalThis.fetch = async url => {
+      calls.push(String(url));
+      if (String(url).includes('/search?')) return Response.json({ data: [
+        { ...card, id: 11, number: '149/147' }, { ...card, id: 12, number: '138/147' },
+      ] });
+      assert.match(String(url), /\/cards\/11\/prices$/);
+      return Response.json({ data: [{ printing: 'Normal', market_price: 4.25 }] });
+    };
+    const result = await request({ search: 'Lugia', number: '149/147', category: 'pokemon' });
+    assert.equal(result.status, 200);
+    assert.equal(result.data.results.length, 1);
+    assert.equal(result.data.results[0].number, '149/147');
+    assert.equal(calls.length, 2);
   });
   await t.test('unauthenticated requests spend no API calls', async () => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };

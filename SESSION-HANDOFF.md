@@ -1,5 +1,13 @@
 # Collect Valor — handoff saved September 12, 2026
 
+## September 19, 2026 — pending local updates
+
+- Andrew approved a planned public trial of 35 free scans. Updated homepage metadata, FAQ and its structured data, and privacy copy. Guest scanning remains blocked during private preview; there is no active guest-limit implementation to change. Restore guest counting with a 35-scan limit when public access is authorized. Existing 40/day tester limits are unchanged.
+- Homepage search label now names TCG API. Privacy now covers email-code sign-in and Resend, private back stories, collector names, tester usage, device storage, and Journal/external links. Corrected the claim that cancellation automatically deletes account data.
+- Not committed or pushed.
+- Pending local collection work: a Netlify daily job refreshes each saved `tcg:` Pokémon price at 08:00 UTC, retains the prior value, and the Collection tile shows a green up/red down arrow and percentage. `schema.sql` now has `previous_value` and `price_updated_at` migrations which Andrew must run in Supabase before the job can write results. The first daily run establishes the comparison for cards without a prior value.
+- Pending local Watchlist work: search now sends Pokémon queries directly to TCG API, accepts a name plus collector number (for example `Lugia 149/147`), and displays provider card images in results and saved watchlist rows.
+
 ## September 18, 2026 — latest work
 
 - Pushed `2533b0b` — refocused card insights on raw cards: removed the visible Grades and Cert # areas, set fair asking guidance to 80% of market value, and added placeholders for future price history and buying/selling activity.
@@ -7,8 +15,12 @@
 - Pushed `9109511` — launched the Journal blog with three posts: Welcome to Collect Valor, 30th Anniversary patience, and How to Tell What Your Pokémon Card Is Worth. Added original artwork in `Sports by Josh Hart/assets/blog/`, internal links, an official Pokémon 30th Celebration source, Journal navigation, clean URLs, and sitemap entries.
 - Pushed `02aeb39` — added `robots.txt` plus canonical URL headers for the three blog posts. Existing post titles, descriptions, sitemap entries, internal links, and one official external link are in place. Article JSON-LD and Open Graph/Twitter metadata have **not** been added yet.
 - Andrew wants future blog posts somewhat longer (at least roughly 500 words) while keeping the first three concise. Use original artwork only; avoid recognizable Pokémon characters, card art, logos, and pack designs unless Andrew explicitly confirms rights.
-- Andrew has two possible external app testers. He may instead give them anonymous temporary tester passes: no email or name, 30-day expiration, anonymous collection, and a **40-scan-per-day** cap. This was explicitly authorized for implementation, but has not yet been built.
-- Remaining security work before broader testing: add session expiration and server-side per-account daily scan caps. The app’s code-email gate is live, but tokens currently do not expire.
+- Temporary tester access is live and Andrew confirmed it works. It uses one shared anonymous tester pass, with no email or name, expires on **October 18, 2026**, and has a server-enforced shared cap of **40 scans per UTC day**.
+- Tester pass setup: Netlify production environment variables `TESTER_PASS_CODE` and `TESTER_PASS_EXPIRES_AT` must exist. The database function/table in `Sports by Josh Hart/tester-access-schema.sql` must be run once in Supabase. Do not place the pass code in repository code.
+- Pushed tester-pass work in `24daced`, mobile access correction in `2e08316`, and the final private Netlify-configuration adjustment in `e48d41a`. The phone scan area has a **Use a tester pass** entry point because the top account button is hidden on narrow screens.
+- Tester sessions expire server-side. Regular account-holder sessions still do not have a general expiration or per-account daily scan cap.
+- Pushed `394a6df` — founding/lifetime member emails can be kept privately in Netlify’s plain-text `COMP_EMAILS` environment variable (comma-separated if more are added). They do **not** need Supabase SQL or a Stripe subscription. The current founding member is configured there by Andrew; do not copy personal emails into GitHub or this handoff. They sign in using the normal email-code flow and receive the `comp` plan, which has permanent access.
+- Pushed `c41b3b8` — special founding members can temporarily share the same server-enforced daily scan cap as tester passes. Add their private email to Netlify’s plain-text `LIMITED_COMP_EMAILS` variable, then have them sign out and back in to receive the capped session. The limit is currently 40 scans/day; remove the email from `LIMITED_COMP_EMAILS` after the TCG plan upgrade to restore unlimited founding-member scans. This reuses the `tester_scan_usage` Supabase table/function already installed for the anonymous tester pass.
 
 ## September 14–15, 2026 — latest work
 
