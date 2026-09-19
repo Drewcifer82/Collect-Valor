@@ -6,7 +6,7 @@ import identify from '../Sports by Josh Hart/netlify/functions/identify.mjs';
 
 const secret = 'tester-session-secret';
 const passCode = 'CV-TEST-40';
-const expiry = '2099-10-18T23:59:59.000Z';
+const expiry = '2026-10-18T23:59:59.000Z';
 const card = {
   identified: true, confidence: 'high', card_type: 'pokemon', category: 'Pokemon',
   player: 'Pikachu', team: '', sport: '', position: '', year: '2026', brand: 'Pokemon',
