@@ -51,7 +51,7 @@ test('Pokemon pricing integration', async t => {
         ? [{ printing: 'Normal', market_price: 24.99 }, { printing: 'Foil', market_price: 42.50 }]
         : [{ ...card, price: 12.47 }] });
     };
-    const search = await request({ search: 'Charizard', category: 'Pokémon' });
+    const search = await request({ search: 'Charizard', category: 'Pokémon', number: card.number });
     assert.equal(search.data.results[0].prices[0].price, 24.99);
     assert.equal(search.data.results[1].variant, 'Foil');
     const selected = await request({ card_id: search.data.results[0].card_id, grade: 'Raw' });
@@ -114,7 +114,7 @@ test('Pokemon pricing integration', async t => {
   await t.test('provider rejection does not become a successful empty search', async () => {
     globalThis.fetch = async () => Response.json({ error: 'X-PAYMENT header is required' }, { status: 402 });
     assert.equal((await request(scan)).status, 502);
-    assert.equal((await request({ search: 'Charizard', category: 'pokemon' })).status, 502);
+    assert.equal((await request({ search: 'Charizard', category: 'pokemon', number: card.number })).status, 502);
   });
   await t.test('Koraidon search expands regular and reverse holo without mixing promos', async () => {
     const calls = [];
@@ -192,14 +192,15 @@ test('Pokemon pricing integration', async t => {
   await t.test('failed finish lookup is an error, never an incomplete successful list', async () => {
     globalThis.fetch = async url => String(url).includes('/prices')
       ? Response.json({ error: 'quota' }, { status: 429 }) : Response.json({ data: [card] });
-    assert.equal((await request({ search: 'Charizard', category: 'pokemon' })).status, 502);
+    assert.equal((await request({ search: 'Charizard', category: 'pokemon', number: card.number })).status, 502);
   });
-  await t.test('broad searches request refinement before spending on finishes', async () => {
+  await t.test('broad searches return a selectable card list without fetching finishes', async () => {
     let calls = 0;
     globalThis.fetch = async () => { calls++; return Response.json({ data: Array.from({ length: 13 }, (_, id) => ({ ...card, id: id + 1 })) }); };
     const result = await request({ search: 'Charizard', category: 'pokemon' });
-    assert.equal(result.status, 422);
-    assert.equal(result.data.code, 'refine_search');
+    assert.equal(result.status, 200);
+    assert.equal(result.data.results.length, 13);
+    assert.equal(result.data.results[0].prices.length, 0);
     assert.equal(calls, 1);
   });
   await t.test('card number narrows a watchlist search before its finish prices are requested', async () => {

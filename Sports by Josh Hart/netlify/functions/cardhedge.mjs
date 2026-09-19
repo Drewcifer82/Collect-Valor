@@ -314,12 +314,19 @@ async function pokemonSearchPath(body) {
   const search = String(body.search).trim();
   if (!search) return json({ error: 'Nothing to search for' }, 400);
   const hits = await tcgSearch(search, key);
-  // A scan's collector number narrows expensive printing lookups to its card.
-  const exact = body.number ? hits.filter(c => sameNumber(c.number, String(body.number))) : [];
-  const candidates = exact.length ? exact : hits;
-  if (new Set(candidates.map(c => String(c.id))).size > 12) {
-    return json({ error: 'Please narrow your search with the card name and number.', code: 'refine_search' }, 422);
+  // A name-only search is for browsing. Return a compact card list without
+  // fetching every finish price; the selected card is priced when watched.
+  if (!body.number) {
+    const seen = new Set();
+    const candidates = hits.filter(c => c.id && !seen.has(String(c.id)) && seen.add(String(c.id))).slice(0, 20);
+    return json({ ok: true, results: candidates.map(c => ({
+      card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
+      number: c.number, variant: c.variant, category: 'pokemon', image: c.image, prices: [],
+    })), count: candidates.length });
   }
+  // A collector number narrows the search before requesting specific finishes.
+  const exact = hits.filter(c => sameNumber(c.number, String(body.number)));
+  const candidates = exact.length ? exact : hits;
   const cards = await expandPrintings(candidates, key);
   const results = cards.filter(c => c.id).map(c => ({
     card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
