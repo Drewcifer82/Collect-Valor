@@ -458,6 +458,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <span class="eyebrow">DEVELOPMENT PREVIEW</span>
     <p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
     <button class="link" id="sc-verify" type="button">Account holder sign in</button>
+    <button class="link" id="sc-tester" type="button">Use a tester pass</button>
   </div>
 </div>
 <div>
@@ -2068,6 +2069,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   $('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
   $('pw-have-tester-pass').addEventListener('click', () => setPwStage('tester'));
   $('sc-verify').addEventListener('click', () => showPaywall('verify'));
+  $('sc-tester').addEventListener('click', () => showPaywall('tester'));
   $('pw-continue').addEventListener('click', unlockWithEmail);
   pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
   $('pw-verify-code').addEventListener('click', verifyEmailCode);
