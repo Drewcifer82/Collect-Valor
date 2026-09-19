@@ -117,6 +117,7 @@ function ownerFromToken(token, secret) {
   if (!good) return null;
   try {
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (data.exp && Date.now() >= Number(data.exp)) return null;
     const u = String(data.u || '').trim().toLowerCase();
     return u || null;
   } catch {

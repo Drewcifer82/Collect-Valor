@@ -31,6 +31,6 @@ function ownerFromToken(token, secret) {
   const [payload, sig] = token.split('.');
   const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   try { if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null; } catch { return null; }
-  try { return String(JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')).u || '').trim().toLowerCase() || null; } catch { return null; }
+  try { const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')); if (data.exp && Date.now() >= Number(data.exp)) return null; return String(data.u || '').trim().toLowerCase() || null; } catch { return null; }
 }
 function json(obj, status = 200) { return new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } }); }

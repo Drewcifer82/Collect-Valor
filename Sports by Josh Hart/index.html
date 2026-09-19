@@ -622,6 +622,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <h2 id="pw-title">We’re still building.</h2>
     <p class="pw-fine">Collect Valor is not operational yet and is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
     <button class="primary" id="pw-have-paid" type="button">Account holder sign in</button>
+    <button class="secondary" id="pw-have-tester-pass" type="button">Use a tester pass</button>
   </div>
   <div id="pw-stage-verify" hidden>
     <h2>Account holder sign in</h2>
@@ -638,6 +639,14 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <button class="primary" id="pw-verify-code" type="button">Unlock</button>
     <p class="msg" id="pw-code-msg"></p>
     <button class="pw-link" id="pw-code-back" type="button">&larr; Use a different email</button>
+  </div>
+  <div id="pw-stage-tester" hidden>
+    <h2>Tester access</h2>
+    <p class="pw-fine">Enter the private tester pass you were given. No email is required.</p>
+    <input class="text" id="pw-tester-code" type="password" autocomplete="off" placeholder="Tester pass" />
+    <button class="primary" id="pw-unlock-tester" type="button">Start testing</button>
+    <p class="msg" id="pw-tester-msg"></p>
+    <button class="pw-link" id="pw-tester-back" type="button">&larr; Back</button>
   </div>
 </dialog>
 <script>
@@ -904,7 +913,11 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let watchlist = null;
   let collection = { cards: [], counts: { singles: 0, slabs: 0, total: 0 }, value: 0 };
   function guestSession() { return { email: null, token: null, plan: 'free', entitled: false }; }
-  function entitled() { return !!(session && session.entitled); }
+  function entitled() {
+    if (!(session && session.entitled)) return false;
+    if (session.expires_at && Date.now() >= Date.parse(session.expires_at)) return false;
+    return true;
+  }
 
   try {
     const saved = localStorage.getItem('cv_session');
@@ -914,21 +927,22 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   function updateSessionUI() {
     const isMember = entitled();
+    const isTester = isMember && session && session.plan === 'tester';
     const name = (session && (session.display_name || session.email || session.username)) || '';
     const initials = name ? name.replace(/@.*$/, '').slice(0, 2).toUpperCase() : 'CV';
     setText('who', name || 'Guest collector');
     setText('acct-email', name || 'Guest');
     setText('profile-avatar', initials);
-    setText('profile-eyebrow', isMember ? 'ACCOUNT HOLDER' : 'DEVELOPMENT PREVIEW');
-    setText('plan-name', isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW');
+    setText('profile-eyebrow', isTester ? 'TEMPORARY TESTER' : isMember ? 'ACCOUNT HOLDER' : 'DEVELOPMENT PREVIEW');
+    setText('plan-name', isTester ? '30-DAY TESTER PASS' : isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW');
     const plan = session && session.plan;
     setText('acct-plan', isMember
-      ? 'Account holder'
+      ? (isTester ? '40 scans per day' : 'Account holder')
       : 'Account holder access required');
     const pill = $('who-pill');
-    if (pill) { pill.textContent = isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW'; pill.classList.toggle('member', isMember); }
+    if (pill) { pill.textContent = isTester ? 'TESTER' : isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW'; pill.classList.toggle('member', isMember); }
     $('signout').classList.toggle('hidden', !name);
-    $('manage-sub').classList.toggle('hidden', !(isMember && plan !== 'comp'));
+    $('manage-sub').classList.toggle('hidden', !(isMember && (plan === 'beta' || plan === 'pro')));
     { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('acct-unlock').textContent = 'Account holder sign in';
@@ -2034,7 +2048,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // ===== Private-preview account access =====
   const PAYWALL_ON = false;
-  const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email'), pwCode = $('pw-code'), pwCodeMsg = $('pw-code-msg');
+  const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email'), pwCode = $('pw-code'), pwCodeMsg = $('pw-code-msg'), pwTesterCode = $('pw-tester-code'), pwTesterMsg = $('pw-tester-msg');
   function showPaywall(stage) { setPwStage(stage || 'intro'); if (!pw.open) { try { pw.showModal(); } catch (e) {} } }
   function hidePaywall() { if (pw.open) pw.close(); }
   function setPwStage(stage) {
@@ -2042,18 +2056,40 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('pw-stage-intro').hidden = stage !== 'intro';
     $('pw-stage-verify').hidden = stage !== 'verify';
     $('pw-stage-code').hidden = stage !== 'code';
+    $('pw-stage-tester').hidden = stage !== 'tester';
     if (stage === 'verify') setTimeout(() => { try { pwEmail.focus(); } catch (e) {} }, 50);
     if (stage === 'code') setTimeout(() => { try { pwCode.focus(); } catch (e) {} }, 50);
+    if (stage === 'tester') setTimeout(() => { try { pwTesterCode.focus(); } catch (e) {} }, 50);
   }
   $('pw-close').addEventListener('click', hidePaywall);
   $('pw-back').addEventListener('click', () => setPwStage('intro'));
   $('pw-code-back').addEventListener('click', () => setPwStage('verify'));
+  $('pw-tester-back').addEventListener('click', () => setPwStage('intro'));
   $('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
+  $('pw-have-tester-pass').addEventListener('click', () => setPwStage('tester'));
   $('sc-verify').addEventListener('click', () => showPaywall('verify'));
   $('pw-continue').addEventListener('click', unlockWithEmail);
   pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
   $('pw-verify-code').addEventListener('click', verifyEmailCode);
   pwCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); verifyEmailCode(); } });
+  $('pw-unlock-tester').addEventListener('click', unlockTester);
+  pwTesterCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockTester(); } });
+
+  async function unlockTester() {
+    const code = (pwTesterCode.value || '').trim();
+    if (!code) { pwTesterMsg.className = 'msg error'; pwTesterMsg.textContent = 'Enter your tester pass.'; return; }
+    pwTesterMsg.className = 'msg'; pwTesterMsg.textContent = 'Checking pass…';
+    try {
+      const res = await fetch('/.netlify/functions/tester-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      const data = await res.json();
+      if (!res.ok || !data.ok) { pwTesterMsg.className = 'msg error'; pwTesterMsg.textContent = data.error || 'Could not unlock tester access.'; return; }
+      session = { email: data.email, token: data.token, plan: 'tester', entitled: true, expires_at: data.expires_at, scan_limit: data.scan_limit };
+      localStorage.setItem('cv_session', JSON.stringify(session));
+      updateSessionUI(); loadCollection();
+      pwTesterMsg.className = 'msg ok'; pwTesterMsg.textContent = 'Tester access unlocked.';
+      setTimeout(hidePaywall, 700);
+    } catch { pwTesterMsg.className = 'msg error'; pwTesterMsg.textContent = 'Could not reach the server.'; }
+  }
 
   async function unlockWithEmail() {
     const email = (pwEmail.value || '').trim().toLowerCase();

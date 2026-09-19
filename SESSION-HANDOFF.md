@@ -1,5 +1,15 @@
 # Collect Valor — handoff saved September 12, 2026
 
+## September 18, 2026 — latest work
+
+- Pushed `2533b0b` — refocused card insights on raw cards: removed the visible Grades and Cert # areas, set fair asking guidance to 80% of market value, and added placeholders for future price history and buying/selling activity.
+- Pushed `4179da6` — secured private-preview sign-in with a six-digit email code. The code expires after 10 minutes and allows five attempts. Resend DNS for `collectvalor.com` was verified and Andrew completed a successful live sign-in test. `RESEND_API_KEY` is configured in Netlify; never place it in code or chat.
+- Pushed `9109511` — launched the Journal blog with three posts: Welcome to Collect Valor, 30th Anniversary patience, and How to Tell What Your Pokémon Card Is Worth. Added original artwork in `Sports by Josh Hart/assets/blog/`, internal links, an official Pokémon 30th Celebration source, Journal navigation, clean URLs, and sitemap entries.
+- Pushed `02aeb39` — added `robots.txt` plus canonical URL headers for the three blog posts. Existing post titles, descriptions, sitemap entries, internal links, and one official external link are in place. Article JSON-LD and Open Graph/Twitter metadata have **not** been added yet.
+- Andrew wants future blog posts somewhat longer (at least roughly 500 words) while keeping the first three concise. Use original artwork only; avoid recognizable Pokémon characters, card art, logos, and pack designs unless Andrew explicitly confirms rights.
+- Andrew has two possible external app testers. He may instead give them anonymous temporary tester passes: no email or name, 30-day expiration, anonymous collection, and a **40-scan-per-day** cap. This was explicitly authorized for implementation, but has not yet been built.
+- Remaining security work before broader testing: add session expiration and server-side per-account daily scan caps. The app’s code-email gate is live, but tokens currently do not expire.
+
 ## September 14–15, 2026 — latest work
 
 - Pushed `5eece16` — added a **Find this card on eBay** button beside the existing TCGplayer search on each verified Pokémon result. It opens a normal eBay active-listing search using the card name, set, and collector number. Andrew live-tested it successfully with Minior 201/182. It uses no eBay API, account connection, or user data.

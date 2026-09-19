@@ -36,6 +36,12 @@ export default async (req) => {
   if (!member) {
     return json({ ok: false, access_required: true, error: 'Collect Valor is currently available to account holders only.' }, 403);
   }
+  let testerRemaining = null;
+  if (member.tester) {
+    const usage = await consumeTesterScan(String(member.tester));
+    if (usage == null) return json({ error: 'Daily tester limit reached. Try again tomorrow.', scan_limit: 40 }, 429);
+    testerRemaining = Math.max(0, 40 - usage);
+  }
 
   // SPEED NOTE (Aug 18): trimmed to only the fields needed to name + price the card.
   // The slow part of a scan is how much text the model has to WRITE, so the verbose
@@ -136,7 +142,7 @@ export default async (req) => {
 
   const card = parseCard(text);
   if (!card) return json({ error: 'Scanner could not read the card reliably. Try a clearer photo.' }, 502);
-  return json({ ok: true, card, raw: text, member: true, model, usage });
+  return json({ ok: true, card, raw: text, member: true, model, usage, tester_scans_remaining: testerRemaining });
 };
 
 function parseCard(text) {
@@ -173,8 +179,23 @@ function memberFromToken(token, secret) {
   try {
     if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
     const d = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    if (d && d.u && !d.guest) return String(d.u).toLowerCase();
+    if (d && d.exp && Date.now() >= Number(d.exp)) return null;
+    if (d && d.u && !d.guest) return d;
     return null;
+  } catch { return null; }
+}
+
+async function consumeTesterScan(passId) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  try {
+    const response = await fetch(`${url}/rest/v1/rpc/consume_tester_scan`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_pass_id: passId, p_limit: 40 }),
+    });
+    if (!response.ok) return null;
+    const count = Number(await response.json());
+    return Number.isFinite(count) && count >= 1 && count <= 40 ? count : null;
   } catch { return null; }
 }
 

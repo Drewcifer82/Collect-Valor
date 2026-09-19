@@ -651,7 +651,9 @@ function verify(token, secret) {
   const [payload, sig] = token.split('.');
   const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   try {
-    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return !(data.exp && Date.now() >= Number(data.exp));
   } catch {
     return false;
   }

@@ -90,6 +90,7 @@ function verifyUser(token, secret) {
   try {
     if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString());
+    if (data.exp && Date.now() >= Number(data.exp)) return null;
     return String(data.u || '').toLowerCase() || null;
   } catch { return null; }
 }
