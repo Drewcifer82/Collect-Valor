@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 
-const COMP_EMAILS = ['paradigmnguy3339@gmail.com', 'paradigmnguy3339@duck.com'];
+const BUILT_IN_COMP_EMAILS = ['paradigmnguy3339@gmail.com', 'paradigmnguy3339@duck.com'];
+const COMP_EMAILS = [...BUILT_IN_COMP_EMAILS, ...String(process.env.COMP_EMAILS || '')
+  .split(',').map(email => email.trim().toLowerCase()).filter(Boolean)];
 const CODE_TTL_MIN = 10;
 const MAX_ATTEMPTS = 5;
 
