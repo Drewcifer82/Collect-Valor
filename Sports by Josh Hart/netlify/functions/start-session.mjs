@@ -3,6 +3,9 @@ import crypto from 'node:crypto';
 const BUILT_IN_COMP_EMAILS = ['paradigmnguy3339@gmail.com', 'paradigmnguy3339@duck.com'];
 const COMP_EMAILS = [...BUILT_IN_COMP_EMAILS, ...String(process.env.COMP_EMAILS || '')
   .split(',').map(email => email.trim().toLowerCase()).filter(Boolean)];
+const LIMITED_COMP_EMAILS = String(process.env.LIMITED_COMP_EMAILS || '')
+  .split(',').map(email => email.trim().toLowerCase()).filter(Boolean);
+const LIMITED_COMP_DAILY_SCANS = 40;
 const CODE_TTL_MIN = 10;
 const MAX_ATTEMPTS = 5;
 
@@ -50,7 +53,8 @@ async function verifyCode({ body, email, url, key, secret }) {
     }
     if (!await allowedEmail(url, key, email)) return json({ error: 'This account is not currently active.' }, 401);
     await sb(url, key, `/rest/v1/email_codes?username=eq.${enc(codeOwner(email))}`, 'DELETE');
-    return json({ ok: true, token: sign(email, secret), email, plan: COMP_EMAILS.includes(email) ? 'comp' : 'beta', entitled: true });
+    const scanLimit = LIMITED_COMP_EMAILS.includes(email) ? LIMITED_COMP_DAILY_SCANS : null;
+    return json({ ok: true, token: sign(email, secret, scanLimit), email, plan: COMP_EMAILS.includes(email) ? 'comp' : 'beta', entitled: true, scan_limit: scanLimit });
   } catch { return json({ error: 'Could not verify the code. Try again.' }, 502); }
 }
 
@@ -61,7 +65,7 @@ async function allowedEmail(url, key, email) {
   return !!sub && String(sub.status).toLowerCase() === 'active';
 }
 function codeOwner(email) { return `session:${email}`; }
-function sign(u, secret) { const payload = Buffer.from(JSON.stringify({ u, iat: Date.now() })).toString('base64url'); return `${payload}.${crypto.createHmac('sha256', secret).update(payload).digest('base64url')}`; }
+function sign(u, secret, scanLimit = null) { const payload = Buffer.from(JSON.stringify({ u, iat: Date.now(), ...(scanLimit ? { scan_limit: scanLimit } : {}) })).toString('base64url'); return `${payload}.${crypto.createHmac('sha256', secret).update(payload).digest('base64url')}`; }
 function sha256(s) { return crypto.createHash('sha256').update(String(s)).digest('hex'); }
 function timingEqual(a, b) { const ab = Buffer.from(a), bb = Buffer.from(b); return ab.length === bb.length && crypto.timingSafeEqual(ab, bb); }
 function enc(s) { return encodeURIComponent(s); }

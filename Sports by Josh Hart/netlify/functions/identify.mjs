@@ -37,10 +37,11 @@ export default async (req) => {
     return json({ ok: false, access_required: true, error: 'Collect Valor is currently available to account holders only.' }, 403);
   }
   let testerRemaining = null;
-  if (member.tester) {
-    const usage = await consumeTesterScan(String(member.tester));
-    if (usage == null) return json({ error: 'Daily tester limit reached. Try again tomorrow.', scan_limit: 40 }, 429);
-    testerRemaining = Math.max(0, 40 - usage);
+  const dailyLimit = member.tester ? 40 : Number(member.scan_limit) || 0;
+  if (dailyLimit) {
+    const usage = await consumeTesterScan(String(member.tester || member.u), dailyLimit);
+    if (usage == null) return json({ error: `Daily scan limit reached. Try again tomorrow.`, scan_limit: dailyLimit }, 429);
+    testerRemaining = Math.max(0, dailyLimit - usage);
   }
 
   // SPEED NOTE (Aug 18): trimmed to only the fields needed to name + price the card.
@@ -185,17 +186,17 @@ function memberFromToken(token, secret) {
   } catch { return null; }
 }
 
-async function consumeTesterScan(passId) {
+async function consumeTesterScan(passId, limit) {
   const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   try {
     const response = await fetch(`${url}/rest/v1/rpc/consume_tester_scan`, {
       method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ p_pass_id: passId, p_limit: 40 }),
+      body: JSON.stringify({ p_pass_id: passId, p_limit: limit }),
     });
     if (!response.ok) return null;
     const count = Number(await response.json());
-    return Number.isFinite(count) && count >= 1 && count <= 40 ? count : null;
+    return Number.isFinite(count) && count >= 1 && count <= limit ? count : null;
   } catch { return null; }
 }
 
