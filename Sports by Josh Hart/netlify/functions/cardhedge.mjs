@@ -397,22 +397,29 @@ function priceResponse(price, low, asOf) {
 
 // Search tcgapi.dev, normalize each hit to the handful of fields we use.
 async function tcgSearch(q, key, filters = {}) {
-  const params = new URLSearchParams({ q, game: 'pokemon', type: 'Cards', sort: 'relevance', per_page: '100' });
-  if (/^\d+$/.test(String(filters.setId || ''))) params.set('set_id', String(filters.setId));
-  if (String(filters.rarity || '').trim()) params.set('rarity', String(filters.rarity).trim());
-  if (String(filters.printing || '').trim()) params.set('printing', String(filters.printing).trim());
-  const url = 'https://api.tcgapi.dev/v1/search?' + params.toString();
-  const resp = await fetch(url, { headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000) });
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => '');
-    throw new Error(`search ${resp.status}${detail ? ': ' + detail.slice(0, 200) : ''}`);
-  }
-  const b = await resp.json();
-  const list = Array.isArray(b && b.data) ? b.data
-    : Array.isArray(b && b.cards) ? b.cards
-    : Array.isArray(b && b.results) ? b.results
-    : Array.isArray(b) ? b : [];
-  return list.map(normalizeCard).filter(Boolean);
+  const runSearch = async query => {
+    const params = new URLSearchParams({ q: query, game: 'pokemon', type: 'Cards', sort: 'relevance', per_page: '100' });
+    if (/^\d+$/.test(String(filters.setId || ''))) params.set('set_id', String(filters.setId));
+    if (String(filters.rarity || '').trim()) params.set('rarity', String(filters.rarity).trim());
+    if (String(filters.printing || '').trim()) params.set('printing', String(filters.printing).trim());
+    const url = 'https://api.tcgapi.dev/v1/search?' + params.toString();
+    const resp = await fetch(url, { headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000) });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '');
+      throw new Error(`search ${resp.status}${detail ? ': ' + detail.slice(0, 200) : ''}`);
+    }
+    const b = await resp.json();
+    const list = Array.isArray(b && b.data) ? b.data
+      : Array.isArray(b && b.cards) ? b.cards
+      : Array.isArray(b && b.results) ? b.results
+      : Array.isArray(b) ? b : [];
+    return list.map(normalizeCard).filter(Boolean);
+  };
+  const results = await runSearch(q);
+  // TCG API does not consistently index apostrophes in card names. Preserve the
+  // collector's original search first, then retry a punctuation-free version.
+  const withoutApostrophes = String(q).replace(/[\u2018\u2019']/g, '').replace(/\s{2,}/g, ' ').trim();
+  return results.length || !withoutApostrophes || withoutApostrophes === q ? results : runSearch(withoutApostrophes);
 }
 
 async function tcgCardById(candidate, key) {

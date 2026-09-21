@@ -107,6 +107,18 @@ test('Pokemon pricing integration', async t => {
     const result = await request({ search: 'Charizard' });
     assert.equal(result.data.results[0].card_id, 'tcg:12345:Normal');
   });
+  await t.test('search retries card names without apostrophes when TCG API finds nothing', async () => {
+    const queries = [];
+    globalThis.fetch = async url => {
+      const query = new URL(url).searchParams.get('q');
+      queries.push(query);
+      return Response.json({ data: query === 'Erikas Tangela' ? [{ ...card, name: "Erika's Tangela" }] : [] });
+    };
+    const result = await request({ search: "Erika's Tangela", category: 'pokemon' });
+    assert.equal(result.status, 200);
+    assert.deepEqual(queries, ["Erika's Tangela", 'Erikas Tangela']);
+    assert.equal(result.data.results[0].description, "Erika's Tangela");
+  });
   await t.test('ambiguous scans ask for a selection instead of using an expensive card', async () => {
     globalThis.fetch = async () => Response.json({ data: [{ ...card, price: 12.47 }, { ...card, id: 54321, price: 900 }] });
     assert.equal((await request(scan)).data.matched, false);
