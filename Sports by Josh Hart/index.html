@@ -330,6 +330,7 @@ td,th{overflow-wrap:anywhere}
 .tag.slab{color:#6de0c0;border-color:#32d6ac55;background:#32d6ac12}
 .tags{display:flex;flex-wrap:wrap;gap:0 2px;margin:16px 0 20px}
 .tags .tag{margin:0 5px 6px 0}
+.card-condition{position:absolute;right:26px;top:238px;max-width:360px;text-align:right}.card-condition .label{margin:0 0 8px}.condition-options{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}.condition-options button{border:1px solid #596681;background:#1a2438;color:#c8d0e5;border-radius:7px;padding:7px 9px;font:10px monospace;letter-spacing:.5px}.condition-options button[aria-pressed=true]{color:#101827;background:#b9a0ff;border-color:#b9a0ff;font-weight:700}.condition-note{margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
 .price-note{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 6px;overflow-wrap:anywhere}
 .fixlink{background:none;border:0;color:#b6b8ff;font-size:12px;padding:6px 0 14px;text-align:left}
 .rdebug{font:10px/1.6 monospace;color:#c4baff;background:#0e1625;border:1px dashed #b9a0ff44;border-radius:8px;padding:10px;margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -406,7 +407,7 @@ td,th{overflow-wrap:anywhere}
 nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
 nav a:hover{color:white}
 footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
-@media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}}
+@media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}.card-condition{position:static;max-width:none;margin:0 0 10px;text-align:left}.condition-options{justify-content:flex-start}}
 .watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
 </style>
 <!-- Privacy-friendly analytics by Plausible -->
@@ -473,6 +474,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
       <div class="value"><span class="label" id="r-plabel">MARKET VALUE</span><strong id="r-estimate">—</strong></div>
     </div>
     <div class="tags" id="r-chips"></div>
+    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION <span class="eyebrow">COMING SOON</span></span><div class="condition-options"><button type="button" data-condition="NM" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-pressed="false">DMG</button></div><p class="condition-note">Condition-based pricing will appear here when it is connected.</p></div>
     <ul class="highlights hidden" id="r-highlights"></ul>
     <div class="notes hidden" id="r-notes"></div>
     <p class="price-note" id="r-price"></p>
@@ -1458,6 +1460,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function addChip(container, text, cls) {
     const s = document.createElement('span'); s.className = 'tag' + (cls ? ' ' + cls : ''); s.textContent = String(text).toUpperCase(); container.appendChild(s);
   }
+  document.querySelectorAll('[data-condition]').forEach((button) => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+  }));
   function setPriceLabel(txt, source) {
     setText('r-plabel', txt);
     setText('r-source', source === 'unverified' ? 'NO VERIFIED MARKET PRICE' : source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : source === 'tcgplayer' ? 'TCGPLAYER · TCG API' : 'CARD HEDGE');
