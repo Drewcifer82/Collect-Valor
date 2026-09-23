@@ -62,6 +62,16 @@ create table if not exists public.collector_profiles (
 );
 alter table public.collector_profiles enable row level security;
 
+-- Temporary opening-day notification list. This table stores only the email a
+-- visitor voluntarily submits. After the launch notice is sent, remove every
+-- row; subscription-account emails remain in their separate account tables.
+create table if not exists public.launch_waitlist (
+  email      text primary key,
+  created_at timestamptz not null default now(),
+  constraint launch_waitlist_email_length check (char_length(email) between 3 and 254)
+);
+alter table public.launch_waitlist enable row level security;
+
 alter table public.collection enable row level security;
 -- Intentionally no policies for anon/authenticated: direct client access is denied.
 -- The Netlify functions use the service_role key (which bypasses RLS) and enforce

@@ -4,22 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0b0f19" />
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '917040513943761');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=917040513943761&ev=PageView&noscript=1"/></noscript>
-<!-- End Meta Pixel Code -->
 <title>Pokémon Card Price Checker + Scanner | Collect Valor</title>
 <meta name="description" content="The Pokémon card price checker. Snap a photo to see what your raw card is worth right now with current market values." />
 <link rel="canonical" href="https://collectvalor.com/" />
@@ -409,12 +393,16 @@ nav a:hover{color:white}
 footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
 @media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}.card-condition{position:static;max-width:none;margin:0 0 10px;text-align:left}.condition-options{justify-content:flex-start}}
 .watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
+.launch-notify{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;max-width:720px;margin:-8px 0 34px;padding:18px;border:1px solid #4a4274;border-radius:16px;background:linear-gradient(135deg,#17152a,#121b2d)}
+.launch-notify label{min-width:0}.launch-notify input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#0f1726;color:var(--text);padding:12px 14px;font-size:16px}.launch-notify button{min-height:48px}.launch-notify .launch-promise,.launch-notify .msg{grid-column:1/-1;margin:0}.launch-notify .launch-promise{color:var(--muted);font-size:11px;line-height:1.55}.launch-hp{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
+@media(max-width:600px){.launch-notify{grid-template-columns:1fr}.launch-notify button{width:100%}}
 </style>
 <!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-CFsJ2ENI3kalPgEOBxGW9.js"></script>
 <script>
   window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
+  plausible.init();
+  window.trackCollectValorEvent=function(name,props){try{plausible(name,props?{props:props}:undefined)}catch(e){}};
 </script>
 </head>
 <body>
@@ -433,6 +421,13 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   <button class="who-pill" id="who-pill" type="button">GUEST</button>
 </header>
 <section class="intro"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h1 id="heading">Collect Valor is coming soon.</h1><p id="subtitle">We are not operational yet. The app is currently available to account holders only. Expect our Grand Opening by October 5th.</p></section>
+<form class="launch-notify" id="launch-notify-form">
+  <label><span class="label">OPENING DAY NOTICE</span><input id="launch-email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></label>
+  <button class="primary" id="launch-notify-submit" type="submit">Notify me</button>
+  <label class="launch-hp" aria-hidden="true">Website<input id="launch-website" name="website" tabindex="-1" autocomplete="off"></label>
+  <p class="launch-promise">We’ll only use this email to tell you when Collect Valor is live. After that notice, we’ll remove it from the launch list. If the email belongs to a subscription account, the account record remains.</p>
+  <p class="msg" id="launch-notify-message" role="status" aria-live="polite"></p>
+</form>
 
 <!-- ============ PRICE DESK ============ -->
 <section id="scan" class="page workspace">
@@ -808,6 +803,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const note = value === null ? ' Price unavailable; changes cannot be calculated without a starting price.' : ' Starting price: ' + price(value) + '.';
       message(card.player + ' added.' + note);
       $('watch-current-message').textContent = card.player + ' is on your watchlist.';
+      if (window.trackCollectValorEvent) window.trackCollectValorEvent('Watchlist Add');
     } catch { if (version === generation) message('Could not add this card. Please try again.'); }
     finally { if (version === generation) { adding.delete(id); renderCatalog(); sync(); } }
   }
@@ -899,6 +895,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 (function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
+  const track = (name, props) => { if (window.trackCollectValorEvent) window.trackCollectValorEvent(name, props); };
   const setText = (id, t) => { const el = $(id); if (el) el.textContent = t; };
   const show = (id) => { const el = $(id); if (el) el.classList.remove('hidden'); };
   const hide = (id) => { const el = $(id); if (el) el.classList.add('hidden'); };
@@ -969,6 +966,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('membership-note', 'Public memberships are not available yet.');
     }
     setLocked(!isMember);
+    updateLaunchFormVisibility();
     if (watchlist) watchlist.sessionChanged();
   }
 
@@ -994,8 +992,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     }
     btn.disabled = false; btn.textContent = label;
   });
-  $('who-pill').addEventListener('click', () => { if (entitled()) navigate('profile'); else showPaywall('intro'); });
-  $('acct-unlock').addEventListener('click', () => showPaywall('verify'));
+  $('who-pill').addEventListener('click', () => { if (entitled()) navigate('profile'); else { track('Account Access Clicked'); showPaywall('intro'); } });
+  $('acct-unlock').addEventListener('click', () => { track('Account Access Clicked'); showPaywall('verify'); });
 
   // ===== Navigation =====
   const COPY = {
@@ -1005,6 +1003,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     profile: ['Make room for great finds.', 'Your account, your standout card, your membership.'],
   };
   let currentPage = 'scan';
+  function updateLaunchFormVisibility() {
+    const form = $('launch-notify-form');
+    if (form) form.hidden = currentPage !== 'scan' || entitled();
+  }
   function navigate(page) {
     if (!COPY[page]) page = 'scan';
     currentPage = page;
@@ -1018,6 +1020,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('subtitle', COPY[page][1]);
     if (page === 'collection' && collFilter === 'binders') renderCollection();
     if (page === 'watch' && watchlist) watchlist.open();
+    if (page === 'collection') track('Collection Opened');
+    if (page === 'watch') track('Watchlist Opened');
+    updateLaunchFormVisibility();
     window.scrollTo(0, 0);
   }
   document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => navigate(b.dataset.page)));
@@ -1055,7 +1060,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     paid.setAttribute('aria-hidden', String(locked));
     $('insight-unlock').hidden = !locked;
   }
-  $('unlock-insights').addEventListener('click', () => showPaywall('intro'));
+  $('unlock-insights').addEventListener('click', () => { track('Account Access Clicked'); showPaywall('intro'); });
 
   // ===== Collection =====
   let collFilter = 'all';
@@ -1064,6 +1069,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     collFilter = f;
     document.querySelectorAll('[data-coll]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.coll === f)));
     renderCollection();
+    if (f === 'binders') track('Community Opened');
   }
   document.querySelectorAll('[data-coll]').forEach((b) => b.addEventListener('click', () => setCollFilter(b.dataset.coll)));
   $('collection-search').addEventListener('input', renderCollection);
@@ -1400,6 +1406,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   identifyBtn.addEventListener('click', () => { if (pendingImage && !busyFlag) identifyPhoto(pendingImage); });
 
   async function identifyPhoto(dataUrl) {
+    track('Scan Started');
     say('');
     result.classList.add('hidden');
     clearCandidates();
@@ -1407,8 +1414,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     try {
       const { res, data } = await post('identify', { image: dataUrl });
       setBusy(false);
-      if (data && data.access_required) { readout.textContent = 'Account holder access required.'; showPaywall('intro'); return; }
+      if (data && data.access_required) { track('Scan Failed', { reason: 'access' }); readout.textContent = 'Account holder access required.'; showPaywall('intro'); return; }
       if (!res.ok || !data || !data.ok) {
+        track('Scan Failed', { reason: 'provider' });
         readout.textContent = 'Could not identify the card.';
         say((data && data.error) || 'Could not identify the card — try a sharper, straight-on photo.', 'error'); return;
       }
@@ -1417,8 +1425,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       renderCard(data.card);
       showLinks();
       bumpScanCount();
+      track('Scan Completed');
       fetchPrice(data.card);
     } catch (err) {
+      track('Scan Failed', { reason: 'network' });
       setBusy(false);
       readout.textContent = 'Could not reach the server.';
       say('Could not reach the server — check your connection and try again.', 'error');
@@ -1567,6 +1577,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (!entitled()) { showPaywall('intro'); return; }
     const q = fixInput.value.trim();
     if (!q) { fixInput.focus(); return; }
+    if (!auto) track('Manual Search Used');
     if (!current) current = { card: {}, image: pendingImage || null };
     const resultsEl = $('fix-results');
     fixBtn.disabled = true; fixBtn.textContent = '…';
@@ -2037,6 +2048,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       }
       saveStar.classList.add('saved'); saveStar.textContent = '★ Saved to collection';
       saveMsg.className = 'save-msg ok'; saveMsg.textContent = 'Saved — open Collection to see it.';
+      track('Card Saved');
       loadCollection();
     } catch (err) {
       saveStar.disabled = false; saveStar.textContent = '☆ Save to collection';
@@ -2088,9 +2100,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   $('pw-back').addEventListener('click', () => setPwStage('intro'));
   $('pw-code-back').addEventListener('click', () => setPwStage('verify'));
   $('pw-tester-back').addEventListener('click', () => setPwStage('intro'));
-  $('pw-have-paid').addEventListener('click', () => setPwStage('verify'));
+  $('pw-have-paid').addEventListener('click', () => { track('Account Access Clicked'); setPwStage('verify'); });
   $('pw-have-tester-pass').addEventListener('click', () => setPwStage('tester'));
-  $('sc-verify').addEventListener('click', () => showPaywall('verify'));
+  $('sc-verify').addEventListener('click', () => { track('Account Access Clicked'); showPaywall('verify'); });
   $('sc-tester').addEventListener('click', () => showPaywall('tester'));
   $('pw-continue').addEventListener('click', unlockWithEmail);
   pwEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); unlockWithEmail(); } });
@@ -2141,7 +2153,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const data = await res.json();
       if (!res.ok || !data.ok) { pwCodeMsg.className = 'msg error'; pwCodeMsg.textContent = data.error || 'Could not unlock.'; return; }
       session = { email: data.email, token: data.token, plan: data.plan || 'beta', entitled: true };
-      try { if ((data.plan || '') !== 'comp') fbq('track', 'Purchase', { value: 8.99, currency: 'USD' }); } catch (e) {}
       localStorage.setItem('cv_session', JSON.stringify(session));
       updateSessionUI();
       pwCodeMsg.className = 'msg ok'; pwCodeMsg.textContent = 'Unlocked!';
@@ -2154,6 +2165,33 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   // ===== Watchlist: isolated browser saves, using the existing pricing endpoint =====
   watchlist = window.createWatchlist({ getSession: () => session, getCurrent: () => current,
     canWatch: () => !busyFlag && (!saveStar.disabled || saveStar.classList.contains('saved')), post, showPaywall, artFrame });
+
+  // ===== Temporary opening-day notification list =====
+  $('launch-notify-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    track('Launch Signup Clicked');
+    const email = $('launch-email').value.trim().toLowerCase();
+    const website = $('launch-website').value;
+    const button = $('launch-notify-submit');
+    const message = $('launch-notify-message');
+    if (!email) { $('launch-email').focus(); return; }
+    button.disabled = true; button.textContent = 'Saving…';
+    message.className = 'msg'; message.textContent = '';
+    try {
+      const response = await fetch('/.netlify/functions/join-launch-list', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, website }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not save your email.');
+      $('launch-email').value = '';
+      message.className = 'msg ok'; message.textContent = 'You’re on the opening-day list.';
+      track('Launch Signup');
+    } catch (error) {
+      message.className = 'msg error'; message.textContent = error.message || 'Could not save your email. Please try again.';
+    } finally {
+      button.disabled = false; button.textContent = 'Notify me';
+    }
+  });
 
   // ===== Boot =====
   resetResultData();
