@@ -473,15 +473,15 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #collection .collection-filters button[aria-pressed=true]{border-color:#7e72cb;background:linear-gradient(135deg,#272642,#1c2740);color:#f5f3ff;box-shadow:inset 0 1px #ffffff0c,0 8px 24px #070a1433}
 #collection .collection-status{margin:0 2px 18px;color:#7f8ca6;font-size:11px}
 #collection .collection-grid{gap:18px}
-#collection .collection-card{position:relative;border-color:#293650;border-radius:19px;background:linear-gradient(160deg,#182238,var(--collection-surface) 62%);box-shadow:0 16px 38px #03060e30,inset 0 1px #ffffff07;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+#collection .collection-card{position:relative;display:flex;flex-direction:column;height:100%;border-color:#293650;border-radius:19px;background:linear-gradient(160deg,#182238,var(--collection-surface) 62%);box-shadow:0 16px 38px #03060e30,inset 0 1px #ffffff07;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
 #collection .collection-card:hover{transform:translateY(-4px);border-color:#475a7d;box-shadow:0 22px 48px #03060e52,inset 0 1px #ffffff0a}
-#collection .collection-open{padding:14px}
+#collection .collection-open{display:flex;flex:1 1 auto;flex-direction:column;padding:14px}
 #collection .collection-open:hover{background:transparent}
 #collection .collection-art-frame{margin-bottom:15px;padding:18px 14px;border:1px solid #26344e;border-radius:13px;background:radial-gradient(circle at 50% 12%,#30415c,#121a2a 70%);box-shadow:inset 0 1px #ffffff08}
 #collection .collection-art-frame img.thumb{border-radius:10px;box-shadow:0 14px 30px #02040b73}
-#collection .collection-open h3{margin-bottom:7px;font-size:16px;line-height:1.3;letter-spacing:-.15px}
+#collection .collection-open h3{min-height:2.6em;margin-bottom:7px;font-size:16px;line-height:1.3;letter-spacing:-.15px}
 #collection .collection-card-meta{color:#929eb7;line-height:1.55}
-#collection .collection-card-value{margin-top:15px;padding-top:13px;border-top:1px solid #27334c}
+#collection .collection-card-value{min-height:58px;margin-top:auto;padding-top:13px;border-top:1px solid #27334c;align-content:flex-start}
 #collection .collection-card-value strong{font:700 20px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;color:var(--collection-mint)}
 #collection .collection-star{border-color:#28354e;color:#9aa6bd;font-weight:600;transition:background .18s ease,color .18s ease}
 #collection .collection-star:hover{background:#ffffff05;color:#f5d57f}
@@ -502,6 +502,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   #collection .collection-card{border-radius:16px}
   #collection .collection-open{padding:10px}
   #collection .collection-art-frame{padding:11px 6px;border-radius:11px}
+  #collection .collection-card-value{flex-direction:column;justify-content:flex-start;align-items:flex-start;gap:8px;min-height:76px}
 }
 @media(max-width:420px){
   #collection .collection-stat{padding:16px}
@@ -515,7 +516,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #watch .watch-stat{position:relative;isolation:isolate;overflow:hidden;padding:23px;border-color:var(--watch-edge);border-radius:19px;background:linear-gradient(150deg,#182238,var(--watch-surface) 72%);box-shadow:0 17px 42px #03060e3d,inset 0 1px #ffffff09}
 #watch .watch-stat:after{content:"";position:absolute;z-index:-1;width:130px;height:130px;right:-65px;top:-76px;border-radius:50%;background:#8f82ff10}
 #watch .watch-stat:first-child{border-color:#4a456d;background:radial-gradient(circle at 92% 0%,#9b8bff18,transparent 42%),linear-gradient(145deg,#1b243b,#121a2a)}
-#watch .watch-stat .label{margin:0;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#adb8ce}
+#watch .watch-stat .label{display:flex;align-items:flex-end;min-height:2.4em;margin:0;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#adb8ce}
 #watch .watch-stat strong{margin:14px 0 9px;font:700 31px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums}
 #watch #watch-refresh{min-height:46px;border-color:#394761;border-radius:12px;background:linear-gradient(145deg,#202b42,#172135);box-shadow:0 9px 23px #02040b3d,inset 0 1px #ffffff0a;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
 #watch #watch-refresh:hover{transform:translateY(-2px);border-color:#576b8e;box-shadow:0 13px 29px #02040b56,inset 0 1px #ffffff0c}
@@ -540,7 +541,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #profile .profile-identity{padding:19px;border:1px solid #2d3a56;border-radius:20px;background:linear-gradient(150deg,#172136,#101827 72%);box-shadow:0 18px 46px #02040b48,inset 0 1px #ffffff09}
 #profile .profile-avatar{box-shadow:0 12px 28px #4c62aa35,inset 0 1px #ffffff2b}
 #profile .prize-panel{border-color:#5c5279;background:radial-gradient(circle at 17% 42%,#3b3155,#1a2235 62%);box-shadow:0 24px 62px #02040b62,inset 0 1px #ffffff0c}
-#profile .profile-stats button{border-color:#2c3954;border-radius:16px;background:linear-gradient(150deg,#182238,#111927 74%);box-shadow:0 13px 32px #02040b38,inset 0 1px #ffffff08;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+#profile .profile-stats button{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;border-color:#2c3954;border-radius:16px;background:linear-gradient(150deg,#182238,#111927 74%);box-shadow:0 13px 32px #02040b38,inset 0 1px #ffffff08;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+#profile .profile-stats span{display:flex;align-items:flex-end;min-height:3em}
 #profile .profile-stats button:hover{transform:translateY(-2px);border-color:#596c8e;box-shadow:0 18px 40px #02040b50,inset 0 1px #ffffff0a}
 #profile .profile-panel{border-color:#2f3c57;border-radius:20px;background:linear-gradient(155deg,#172136,#101827 72%);box-shadow:0 18px 46px #02040b46,inset 0 1px #ffffff09}
 #profile .profile-membership{background:radial-gradient(circle at 92% 0%,#9b8bff17,transparent 42%),linear-gradient(145deg,#1b243b,#111927)}
