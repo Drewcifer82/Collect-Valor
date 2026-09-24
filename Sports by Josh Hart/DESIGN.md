@@ -3,8 +3,30 @@
 The locked visual + interaction design for the sports card scanner. Pair with
 HANDOFF.md (status) and CLAUDE.md (how we work).
 
-**Superseded Aug 12, 2026.** The original gold-on-black scheme was scrapped —
-it read cheap/casino rather than premium. Current direction below.
+**Superseded Sep 23, 2026.** The flat mint-only direction below remains as
+historical context. The current, locked direction is the layered Collect Valor
+system used throughout the live app.
+
+## Current visual system — Sep 23, 2026
+
+- Deep midnight-navy background with subtle faceted planes.
+- Solid, raised navy panels with a faint inner highlight, restrained border,
+  and soft shadow. Features should feel separated from the page and slightly
+  three-dimensional without becoming glossy or glass-like.
+- Cyan → purple → pink → warm-gold gradient is the brand signature. Reserve it
+  for the wordmark, active navigation, primary actions, and thin accent lines.
+- Main panel radius: 16–22px. Smaller controls: 10–14px.
+- Headings are bold and compact; labels are small, uppercase, and tracked.
+  Supporting copy stays muted for clear hierarchy.
+- Hover motion is a subtle lift only. Respect reduced-motion preferences.
+- Mobile navigation uses a clear 3-by-2 grid with comfortable touch targets.
+- This system applies everywhere: Price Desk, Collection, Watchlist, Profile,
+  Journal, individual articles, FAQ, Privacy, and offline states.
+
+Rule: new pages and features must reuse these surfaces and accents so the site
+feels like one product.
+
+## Previous direction — historical reference
 
 ## Vibe
 Modern, technical, sporty-premium. Deep navy with faceted background planes and a

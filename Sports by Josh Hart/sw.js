@@ -1,10 +1,11 @@
 /* Collect Valor service worker — bump CACHE on every deploy or users get stale HTML */
-const CACHE = 'cv-v1-2026-09-23-private-analytics';
+const CACHE = 'cv-v1-2026-09-23-visual-polish';
 const SHELL = [
   '/', '/index.html',
   '/faq', '/faq.html',
   '/privacy', '/privacy.html',
   '/offline.html',
+  '/static-polish.css',
   '/manifest.json',
   '/favicon.svg',
   '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'

@@ -390,12 +390,171 @@ td,th{overflow-wrap:anywhere}
 /* Nav link to static pages + footer links */
 nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
 nav a:hover{color:white}
-footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
-@media(max-width:760px){nav{grid-template-columns:repeat(5,minmax(0,1fr))}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}.card-condition{position:static;max-width:none;margin:0 0 10px;text-align:left}.condition-options{justify-content:flex-start}}
+footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
+@media(max-width:760px){nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}.card-condition{position:static;max-width:none;margin:0 0 10px;text-align:left}.condition-options{justify-content:flex-start}}
 .watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
 .launch-notify{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;max-width:720px;margin:-8px 0 34px;padding:18px;border:1px solid #4a4274;border-radius:16px;background:linear-gradient(135deg,#17152a,#121b2d)}
 .launch-notify label{min-width:0}.launch-notify input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:11px;background:#0f1726;color:var(--text);padding:12px 14px;font-size:16px}.launch-notify button{min-height:48px}.launch-notify .launch-promise,.launch-notify .msg{grid-column:1/-1;margin:0}.launch-notify .launch-promise{color:var(--muted);font-size:11px;line-height:1.55}.launch-hp{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}
 @media(max-width:600px){.launch-notify{grid-template-columns:1fr}.launch-notify button{width:100%}}
+/* Price desk polish: raised controls over a recessed scanning surface. */
+.launch-notify{position:relative;isolation:isolate;overflow:hidden;border-color:#393a62;border-radius:20px;background:radial-gradient(circle at 92% -20%,#9b8bff20,transparent 38%),linear-gradient(145deg,#191b31,#111a2a 72%);box-shadow:0 18px 48px #03060f45,inset 0 1px #ffffff0b}
+.launch-notify:before{content:"";position:absolute;z-index:-1;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,#72dce777,#c68cff77,transparent)}
+.launch-notify .label{margin:0 0 8px 2px;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#afb9cf}
+.launch-notify input{border-color:#2c3a56;background:#111a2a;box-shadow:inset 0 2px 8px #05081166,inset 0 1px #ffffff06;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.launch-notify input:hover{border-color:#445573;background:#142035}
+.launch-notify input:focus{border-color:#56d1e6;box-shadow:0 0 0 3px #45cbd31b,inset 0 2px 8px #05081155}
+.launch-notify .primary{border-radius:13px;box-shadow:0 10px 28px #5957a52c;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+.launch-notify .primary:hover{transform:translateY(-2px);box-shadow:0 15px 34px #7c65be38;filter:saturate(1.08)}
+#scan.workspace{gap:24px;align-items:start}
+#scan .scan-console,#scan .scan-output{position:relative;isolation:isolate;min-width:0;border:1px solid #2b3853;border-radius:22px;background:linear-gradient(155deg,#182238,#101827 72%);box-shadow:0 20px 52px #02050d4d,inset 0 1px #ffffff09}
+#scan .scan-console{padding:18px}
+#scan .scan-console:before{content:"";position:absolute;z-index:-1;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,#47d6e771,#a78df26b,transparent)}
+#scan .photo{height:418px;border-color:#354563;border-radius:16px;background:radial-gradient(circle at 50% 28%,#2a3b55,#121a2a 66%);box-shadow:inset 0 1px #ffffff0a,inset 0 -40px 70px #05081170,0 14px 32px #02040b55;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+#scan .photo:hover{transform:translateY(-2px);border-color:#4a6288;box-shadow:inset 0 1px #ffffff0d,inset 0 -40px 70px #05081170,0 19px 38px #02040b70}
+#scan .photo:before{inset:18px;border-color:#68c5e34d;box-shadow:inset 0 0 28px #39b9d00a}
+#scan .photo-empty{max-width:330px;color:#a7b3ca}
+#scan .actions{gap:10px;margin-top:12px}
+#scan .actions .secondary{min-height:48px;border-color:#35435f;border-radius:13px;background:linear-gradient(145deg,#202b42,#172135);box-shadow:0 8px 20px #02040b35,inset 0 1px #ffffff0a;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#scan .actions .secondary:hover{transform:translateY(-2px);border-color:#526687;background:linear-gradient(145deg,#24314a,#1a263b);box-shadow:0 12px 24px #02040b50,inset 0 1px #ffffff0d}
+#scan .identify{min-height:50px;border-radius:13px;box-shadow:0 11px 28px #3b93bc26;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease,opacity .2s ease}
+#scan .identify:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 16px 34px #8b78d333;filter:saturate(1.08)}
+#scan .identify:disabled{opacity:.58;box-shadow:none}
+#scan .search{margin-top:18px;padding:14px;border:1px solid #27344e;border-radius:15px;background:#0e1625;box-shadow:inset 0 2px 12px #0407114d}
+#scan .search .label{margin:0 0 9px 2px;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#aeb9d0}
+#scan .search-row input{min-height:48px;border-color:#2b3955;border-radius:11px;background:#151f33;box-shadow:inset 0 1px #ffffff06;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#scan .search-row input:hover{border-color:#425575;background:#18243a}
+#scan .search-row input:focus{border-color:#56d1e6;box-shadow:0 0 0 3px #45cbd31b}
+#scan .search-row .secondary{min-width:54px;border-color:#394965;border-radius:11px;background:#1b263b;box-shadow:inset 0 1px #ffffff08}
+#scan .scan-output{display:flex;flex-direction:column;min-height:420px;padding:24px;overflow:hidden}
+#scan .scan-output:before{content:"";position:absolute;z-index:-1;left:0;top:26px;bottom:26px;width:2px;background:linear-gradient(180deg,#42cfe3,#9d83ee 58%,#efb641);box-shadow:0 0 18px #73aee844}
+#scan .scan-output:after{content:"";position:absolute;z-index:-1;width:220px;height:220px;right:-120px;top:-130px;border-radius:50%;background:#8c7fff12}
+#scan .scan-output>.readout{margin:0 0 18px;padding:2px 0 0 4px;font-size:14px;line-height:1.55;color:#a9b4c9}
+#scan .scan-output>.insight-note{margin-top:auto;padding-top:18px;border-top:1px solid #27334b;color:#8592aa}
+#scan .result{border-color:#34425d;background:linear-gradient(155deg,#1a253a,#131c2c 72%);box-shadow:0 18px 42px #03060e4d,inset 0 1px #ffffff09}
+#scan .member-line{border-color:#3c4168;background:linear-gradient(145deg,#20243f,#151e31);box-shadow:0 12px 28px #03060e38,inset 0 1px #ffffff08}
+#scan .member-line .link{min-height:44px}
+@media(max-width:760px){
+  #scan.workspace{gap:16px}
+  #scan .scan-console,#scan .scan-output{border-radius:18px}
+  #scan .scan-console{padding:12px}
+  #scan .photo{height:350px;border-radius:14px}
+  #scan .scan-output{min-height:260px;padding:20px}
+}
+@media(max-width:420px){
+  .launch-notify{padding:14px;border-radius:17px}
+  #scan .photo{height:320px}
+  #scan .actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Collection polish: a quieter, more cohesive collector-display surface. */
+#collection{--collection-surface:#121a2a;--collection-surface-raised:#172136;--collection-edge:#2d3955;--collection-mint:#45dfbb}
+#collection .collection-summary{gap:18px;margin-bottom:34px}
+#collection .collection-stat{position:relative;isolation:isolate;overflow:hidden;padding:25px 26px;border-color:var(--collection-edge);border-radius:20px;background:linear-gradient(145deg,#182238 0%,var(--collection-surface) 72%);box-shadow:0 18px 44px #04071135,inset 0 1px #ffffff08}
+#collection .collection-stat:after{content:"";position:absolute;z-index:-1;width:150px;height:150px;right:-70px;top:-86px;border-radius:50%;background:#8f82ff12;filter:blur(2px)}
+#collection .collection-stat.total{background:radial-gradient(circle at 92% 0%,#9b8bff18,transparent 42%),linear-gradient(135deg,#1a2841,#121a2b 72%)}
+#collection .collection-stat.total:before{height:2px}
+#collection .collection-stat .label{margin:0;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.02em;color:#aeb9d0}
+#collection .collection-stat strong{margin:15px 0 10px;font:700 32px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-1.2px}
+#collection .collection-stat.total strong{font-size:42px;color:var(--collection-mint)}
+#collection .collection-stat p{max-width:32ch;font-size:12px;line-height:1.55;color:#919db6}
+#collection .collection-toolbar{margin-bottom:16px;padding-top:2px}
+#collection .collection-toolbar h2{font-size:24px;letter-spacing:-.65px}
+#collection .collection-toolbar p{font-size:13px;line-height:1.5}
+#collection .collection-toolbar .primary{min-height:48px;padding-inline:20px;border-radius:14px;box-shadow:0 10px 28px #3e94c326;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+#collection .collection-toolbar .primary:hover{transform:translateY(-2px);box-shadow:0 14px 34px #8b78d32d;filter:saturate(1.08)}
+#collection .collection-controls{gap:10px;margin-bottom:12px;padding:12px;border:1px solid #25314a;border-radius:18px;background:#0f1625aa;box-shadow:inset 0 1px #ffffff06}
+#collection .collection-controls label{display:block}
+#collection .collection-controls .label{margin:0 0 8px 3px;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#aeb9d0}
+#collection .collection-controls input,#collection .collection-controls select{min-height:50px;padding:13px 15px;border-color:#2b3854;border-radius:12px;background:#151f33;box-shadow:inset 0 1px 0 #ffffff07;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#collection .collection-controls input:hover,#collection .collection-controls select:hover{border-color:#425272;background:#18243a}
+#collection .collection-controls input:focus,#collection .collection-controls select:focus{border-color:#58cfe0;box-shadow:0 0 0 3px #45cbd31d}
+#collection .collection-filters{gap:9px;margin:0 0 13px}
+#collection .collection-filters button{min-height:42px;padding:9px 15px;border-color:#2a3651;border-radius:12px;background:#121b2c;color:#9ba7bf;font-weight:600;transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
+#collection .collection-filters button:hover{transform:translateY(-1px);border-color:#455677;color:#edf0fa}
+#collection .collection-filters button[aria-pressed=true]{border-color:#7e72cb;background:linear-gradient(135deg,#272642,#1c2740);color:#f5f3ff;box-shadow:inset 0 1px #ffffff0c,0 8px 24px #070a1433}
+#collection .collection-status{margin:0 2px 18px;color:#7f8ca6;font-size:11px}
+#collection .collection-grid{gap:18px}
+#collection .collection-card{position:relative;border-color:#293650;border-radius:19px;background:linear-gradient(160deg,#182238,var(--collection-surface) 62%);box-shadow:0 16px 38px #03060e30,inset 0 1px #ffffff07;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+#collection .collection-card:hover{transform:translateY(-4px);border-color:#475a7d;box-shadow:0 22px 48px #03060e52,inset 0 1px #ffffff0a}
+#collection .collection-open{padding:14px}
+#collection .collection-open:hover{background:transparent}
+#collection .collection-art-frame{margin-bottom:15px;padding:18px 14px;border:1px solid #26344e;border-radius:13px;background:radial-gradient(circle at 50% 12%,#30415c,#121a2a 70%);box-shadow:inset 0 1px #ffffff08}
+#collection .collection-art-frame img.thumb{border-radius:10px;box-shadow:0 14px 30px #02040b73}
+#collection .collection-open h3{margin-bottom:7px;font-size:16px;line-height:1.3;letter-spacing:-.15px}
+#collection .collection-card-meta{color:#929eb7;line-height:1.55}
+#collection .collection-card-value{margin-top:15px;padding-top:13px;border-top:1px solid #27334c}
+#collection .collection-card-value strong{font:700 20px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;color:var(--collection-mint)}
+#collection .collection-star{border-color:#28354e;color:#9aa6bd;font-weight:600;transition:background .18s ease,color .18s ease}
+#collection .collection-star:hover{background:#ffffff05;color:#f5d57f}
+#collection .collection-empty{padding:50px 22px;border-color:#33415e;border-radius:20px;background:radial-gradient(circle at 50% 0%,#9286ff10,transparent 55%),#111927}
+#collection .collection-empty h3{margin:0 0 8px;font-size:21px}
+#collection>.footnote{margin:18px 2px 0;color:#77849e}
+.collection-dialog{border-color:#35435f;background:radial-gradient(circle at 85% 0%,#9b8bff12,transparent 38%),linear-gradient(150deg,#182238,#111827 72%);box-shadow:0 30px 90px #02040b99,inset 0 1px #ffffff0a}
+@media(max-width:760px){
+  #collection .collection-summary{gap:10px;margin-bottom:28px}
+  #collection .collection-stat{padding:19px;border-radius:17px}
+  #collection .collection-stat.total strong{font-size:38px}
+  #collection .collection-stat:not(.total) strong{font-size:28px}
+  #collection .collection-toolbar{align-items:stretch}
+  #collection .collection-toolbar>div{flex:1 1 100%}
+  #collection .collection-toolbar .primary{width:100%}
+  #collection .collection-controls{padding:10px;border-radius:16px}
+  #collection .collection-grid{gap:12px}
+  #collection .collection-card{border-radius:16px}
+  #collection .collection-open{padding:10px}
+  #collection .collection-art-frame{padding:11px 6px;border-radius:11px}
+}
+@media(max-width:420px){
+  #collection .collection-stat{padding:16px}
+  #collection .collection-stat p{font-size:11px}
+  #collection .collection-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #collection .collection-filters button:last-child{grid-column:1/-1}
+}
+/* Watchlist polish: raised tracker cards and a recessed discovery console. */
+#watch{--watch-surface:#121a2a;--watch-raised:#182238;--watch-edge:#2d3a56}
+#watch .watch-summary{gap:18px;margin-bottom:24px}
+#watch .watch-stat{position:relative;isolation:isolate;overflow:hidden;padding:23px;border-color:var(--watch-edge);border-radius:19px;background:linear-gradient(150deg,#182238,var(--watch-surface) 72%);box-shadow:0 17px 42px #03060e3d,inset 0 1px #ffffff09}
+#watch .watch-stat:after{content:"";position:absolute;z-index:-1;width:130px;height:130px;right:-65px;top:-76px;border-radius:50%;background:#8f82ff10}
+#watch .watch-stat:first-child{border-color:#4a456d;background:radial-gradient(circle at 92% 0%,#9b8bff18,transparent 42%),linear-gradient(145deg,#1b243b,#121a2a)}
+#watch .watch-stat .label{margin:0;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#adb8ce}
+#watch .watch-stat strong{margin:14px 0 9px;font:700 31px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums}
+#watch #watch-refresh{min-height:46px;border-color:#394761;border-radius:12px;background:linear-gradient(145deg,#202b42,#172135);box-shadow:0 9px 23px #02040b3d,inset 0 1px #ffffff0a;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+#watch #watch-refresh:hover{transform:translateY(-2px);border-color:#576b8e;box-shadow:0 13px 29px #02040b56,inset 0 1px #ffffff0c}
+#watch .watch-lineup,#watch .watch-discover{padding:22px;border:1px solid var(--watch-edge);border-radius:20px;background:linear-gradient(155deg,#172136,#101827 72%);box-shadow:0 20px 50px #02040b4a,inset 0 1px #ffffff09}
+#watch .watch-discover{background:radial-gradient(circle at 94% 0%,#8e7ee817,transparent 40%),linear-gradient(155deg,#182238,#101827 72%)}
+#watch .watch-heading h2,#watch .watch-discover h2{font-size:24px;letter-spacing:-.65px}
+#watch .watch-sort{font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#aeb9d0}
+#watch .watch-sort select,#watch #watch-search{border-color:#2e3c58;border-radius:11px;background:#111a2a;box-shadow:inset 0 2px 9px #04071155,inset 0 1px #ffffff06;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#watch .watch-sort select:hover,#watch #watch-search:hover{border-color:#465977;background:#142035}
+#watch .watch-sort select:focus,#watch #watch-search:focus{border-color:#56d1e6;box-shadow:0 0 0 3px #45cbd31b}
+#watch .watch-filters{gap:9px}
+#watch .watch-filters button{border-color:#2d3a55;border-radius:12px;background:#121b2c;font-weight:600;transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
+#watch .watch-filters button:hover{transform:translateY(-1px);border-color:#4b5e7f;color:#fff}
+#watch .watch-filters button[aria-pressed=true]{border-color:#7e72cb;background:linear-gradient(135deg,#272642,#1c2740);box-shadow:inset 0 1px #ffffff0c,0 8px 22px #0508123d}
+#watch .watch-row{border-color:#2b3853;border-radius:17px;background:linear-gradient(150deg,#19233a,#121a2a 72%);box-shadow:0 13px 32px #02040b38,inset 0 1px #ffffff08;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+#watch .watch-row:hover{transform:translateY(-2px);border-color:#495d7f;box-shadow:0 18px 40px #02040b55,inset 0 1px #ffffff0b}
+#watch .watch-empty{border-color:#35435f;border-radius:17px;background:#0f1726;box-shadow:inset 0 2px 12px #03060e4a}
+#watch .watch-catalog-row{border-color:#2a3650}
+#watch .watch-add{box-shadow:inset 0 1px #ffffff08}
+#watch .watch-detail-prices>div{border:1px solid #2c3954;background:#101827;box-shadow:inset 0 2px 9px #03060e48}
+/* Profile polish: a collector cabinet with one strong showcase surface. */
+#profile .profile-identity{padding:19px;border:1px solid #2d3a56;border-radius:20px;background:linear-gradient(150deg,#172136,#101827 72%);box-shadow:0 18px 46px #02040b48,inset 0 1px #ffffff09}
+#profile .profile-avatar{box-shadow:0 12px 28px #4c62aa35,inset 0 1px #ffffff2b}
+#profile .prize-panel{border-color:#5c5279;background:radial-gradient(circle at 17% 42%,#3b3155,#1a2235 62%);box-shadow:0 24px 62px #02040b62,inset 0 1px #ffffff0c}
+#profile .profile-stats button{border-color:#2c3954;border-radius:16px;background:linear-gradient(150deg,#182238,#111927 74%);box-shadow:0 13px 32px #02040b38,inset 0 1px #ffffff08;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+#profile .profile-stats button:hover{transform:translateY(-2px);border-color:#596c8e;box-shadow:0 18px 40px #02040b50,inset 0 1px #ffffff0a}
+#profile .profile-panel{border-color:#2f3c57;border-radius:20px;background:linear-gradient(155deg,#172136,#101827 72%);box-shadow:0 18px 46px #02040b46,inset 0 1px #ffffff09}
+#profile .profile-membership{background:radial-gradient(circle at 92% 0%,#9b8bff17,transparent 42%),linear-gradient(145deg,#1b243b,#111927)}
+#profile .profile-panel input{border-color:#2f3d59;background:#101827;box-shadow:inset 0 2px 9px #03060e55,inset 0 1px #ffffff05;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#profile .profile-panel input:hover{border-color:#465977;background:#142035}
+#profile .profile-panel input:focus{border-color:#56d1e6;box-shadow:0 0 0 3px #45cbd31b}
+#profile .profile-panel .secondary{border-color:#394862;background:linear-gradient(145deg,#202b42,#172135);box-shadow:inset 0 1px #ffffff08}
+@media(max-width:760px){
+  #watch .watch-summary{gap:10px}
+  #watch .watch-stat{padding:17px 13px;border-radius:16px}
+  #watch .watch-lineup,#watch .watch-discover{padding:17px;border-radius:17px}
+  #profile .profile-identity{padding:16px;border-radius:17px}
+  #profile .prize-panel,#profile .profile-panel{border-radius:18px}
+}
 </style>
 <!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-CFsJ2ENI3kalPgEOBxGW9.js"></script>
@@ -422,7 +581,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 </header>
 <section class="intro"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h1 id="heading">Collect Valor is coming soon.</h1><p id="subtitle">We are not operational yet. The app is currently available to account holders only. Expect our Grand Opening by October 5th.</p></section>
 <form class="launch-notify" id="launch-notify-form">
-  <label><span class="label">OPENING DAY NOTICE</span><input id="launch-email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></label>
+  <label><span class="label">Opening day notice</span><input id="launch-email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required></label>
   <button class="primary" id="launch-notify-submit" type="submit">Notify me</button>
   <label class="launch-hp" aria-hidden="true">Website<input id="launch-website" name="website" tabindex="-1" autocomplete="off"></label>
   <p class="launch-promise">We’ll only use this email to tell you when Collect Valor is live. After that notice, we’ll remove it from the launch list. If the email belongs to a subscription account, the account record remains.</p>
@@ -431,7 +590,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 
 <!-- ============ PRICE DESK ============ -->
 <section id="scan" class="page workspace">
-<div>
+<div class="scan-console">
   <div class="photo" id="photo" role="button" tabindex="0" aria-label="Take or upload a card photo">
     <div class="photo-empty" id="photo-empty"><b>Your card goes here.</b>Take or upload a clear photo of the front of the card, then tap Identify &amp; price.</div>
     <img id="preview" class="hidden" alt="Your card photo" />
@@ -446,7 +605,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   <input class="file" id="camera-input" type="file" accept="image/*" capture="environment">
   <input class="file" id="upload-input" type="file" accept="image/*">
   <form class="search" id="search">
-    <label class="label" for="fix-input">OR SEARCH TCG API BY NAME</label>
+    <label class="label" for="fix-input">Search TCG API by name</label>
     <div class="search-row"><input id="fix-input" placeholder="e.g. Pikachu 025/165" autocapitalize="none" autocorrect="off"><button class="secondary" id="fix-btn" type="submit">Go</button></div>
   </form>
   <p id="notice" class="msg" role="status" aria-live="polite"></p>
@@ -457,7 +616,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <button class="link" id="sc-tester" type="button">Use a tester pass</button>
   </div>
 </div>
-<div>
+<div class="scan-output">
   <p class="readout" id="readout">Scan a card or search by name to get started.</p>
   <article class="result hidden" id="result">
     <div class="result-head">
@@ -524,14 +683,14 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
 <!-- ============ COLLECTION ============ -->
 <section id="collection" class="page" hidden aria-label="Your collection">
   <div class="collection-summary">
-    <article class="collection-stat total"><span class="label">COLLECTION VALUE</span><strong id="stat-value">$0</strong><p>A little history. A lot of possibility.</p></article>
-    <article class="collection-stat"><span class="label">CARDS COLLECTED</span><strong id="stat-count">0</strong><p id="collection-breakdown">0 / 50 cards saved</p></article>
-    <article class="collection-stat"><span class="label">IN YOUR SHOWCASE</span><strong id="collection-showcase-count">0</strong><p>The finds you love most.</p></article>
+    <article class="collection-stat total"><span class="label">Collection value</span><strong id="stat-value">$0</strong><p>A little history. A lot of possibility.</p></article>
+    <article class="collection-stat"><span class="label">Cards collected</span><strong id="stat-count">0</strong><p id="collection-breakdown">0 / 50 cards saved</p></article>
+    <article class="collection-stat"><span class="label">In your showcase</span><strong id="collection-showcase-count">0</strong><p>The finds you love most.</p></article>
   </div>
   <div class="collection-toolbar"><div><h2>Your personal lineup</h2><p>Find a favorite. Make room for the next one.</p></div><button class="primary" data-page="scan" type="button">+ Scan a card</button></div>
   <div class="collection-controls">
-    <label><span class="label">FIND A CARD</span><input id="collection-search" type="search" placeholder="Search player, set, or sport" autocomplete="off"></label>
-    <label><span class="label">SORT BY</span><select id="collection-sort"><option value="recent">Recently added</option><option value="high">Value: high to low</option><option value="low">Value: low to high</option><option value="name">Name: A to Z</option></select></label>
+    <label><span class="label">Find a card</span><input id="collection-search" type="search" placeholder="Search card, set, or number" autocomplete="off"></label>
+    <label><span class="label">Sort by</span><select id="collection-sort"><option value="recent">Recently added</option><option value="high">Value: high to low</option><option value="low">Value: low to high</option><option value="name">Name: A to Z</option></select></label>
   </div>
   <div class="collection-filters" role="group" aria-label="Filter collection">
     <button type="button" data-coll="all" aria-pressed="true">All cards</button>
