@@ -610,6 +610,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <div class="value"><span class="label" id="r-plabel">MARKET VALUE</span><strong id="r-estimate">—</strong></div>
     </div>
     <div class="tags" id="r-chips"></div>
+    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION <span class="eyebrow">COMING SOON</span></span><div class="condition-options"><button type="button" data-condition="NM" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-pressed="false">DMG</button></div><p class="condition-note">Condition-based pricing will appear here when it is connected.</p></div>
     <ul class="highlights hidden" id="r-highlights"></ul>
     <div class="notes hidden" id="r-notes"></div>
     <p class="price-note" id="r-price"></p>
@@ -617,7 +618,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
     <button class="fixlink" id="fix-link" type="button">Search for a different card ↓</button>
     <div class="marketplace-links hidden" id="links-wrap"><a id="lnk-tcg" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Search TCGplayer ↗</a><a id="lnk-ebay" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Find this card on eBay ↗</a></div>
 
-    <div class="insight-gate" id="insight-gate" hidden>
+    <div class="insight-gate" id="insight-gate">
       <div id="paid-insights">
         <div class="averages hidden" id="avgs-wrap">
           <div><span>30-DAY AVG.</span><strong id="ov-avg30">—</strong></div>
@@ -654,7 +655,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
-  <p class="insight-note" hidden>Identification by OpenAI. Pokémon market prices from TCG API. Price history and sales activity are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
+  <p class="insight-note">Identification by OpenAI. Pokémon market prices from TCG API. Price history and sales activity are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
   <div class="matches-head hidden" id="matches-head"><span class="label">CHOOSE YOUR EXACT CARD</span><span id="matches-note">Tap your card for its real price</span></div>
   <div class="cards" id="fix-results"></div>
   <div class="movers hidden" id="market"><span class="label">MARKET MOVERS · BIGGEST WEEKLY GAINS</span><div id="market-list"></div></div>
@@ -1579,9 +1580,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('r-detail', cardMeta(card));
     const chips = $('r-chips'); chips.replaceChildren();
     if (card.rookie === true) addChip(chips, 'ROOKIE', 'rookie');
-    [card.finish, card.rarity, card.rarity_mark, card.special_stamp, card.variation]
-      .filter(Boolean).filter((value, index, values) => values.indexOf(value) === index).slice(0, 2)
-      .forEach((c) => addChip(chips, c, 'mag'));
+    [card.sport || card.category, card.team, card.position].filter(Boolean).forEach((c) => addChip(chips, c));
+    [card.finish, card.rarity, card.rarity_mark, card.special_stamp, card.variation].filter(Boolean).forEach((c) => addChip(chips, c, 'mag'));
+    addChip(chips, 'RAW / UNGRADED');
     const hl = $('r-highlights'); hl.replaceChildren();
     if (Array.isArray(card.highlights) && card.highlights.length) {
       card.highlights.forEach((h) => { const li = document.createElement('li'); li.textContent = h; hl.appendChild(li); });
