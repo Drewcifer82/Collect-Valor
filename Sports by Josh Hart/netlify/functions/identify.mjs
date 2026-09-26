@@ -37,7 +37,7 @@ export default async (req) => {
     return json({ ok: false, access_required: true, error: 'Collect Valor is currently available to account holders only.' }, 403);
   }
   let testerRemaining = null;
-  const dailyLimit = member.tester ? 40 : Number(member.scan_limit) || 0;
+  const dailyLimit = member.tester ? 75 : Number(member.scan_limit) || 0;
   if (dailyLimit) {
     const usage = await consumeTesterScan(String(member.tester || member.u), dailyLimit);
     if (usage == null) return json({ error: `Daily scan limit reached. Try again tomorrow.`, scan_limit: dailyLimit }, 429);

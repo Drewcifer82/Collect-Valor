@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-const DAILY_LIMIT = 40;
+const DAILY_LIMIT = 75;
 
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -8,15 +8,16 @@ export default async (req) => {
   try { body = await req.json(); } catch { return json({ error: 'Bad request' }, 400); }
 
   const secret = process.env.SESSION_SECRET;
-  const configuredCode = String(process.env.TESTER_PASS_CODE || '');
+  const configuredCodes = String(process.env.TESTER_PASS_CODE || '').split(',').map(code => code.trim()).filter(Boolean);
   const expiresAt = Date.parse(String(process.env.TESTER_PASS_EXPIRES_AT || ''));
-  if (!secret || !configuredCode || !Number.isFinite(expiresAt)) return json({ error: 'Tester access is not configured.' }, 503);
+  if (!secret || !configuredCodes.length || !Number.isFinite(expiresAt)) return json({ error: 'Tester access is not configured.' }, 503);
   if (Date.now() >= expiresAt) return json({ error: 'This tester pass has expired.' }, 401);
 
   const submitted = String(body.code || '').trim();
-  if (!safeEqual(submitted, configuredCode)) return json({ error: 'Invalid tester pass.' }, 401);
+  const matchedCode = configuredCodes.find(code => safeEqual(submitted, code));
+  if (!matchedCode) return json({ error: 'Invalid tester pass.' }, 401);
 
-  const passId = crypto.createHash('sha256').update(configuredCode).digest('hex').slice(0, 20);
+  const passId = crypto.createHash('sha256').update(matchedCode).digest('hex').slice(0, 20);
   const payload = Buffer.from(JSON.stringify({
     u: `tester:${passId}`, tester: passId, exp: expiresAt, iat: Date.now(),
   })).toString('base64url');

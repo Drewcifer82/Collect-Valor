@@ -5,7 +5,8 @@ import testerAccess from '../Sports by Josh Hart/netlify/functions/tester-access
 import identify from '../Sports by Josh Hart/netlify/functions/identify.mjs';
 
 const secret = 'tester-session-secret';
-const passCode = 'CV-TEST-40';
+const passCode = 'CV-TEST-75';
+const secondPassCode = 'CV-TEST-SECOND';
 const expiry = '2026-10-18T23:59:59.000Z';
 const card = {
   identified: true, confidence: 'high', card_type: 'pokemon', category: 'Pokemon',
@@ -26,7 +27,7 @@ test('temporary tester pass', async t => {
   const keys = ['SESSION_SECRET', 'TESTER_PASS_CODE', 'TESTER_PASS_EXPIRES_AT', 'OPENAI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
   const original = Object.fromEntries(keys.map(key => [key, process.env[key]]));
   Object.assign(process.env, {
-    SESSION_SECRET: secret, TESTER_PASS_CODE: passCode, TESTER_PASS_EXPIRES_AT: expiry,
+    SESSION_SECRET: secret, TESTER_PASS_CODE: `${passCode},${secondPassCode}`, TESTER_PASS_EXPIRES_AT: expiry,
     OPENAI_API_KEY: 'openai-test-key', SUPABASE_URL: 'https://db.example.test', SUPABASE_SERVICE_ROLE_KEY: 'db-test-key',
   });
   t.after(() => {
@@ -43,7 +44,7 @@ test('temporary tester pass', async t => {
     const result = await callAccess(passCode);
     assert.equal(result.status, 200);
     assert.equal(result.data.email, 'Anonymous tester');
-    assert.equal(result.data.scan_limit, 40);
+    assert.equal(result.data.scan_limit, 75);
     assert.equal(result.data.expires_at, expiry);
     const [payload, signature] = result.data.token.split('.');
     assert.equal(signature, crypto.createHmac('sha256', secret).update(payload).digest('base64url'));
@@ -52,8 +53,12 @@ test('temporary tester pass', async t => {
     assert.equal(decoded.exp, Date.parse(expiry));
   });
 
-  await t.test('consumes one of 40 scans before calling the vision provider', async () => {
+  await t.test('each tester code receives an independent 75-scan daily limit', async () => {
     const { data: access } = await callAccess(passCode);
+    const { data: secondAccess } = await callAccess(secondPassCode);
+    const firstPayload = JSON.parse(Buffer.from(access.token.split('.')[0], 'base64url').toString('utf8'));
+    const secondPayload = JSON.parse(Buffer.from(secondAccess.token.split('.')[0], 'base64url').toString('utf8'));
+    assert.notEqual(firstPayload.tester, secondPayload.tester);
     let rpcCalled = false;
     globalThis.fetch = async (url) => {
       if (String(url).includes('/rpc/consume_tester_scan')) {
@@ -66,10 +71,10 @@ test('temporary tester pass', async t => {
     const response = await identify(new Request('http://localhost/identify', { method: 'POST', body: JSON.stringify({ image: 'dGVzdA==', token: access.token }) }));
     const data = await response.json();
     assert.equal(response.status, 200);
-    assert.equal(data.tester_scans_remaining, 39);
+    assert.equal(data.tester_scans_remaining, 74);
   });
 
-  await t.test('blocks scan 41 before calling the paid provider', async () => {
+  await t.test('blocks scan 76 before calling the paid provider', async () => {
     const { data: access } = await callAccess(passCode);
     let calls = 0;
     globalThis.fetch = async url => {
