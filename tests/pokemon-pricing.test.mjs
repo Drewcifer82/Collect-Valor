@@ -80,6 +80,23 @@ test('Pokemon pricing integration', async t => {
     assert.equal(result.data.conditions[0].median_with_shipping, 10);
     assert.equal(result.data.conditions[1].lowest_with_shipping, 7);
   });
+  await t.test('price history returns normalized TCGplayer market and sales data', async () => {
+    globalThis.fetch = async (url, options) => {
+      assert.equal(String(url), 'https://api.tcgapi.dev/v1/cards/12345/history?range=all&printing=Holofoil');
+      assert.equal(options.headers['X-API-Key'], 'test-key');
+      return Response.json({ data: [
+        { date: '2026-09-27', printing: 'Holofoil', market_price: 18.5, low_price: 16, avg_sales_price: 18.1, sales_volume: 7 },
+        { date: '2026-09-28', printing: 'Normal', market_price: 9.25, low_price: 8, avg_sales_price: 9, sales_volume: 3 },
+        { date: '2026-09-29', printing: 'Holofoil', market_price: '19.75', low_price: null, avg_sales_price: null, sales_volume: 0 },
+      ] });
+    };
+    const result = await request({ history_for: 'tcg:12345:Holofoil' });
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.data.history, [
+      { date: '2026-09-27', printing: 'Holofoil', price: 18.5, low_price: 16, avg_sales_price: 18.1, sales_volume: 7 },
+      { date: '2026-09-29', printing: 'Holofoil', price: 19.75, low_price: null, avg_sales_price: null, sales_volume: 0 },
+    ]);
+  });
   await t.test('repeat searches fetch all editions and selected prices stay fresh with database configured', async () => {
     const envKeys = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
     const saved = envKeys.map(k => process.env[k]);
@@ -279,6 +296,11 @@ test('Pokemon pricing integration', async t => {
     const conditions = await request({ token: guestToken, scan_proof: proof, condition_for: 'tcg:12345:Normal', card: { ...scan.card, card_type: 'pokemon' } });
     assert.equal(conditions.status, 200);
     assert.equal(conditions.data.conditions[0].median_with_shipping, 19.25);
+
+    globalThis.fetch = async () => Response.json({ data: [{ date: '2026-09-29', printing: 'Normal', market_price: 18.75, avg_sales_price: 18.25, sales_volume: 4 }] });
+    const history = await request({ token: guestToken, scan_proof: proof, history_for: 'tcg:12345:Normal', card: { ...scan.card, card_type: 'pokemon' } });
+    assert.equal(history.status, 200);
+    assert.equal(history.data.history[0].price, 18.75);
   });
   await t.test('guest correction results carry a proof for the selected price', async () => {
     const owner = 'guest:test-device';

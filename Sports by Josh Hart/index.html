@@ -332,8 +332,8 @@ td,th{overflow-wrap:anywhere}
 .kv td:nth-child(3){color:var(--text)}
 .kv .pos{color:#64dabd!important}.kv .neg{color:#f394b8!important}
 /* History chart (ported) */
-.chart-spans{display:flex;gap:6px;margin:0 0 10px}
-.span-btn{border:1px solid var(--line);background:#0e1625;color:var(--muted);border-radius:8px;padding:6px 12px;font:11px monospace;min-height:34px}
+.chart-spans{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.span-btn{border:1px solid var(--line);background:#0e1625;color:var(--muted);border-radius:8px;padding:8px 12px;font:11px monospace;min-width:48px;min-height:44px}
 .span-btn.on{color:#eee9ff;border-color:#b9a0ff;background:#b9a0ff20}
 .chart-wrap{position:relative;border:1px solid var(--line);border-radius:12px;background:#0e1625;padding:8px 4px 2px}
 .chart-wrap svg{width:100%;height:auto;display:block;touch-action:none}
@@ -655,7 +655,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
           </tbody></table>
         </section>
         <section id="pane-history" role="tabpanel" tabindex="0" data-insight-panel hidden>
-          <div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>Charts will appear here when price-history data is connected.</div>
+          <div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>Open this tab after matching a card to load its market history.</div>
         </section>
       </div>
       <div class="insight-unlock" id="insight-unlock" hidden><span class="eyebrow">DEVELOPMENT PREVIEW</span><h3>We’re still building.</h3><p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p><button class="primary" id="unlock-insights" type="button">Account holder sign in</button></div>
@@ -668,7 +668,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
-  <p class="insight-note">Identification by OpenAI. Pokémon market prices from TCG API. Price history and sales activity are not currently supported. Check the matched card, year, and variation before trusting a price.</p>
+  <p class="insight-note">Identification by OpenAI. Pokémon market prices and price history from TCG API. Sales activity estimates are still being built. Check the matched card, year, and variation before trusting a price.</p>
   <div class="matches-head hidden" id="matches-head"><span class="label">CHOOSE YOUR EXACT CARD</span><span id="matches-note">Tap your card for its real price</span></div>
   <div class="cards" id="fix-results"></div>
   <div class="movers hidden" id="market"><span class="label">MARKET MOVERS · BIGGEST WEEKLY GAINS</span><div id="market-list"></div></div>
@@ -1540,6 +1540,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let current = null;      // the card on screen: { card, image, value, is_slab }
   let lastData = null;     // last Card Hedge pricing payload
   let histCache = null;
+  let historyRequest = 0;
   let conditionRows = null;
   let selectedCondition = 'NM';
   let conditionRequest = 0;
@@ -2108,7 +2109,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
 
   function resetResultData() {
-    lastData = null; histCache = null; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
+    lastData = null; histCache = null; historyRequest++; chartSpanDays = 30; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
     document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.condition === 'NM')));
     setText('condition-note', 'Condition prices load after the card is matched.');
     setText('ov-range', '—');
@@ -2122,62 +2123,72 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   // ---- Price history: chart + recent sales, loaded on demand ----
   async function maybeLoadHistory() {
     const pane = $('pane-history');
-    pane.innerHTML = historyPlaceholderHtml();
+    if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) {
+      pane.innerHTML = historyPlaceholderHtml('Match a Pokémon card first to load its market history.');
+      return;
+    }
+    if (histCache !== null) { renderHistory(histCache); return; }
+    const request = ++historyRequest;
+    pane.innerHTML = '<div class="panel-empty" role="status" aria-live="polite"><b>Loading price history…</b>Getting the latest TCGplayer market records.</div>';
+    try {
+      const { res, data } = await post('cardhedge', {
+        history_for: current.card.card_id,
+        card: current.proofCard || current.card,
+        scan_proof: current.priceProof || '',
+        selection_proof: current.selectionProof || '',
+      });
+      if (request !== historyRequest) return;
+      histCache = res.ok && data && data.ok && Array.isArray(data.history) ? data.history : [];
+    } catch (e) { if (request !== historyRequest) return; histCache = []; }
+    if (!histCache.length) {
+      pane.innerHTML = historyPlaceholderHtml('No price history is available for this printing yet. History generally begins once a card reaches a $1 market value.');
+      return;
+    }
+    renderHistory(histCache);
   }
 
-  function historyPlaceholderHtml() {
-    return '<div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>Charts will appear here when price-history data is connected.</div>';
+  function historyPlaceholderHtml(message) {
+    return '<div class="panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button><button type="button" disabled>6M</button><button type="button" disabled>1Y</button></div>' + escapeHtml(message || 'Open this tab after matching a card to load its market history.') + '</div>';
   }
 
-  let chartSpanMonths = 6;
+  const HISTORY_SPANS = [{ days: 30, label: '30D' }, { days: 60, label: '60D' }, { days: 90, label: '90D' }, { days: 183, label: '6M' }, { days: 365, label: '1Y' }];
+  let chartSpanDays = 30;
   function renderHistory(history) {
     const pane = $('pane-history');
-    const rows = history.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
-    let chartRows;
-    try { chartRows = smoothForChart(rows); } catch (e) { chartRows = rows; }
-    if (!chartRows || chartRows.length < 2) chartRows = rows;
+    const rows = history.filter((row) => row && row.date && Number.isFinite(Number(row.price))).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const chartRows = historyWindow(rows);
     const first = Number(chartRows[0] && chartRows[0].price), last = Number(chartRows[chartRows.length - 1] && chartRows[chartRows.length - 1].price);
     const change = (Number.isFinite(first) && first > 0 && Number.isFinite(last)) ? (last / first - 1) * 100 : null;
-    let html = '<div class="history-heading"><span class="label">SALE HISTORY · CARD HEDGE</span>' +
-      (change != null ? '<strong class="' + (change >= 0 ? 'watch-up' : 'watch-down') + '">' + (change > 0 ? '+' : '') + change.toFixed(1) + '% over ' + chartSpanMonths + 'M</strong>' : '') + '</div>';
+    const span = HISTORY_SPANS.find(item => item.days === chartSpanDays) || HISTORY_SPANS[0];
+    let html = '<div class="history-heading"><span class="label">MARKET HISTORY · TCGPLAYER</span>' +
+      (change != null ? '<strong class="' + (change >= 0 ? 'watch-up' : 'watch-down') + '">' + (change > 0 ? '+' : '') + change.toFixed(1) + '% over ' + span.label + '</strong>' : '') + '</div>';
     if (chartRows.length >= 2) html += spanButtonsHtml() + buildChart(chartRows);
-    html += '<table style="margin-top:12px"><thead><tr><th>When</th><th>Grade</th><th>Price</th></tr></thead><tbody>' +
-      rows.slice(-5).reverse().map((h) => '<tr><td>' + escapeHtml(h.date ? String(h.date).slice(0, 10) : '—') + '</td><td>' +
-        escapeHtml(h.grade || '—') + '</td><td>$' + money(h.price) + '</td></tr>').join('') + '</tbody></table>';
+    else html += spanButtonsHtml() + '<div class="panel-empty"><b>Not enough points in this range</b>Choose a longer time period to see the chart.</div>';
+    html += '<table style="margin-top:12px"><thead><tr><th>Date</th><th>Market</th><th>Avg. sale</th><th>Sales</th></tr></thead><tbody>' +
+      chartRows.slice(-5).reverse().map((h) => '<tr><td>' + escapeHtml(String(h.date).slice(0, 10)) + '</td><td>$' + money(h.price) + '</td><td>' +
+        (h.avg_sales_price != null ? '$' + money(h.avg_sales_price) : '—') + '</td><td>' + (h.sales_volume != null ? escapeHtml(String(h.sales_volume)) : '—') + '</td></tr>').join('') + '</tbody></table>' +
+      '<p class="insight-note">Market history is not a list of individual completed sales. Average sale price and sales volume may lag by a few days.</p>';
     pane.innerHTML = html;
     if (chartRows.length >= 2) { wireChartTip(pane, chartRows); wireSpanButtons(pane, history); }
+    else wireSpanButtons(pane, history);
   }
   function spanButtonsHtml() {
-    return '<div class="chart-spans">' + [3, 6, 12].map((m) => '<button type="button" class="span-btn' + (m === chartSpanMonths ? ' on' : '') + '" data-span="' + m + '">' + m + 'M</button>').join('') + '</div>';
+    return '<div class="chart-spans" aria-label="Price history range">' + HISTORY_SPANS.map((item) => '<button type="button" class="span-btn' + (item.days === chartSpanDays ? ' on' : '') + '" aria-pressed="' + (item.days === chartSpanDays) + '" data-span="' + item.days + '">' + item.label + '</button>').join('') + '</div>';
   }
   function wireSpanButtons(pane, history) {
     pane.querySelectorAll('.span-btn').forEach((b) => b.addEventListener('click', () => {
-      const m = parseInt(b.getAttribute('data-span'), 10);
-      if (Number.isFinite(m) && m !== chartSpanMonths) { chartSpanMonths = m; renderHistory(history); }
+      const days = parseInt(b.getAttribute('data-span'), 10);
+      if (Number.isFinite(days) && days !== chartSpanDays) { chartSpanDays = days; renderHistory(history); }
     }));
   }
-  function smoothForChart(rows) {
-    if (rows.length < 2) return rows;
-    const DAY = 86400000, days = Math.round((chartSpanMonths || 6) * 30.44);
+  function historyWindow(rows) {
+    if (!rows.length) return [];
+    const DAY = 86400000;
     const parse = (d) => Date.parse(String(d).slice(0, 10));
     const newest = parse(rows[rows.length - 1].date);
     if (!Number.isFinite(newest)) return rows;
-    const cutoff = newest - days * DAY;
-    let win = rows.filter((r) => { const t = parse(r.date); return Number.isFinite(t) && t >= cutoff; });
-    if (win.length < 2) win = rows;
-    const start = parse(win[0].date);
-    if (!Number.isFinite(start)) return win;
-    const buckets = new Map();
-    win.forEach((r) => {
-      const t = parse(r.date), p = Number(r.price);
-      if (!Number.isFinite(t) || !Number.isFinite(p)) return;
-      const wk = Math.floor((t - start) / (7 * DAY));
-      const b = buckets.get(wk) || { sum: 0, n: 0, date: '' };
-      b.sum += p; b.n += 1; b.date = String(r.date).slice(0, 10);
-      buckets.set(wk, b);
-    });
-    const out = Array.from(buckets.keys()).sort((a, b) => a - b).map((k) => { const b = buckets.get(k); return { price: b.sum / b.n, date: b.date }; });
-    return out.length >= 2 ? out : win;
+    const cutoff = newest - chartSpanDays * DAY;
+    return rows.filter((r) => { const t = parse(r.date); return Number.isFinite(t) && t >= cutoff; });
   }
   const CW = 480, CH = 180, CL = 56, CR = 14, CT = 14, CB = 26;
   function buildChart(rows) {

@@ -45,7 +45,7 @@ export default async (req) => {
       return await moversPath(body, apiKey);       // weekly top gainers
     }
     if (body.history_for) {
-      if (String(body.history_for).startsWith('tcg:')) return json({ ok: true, history: [] });
+      if (String(body.history_for).startsWith('tcg:')) return await pokemonHistoryPath(body);
       return await historyPath(body, apiKey);      // card_id -> sale history
     }
     if (body.condition_for) {
@@ -427,6 +427,32 @@ async function pokemonConditionPath(body) {
   return json({ ok: true, conditions, as_of: String(payload.meta?.as_of || ''), stale: payload.meta?.stale === true });
 }
 
+async function pokemonHistoryPath(body) {
+  const key = process.env.TCGAPI_KEY;
+  if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
+  const [, encodedId, encodedPrinting = ''] = String(body.history_for).split(':');
+  const id = decodeURIComponent(encodedId || '');
+  const printing = decodeURIComponent(encodedPrinting);
+  if (!/^\d+$/.test(id)) return json({ error: 'Invalid Pokemon card ID' }, 400);
+  const params = new URLSearchParams({ range: 'all' });
+  if (printing) params.set('printing', printing);
+  const response = await fetch('https://api.tcgapi.dev/v1/cards/' + id + '/history?' + params, {
+    headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error('Pokemon price history returned ' + response.status);
+  const payload = await response.json();
+  const rows = Array.isArray(payload.data) ? payload.data : payload.data ? [payload.data] : [];
+  const history = rows.filter(row => !printing || !row.printing || String(row.printing).toLowerCase() === printing.toLowerCase()).map(row => ({
+    date: String(row.date || '').slice(0, 10),
+    printing: String(row.printing || printing),
+    price: numOrNull(row.market_price),
+    low_price: numOrNull(row.low_price),
+    avg_sales_price: numOrNull(row.avg_sales_price),
+    sales_volume: numOrNull(row.sales_volume),
+  })).filter(row => row.date && row.price !== null);
+  return json({ ok: true, source: 'tcgplayer', history });
+}
+
 function priceResponse(price, low, asOf) {
   return json({ ok: true, matched: true, source: 'tcgplayer',
     fmv: price === null ? null : { price, low: low ?? null, as_of_date: asOf || '' },
@@ -715,9 +741,10 @@ function readSigned(token, secret) {
 }
 
 function guestRequestAllowed(body, session, secret) {
-  if (body.condition_for) {
+  if (body.condition_for || body.history_for) {
+    const cardId = String(body.condition_for || body.history_for);
     const selection = readSigned(body.selection_proof, secret);
-    if (selection && selection.kind === 'guest-selection' && selection.owner === session.u && selection.card_id === String(body.condition_for)) return true;
+    if (selection && selection.kind === 'guest-selection' && selection.owner === session.u && selection.card_id === cardId) return true;
     const proof = readSigned(body.scan_proof, secret);
     return !!(proof && proof.kind === 'guest-price' && proof.category === 'pokemon'
       && body.card && normalizeProof(body.card.player) === proof.name
