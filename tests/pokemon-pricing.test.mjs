@@ -64,6 +64,22 @@ test('Pokemon pricing integration', async t => {
     assert.match(calls[1], /\/cards\/12345\/prices$/);
     assert.match(calls[2], /\/cards\/12345\/prices\?printing=Normal$/);
   });
+  await t.test('condition pricing returns the five raw-card condition rows', async () => {
+    globalThis.fetch = async (url, options) => {
+      assert.equal(String(url), 'https://api.tcgapi.dev/v1/cards/12345/prices/conditions?printing=Holofoil');
+      assert.equal(options.headers['X-API-Key'], 'test-key');
+      return Response.json({ data: [
+        { card_id: 12345, printing: 'Holofoil', condition: 'Near Mint', language: 'English', low_price: 8, lowest_with_shipping: 9, median_with_shipping: 10, sample_count: 12, last_updated_at: '2026-09-29T12:00:00Z' },
+        { card_id: 12345, printing: 'Holofoil', condition: 'Lightly Played', language: 'English', low_price: 6, lowest_with_shipping: 7, median_with_shipping: null, sample_count: 2 },
+        { card_id: 12345, printing: 'Holofoil', condition: 'Near Mint', language: 'Japanese', median_with_shipping: 11, sample_count: 4 },
+      ], meta: { as_of: '2026-09-29T12:00:00Z' } });
+    };
+    const result = await request({ condition_for: 'tcg:12345:Holofoil' });
+    assert.equal(result.status, 200);
+    assert.equal(result.data.conditions.length, 2);
+    assert.equal(result.data.conditions[0].median_with_shipping, 10);
+    assert.equal(result.data.conditions[1].lowest_with_shipping, 7);
+  });
   await t.test('repeat searches fetch all editions and selected prices stay fresh with database configured', async () => {
     const envKeys = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
     const saved = envKeys.map(k => process.env[k]);
@@ -258,6 +274,11 @@ test('Pokemon pricing integration', async t => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };
     const rejected = await request({ token: guestToken, scan_proof: proof, card: { ...scan.card, player: 'Pikachu', card_type: 'pokemon' } });
     assert.equal(rejected.status, 401);
+
+    globalThis.fetch = async () => Response.json({ data: [{ printing: 'Normal', condition: 'Near Mint', language: 'English', median_with_shipping: 19.25, sample_count: 6 }] });
+    const conditions = await request({ token: guestToken, scan_proof: proof, condition_for: 'tcg:12345:Normal', card: { ...scan.card, card_type: 'pokemon' } });
+    assert.equal(conditions.status, 200);
+    assert.equal(conditions.data.conditions[0].median_with_shipping, 19.25);
   });
   await t.test('guest correction results carry a proof for the selected price', async () => {
     const owner = 'guest:test-device';

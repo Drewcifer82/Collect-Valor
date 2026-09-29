@@ -11,7 +11,7 @@ export default async () => {
 
   let rows;
   try {
-    const response = await fetch(url + '/rest/v1/collection?select=id,card_id,value&card_id=like.tcg%3A%25', {
+    const response = await fetch(url + '/rest/v1/collection?select=id,card_id,value,grade&card_id=like.tcg%3A%25', {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
     if (!response.ok) throw new Error('collection query failed: ' + response.status);
@@ -23,7 +23,7 @@ export default async () => {
   let updated = 0, failed = 0;
   for (const row of Array.isArray(rows) ? rows : []) {
     try {
-      const price = await pokemonPrice(row.card_id, tcgKey);
+      const price = await pokemonPrice(row.card_id, tcgKey, row.grade);
       if (price == null) { failed++; continue; }
       const response = await fetch(url + '/rest/v1/collection?id=eq.' + encodeURIComponent(row.id), {
         method: 'PATCH',
@@ -36,23 +36,32 @@ export default async () => {
   return json({ ok: true, scanned: Array.isArray(rows) ? rows.length : 0, updated, failed });
 };
 
-async function pokemonPrice(cardId, key) {
+async function pokemonPrice(cardId, key, grade) {
   const [, encodedId, encodedPrinting = ''] = String(cardId || '').split(':');
   const id = decodeURIComponent(encodedId || '');
   const printing = decodeURIComponent(encodedPrinting || '');
   if (!/^\d+$/.test(id)) return null;
   const suffix = printing ? '?' + new URLSearchParams({ printing }) : '';
-  const response = await fetch('https://api.tcgapi.dev/v1/cards/' + encodeURIComponent(id) + '/prices' + suffix, {
+  const condition = conditionName(grade);
+  const endpoint = condition ? '/prices/conditions' : '/prices';
+  const response = await fetch('https://api.tcgapi.dev/v1/cards/' + encodeURIComponent(id) + endpoint + suffix, {
     headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) throw new Error('TCG API price request failed: ' + response.status);
   const data = await response.json();
   const rows = Array.isArray(data.data) ? data.data : data.data ? [data.data] : [];
-  const row = printing ? rows.find(item => String(item.printing || '').toLowerCase() === printing.toLowerCase())
-    : rows.length === 1 ? rows[0] : null;
-  const value = row && (row.market_price ?? row.price);
+  const matching = condition ? rows.filter(item => String(item.condition || '').toLowerCase() === condition.toLowerCase()) : rows;
+  const row = printing ? matching.find(item => String(item.printing || '').toLowerCase() === printing.toLowerCase())
+    : matching.length === 1 ? matching[0] : null;
+  const value = row && (condition
+    ? (row.median_with_shipping ?? row.lowest_with_shipping ?? row.low_price)
+    : (row.market_price ?? row.price));
   const price = Number(value);
   return Number.isFinite(price) && price >= 0 ? price : null;
+}
+
+function conditionName(value) {
+  return ({ NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged' })[String(value || '').trim().toUpperCase()] || '';
 }
 
 function json(body, status = 200) {

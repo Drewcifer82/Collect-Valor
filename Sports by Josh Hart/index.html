@@ -314,7 +314,7 @@ td,th{overflow-wrap:anywhere}
 .tag.slab{color:#6de0c0;border-color:#32d6ac55;background:#32d6ac12}
 .tags{display:flex;flex-wrap:wrap;gap:0 2px;margin:12px 0 10px}
 .tags .tag{margin:0 5px 6px 0}
-.card-condition{position:absolute;right:26px;top:238px;max-width:360px;text-align:right}.card-condition .label{margin:0 0 8px}.condition-options{display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap}.condition-options button{border:1px solid #596681;background:#1a2438;color:#c8d0e5;border-radius:7px;padding:7px 9px;font:10px monospace;letter-spacing:.5px}.condition-options button[aria-pressed=true]{color:#101827;background:#b9a0ff;border-color:#b9a0ff;font-weight:700}.condition-note{margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
+.card-condition{position:absolute;right:26px;top:238px;max-width:360px;text-align:right}.card-condition .label{margin:0 0 8px}.condition-options{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.condition-options button{min-width:48px;min-height:44px;border:1px solid #596681;background:#1a2438;color:#c8d0e5;border-radius:7px;padding:9px 10px;font:11px monospace;letter-spacing:.5px}.condition-options button[aria-pressed=true]{color:#101827;background:#b9a0ff;border-color:#b9a0ff;font-weight:700}.condition-note{margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
 .price-note{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 6px;overflow-wrap:anywhere}
 .fixlink{background:none;border:0;color:#b6b8ff;font-size:12px;padding:6px 0 14px;text-align:left}
 .rdebug{font:10px/1.6 monospace;color:#c4baff;background:#0e1625;border:1px dashed #b9a0ff44;border-radius:8px;padding:10px;margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -623,7 +623,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <div class="value"><span class="label" id="r-plabel">MARKET VALUE</span><strong id="r-estimate">—</strong></div>
     </div>
     <div class="tags" id="r-chips"></div>
-    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION <span class="eyebrow">COMING SOON</span></span><div class="condition-options"><button type="button" data-condition="NM" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-pressed="false">DMG</button></div><p class="condition-note">Condition-based pricing will appear here when it is connected.</p></div>
+    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION</span><div class="condition-options"><button type="button" data-condition="NM" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-pressed="false">DMG</button></div><p class="condition-note" id="condition-note" role="status" aria-live="polite">Condition prices load after the card is matched.</p></div>
     <ul class="highlights hidden" id="r-highlights"></ul>
     <div class="notes hidden" id="r-notes"></div>
     <p class="price-note" id="r-price"></p>
@@ -1353,7 +1353,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const open = document.createElement('button'); open.type = 'button'; open.className = 'collection-open';
     open.setAttribute('aria-label', 'View ' + cardName(card));
     const grade = document.createElement('span'); grade.className = 'collection-grade';
-    grade.textContent = card.is_slab ? ('SLAB · ' + (card.grade || 'GRADED')).toUpperCase() : 'SINGLE / UNGRADED';
+    grade.textContent = card.is_slab ? ('SLAB · ' + (card.grade || 'GRADED')).toUpperCase()
+      : card.grade ? ('SINGLE · ' + card.grade).toUpperCase() : 'SINGLE / UNGRADED';
     const h = document.createElement('h3'); h.textContent = cardName(card);
     const meta = document.createElement('p'); meta.className = 'collection-card-meta';
     meta.textContent = [cardMeta(card), card.category].filter(Boolean).join(' · ');
@@ -1406,7 +1407,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('collection-dialog-set', [cardMeta(card), card.category].filter(Boolean).join(' · ') || '—');
     $('collection-dialog-art').replaceChildren(artFrame(card));
     setText('collection-dialog-value', card.value != null ? '$' + money(card.value) : 'No price yet');
-    setText('collection-dialog-type', card.is_slab ? ('Slab · ' + (card.grade || 'graded')) : 'Single · ungraded');
+    setText('collection-dialog-type', card.is_slab ? ('Slab · ' + (card.grade || 'graded')) : ('Single · ' + (card.grade || 'ungraded')));
     setText('collection-dialog-category', card.category || (card.card_type === 'pokemon' ? 'Pokémon' : '—'));
     setText('collection-dialog-cert', card.cert_number || '—');
     paintDetailStar();
@@ -1539,6 +1540,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let current = null;      // the card on screen: { card, image, value, is_slab }
   let lastData = null;     // last Card Hedge pricing payload
   let histCache = null;
+  let conditionRows = null;
+  let selectedCondition = 'NM';
+  let conditionRequest = 0;
+  let conditionLoading = false;
   let busyFlag = false;
 
   function say(msg, cls) { notice.className = 'msg' + (cls ? ' ' + cls : ''); notice.textContent = msg || ''; }
@@ -1591,7 +1596,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         updateSessionUI();
         loadCollection();
       }
-      current = { card: data.card, image: dataUrl, priceProof: data.price_proof || '' };
+      current = { card: data.card, proofCard: { ...data.card }, image: dataUrl, priceProof: data.price_proof || '' };
       resetSaveStar();
       renderCard(data.card);
       showLinks();
@@ -1646,7 +1651,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const s = document.createElement('span'); s.className = 'tag' + (cls ? ' ' + cls : ''); s.textContent = String(text).toUpperCase(); container.appendChild(s);
   }
   document.querySelectorAll('[data-condition]').forEach((button) => button.addEventListener('click', () => {
+    selectedCondition = button.dataset.condition;
     document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+    if (current && current.card) current.card.grade = selectedCondition;
+    renderConditionPrice();
   }));
   function setPriceLabel(txt, source) {
     setText('r-plabel', txt);
@@ -1688,8 +1696,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (picked != null) {
       setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE', data.source);
       setText('r-estimate', '$' + money(picked.value));
-      setText('r-price', priceNote(data, picked));
-      if (current) current.value = picked.value;
+      const note = priceNote(data, picked);
+      setText('r-price', note);
+      if (current) { current.value = picked.value; current.marketValue = picked.value; current.marketNote = note; }
     } else if (fromManual) {
       setPriceLabel('MARKET VALUE'); setText('r-estimate', '—');
       setText('r-price', 'Matched, but no market price is available yet.');
@@ -1717,6 +1726,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     fillOverview(data, picked);
     fillInsights(data);
     lastData = data;
+    loadConditionPrices();
   }
 
   // No exact Card Hedge match: make the pick-list the hero, don't fake a value.
@@ -1835,6 +1845,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (c.category) current.card.category = c.category;
     if (c.image) current.card.image = c.image;
     current.card.card_id = c.card_id;
+    current.selectionProof = c.selection_proof || '';
     if (c.rookie != null) current.card.rookie = c.rookie === true;
     document.querySelectorAll('.candidate').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
     setText('r-tag', 'MATCHED BY SEARCH');
@@ -1863,14 +1874,16 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         if (picked != null) {
           setPriceLabel((picked.source === 'fmv' || picked.source === 'cardhedge') ? 'MARKET VALUE' : 'LAST SALE', data.source);
           setText('r-estimate', '$' + money(picked.value));
-          setText('r-price', priceNote(data, picked));
-          current.value = picked.value;
+          const note = priceNote(data, picked);
+          setText('r-price', note);
+          current.value = picked.value; current.marketValue = picked.value; current.marketNote = note;
         } else {
           setText('r-price', 'Card matched, but no raw price is available yet.');
           current.value = null;
         }
         fillOverview(data, picked); fillInsights(data);
         lastData = data;
+        loadConditionPrices();
       } else {
         setText('r-price', 'Could not get a price — you can still save the card.'); current.value = null;
       }
@@ -2020,8 +2033,84 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     }
   }
 
+  const CONDITION_NAMES = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged' };
+  function conditionCode(value) {
+    const text = String(value || '').trim().toLowerCase();
+    return text === 'near mint' || text === 'nm' ? 'NM'
+      : text === 'lightly played' || text === 'lp' ? 'LP'
+      : text === 'moderately played' || text === 'mp' ? 'MP'
+      : text === 'heavily played' || text === 'hp' ? 'HP'
+      : text === 'damaged' || text === 'dmg' ? 'DMG' : '';
+  }
+  function conditionAmount(row) {
+    if (row && row.median_with_shipping != null) return { value: Number(row.median_with_shipping), basis: 'Median live listing including shipping' };
+    if (row && row.lowest_with_shipping != null) return { value: Number(row.lowest_with_shipping), basis: 'Lowest live listing including shipping' };
+    if (row && row.low_price != null) return { value: Number(row.low_price), basis: 'Lowest live item price before shipping' };
+    return null;
+  }
+  function restoreMarketPrice() {
+    if (!current || !Number.isFinite(Number(current.marketValue))) return;
+    current.value = Number(current.marketValue);
+    setPriceLabel('MARKET VALUE', 'tcgplayer');
+    setText('r-estimate', '$' + money(current.marketValue));
+    setText('r-price', current.marketNote || 'TCGplayer · TCG API');
+  }
+  function renderConditionPrice() {
+    const label = CONDITION_NAMES[selectedCondition] || selectedCondition;
+    if (!current || !current.card || !current.card.card_id) {
+      setText('condition-note', 'Condition prices load after the card is matched.');
+      return;
+    }
+    current.card.grade = selectedCondition;
+    if (conditionRows === null) {
+      setText('condition-note', 'Loading ' + label + ' pricing…');
+      if (!conditionLoading) loadConditionPrices();
+      return;
+    }
+    const row = conditionRows.find(item => conditionCode(item.condition) === selectedCondition);
+    const amount = conditionAmount(row);
+    if (!row || !amount || !Number.isFinite(amount.value)) {
+      restoreMarketPrice();
+      setText('condition-note', 'No ' + label + ' listing data is available. Market value is shown instead.');
+      return;
+    }
+    current.value = amount.value;
+    setPriceLabel(selectedCondition + ' LISTING PRICE', 'tcgplayer');
+    setText('r-estimate', '$' + money(amount.value));
+    const count = Number(row.sample_count);
+    const date = String(row.last_updated_at || '').slice(0, 10);
+    setText('r-price', [amount.basis, Number.isFinite(count) ? count + ' sampled listing' + (count === 1 ? '' : 's') : '', date ? 'as of ' + date : ''].filter(Boolean).join(' · '));
+    setText('condition-note', label + ' price from live TCGplayer listings.');
+  }
+  async function loadConditionPrices() {
+    if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) return;
+    current.card.grade = selectedCondition;
+    conditionLoading = true;
+    const request = ++conditionRequest;
+    setText('condition-note', 'Loading ' + (CONDITION_NAMES[selectedCondition] || selectedCondition) + ' pricing…');
+    try {
+      const { res, data } = await post('cardhedge', {
+        condition_for: current.card.card_id,
+        card: current.proofCard || current.card,
+        scan_proof: current.priceProof || '',
+        selection_proof: current.selectionProof || '',
+      });
+      if (request !== conditionRequest) return;
+      conditionLoading = false;
+      conditionRows = res.ok && data && data.ok && Array.isArray(data.conditions) ? data.conditions : [];
+      renderConditionPrice();
+    } catch (e) {
+      if (request !== conditionRequest) return;
+      conditionLoading = false;
+      conditionRows = [];
+      renderConditionPrice();
+    }
+  }
+
   function resetResultData() {
-    lastData = null; histCache = null;
+    lastData = null; histCache = null; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
+    document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.condition === 'NM')));
+    setText('condition-note', 'Condition prices load after the card is matched.');
     setText('ov-range', '—');
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
     hide('avgs-wrap'); hide('links-wrap');
