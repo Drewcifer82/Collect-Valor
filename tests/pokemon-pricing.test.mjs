@@ -8,6 +8,10 @@ const card = { id: 12345, name: 'Charizard ex', number: '125/197', set_name: 'Ob
 const secret = 'local-test-secret';
 const tokenPayload = Buffer.from(JSON.stringify({ u: 'test@example.com' })).toString('base64url');
 const token = tokenPayload + '.' + crypto.createHmac('sha256', secret).update(tokenPayload).digest('base64url');
+function signed(data) {
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
+  return payload + '.' + crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+}
 async function request(body) {
   const response = await handler(new Request('http://localhost/cardhedge', {
     method: 'POST', body: JSON.stringify({ token, ...body }),
@@ -234,6 +238,40 @@ test('Pokemon pricing integration', async t => {
   await t.test('unauthenticated requests spend no API calls', async () => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };
     assert.equal((await request({ token: 'bad', ...scan })).status, 401);
+  });
+  await t.test('a guest can price only the card authorized by a successful scan', async () => {
+    const guestToken = signed({ u: 'guest:test-device', guest: true, exp: Date.now() + 60_000 });
+    const proof = signed({ kind: 'guest-price', name: 'charizard ex', number: '125/197', category: 'pokemon', exp: Date.now() + 60_000 });
+    let calls = 0;
+    globalThis.fetch = async url => {
+      calls++;
+      const target = String(url);
+      if (target.includes('/search?')) return Response.json({ data: [card] });
+      if (/\/cards\/12345$/.test(target)) return Response.json({ data: card });
+      return Response.json({ data: [{ printing: 'Normal', market_price: 18.75 }] });
+    };
+    const result = await request({ token: guestToken, scan_proof: proof, card: { ...scan.card, card_type: 'pokemon', set: '' } });
+    assert.equal(result.status, 200);
+    assert.equal(result.data.fmv.price, 18.75);
+    assert.ok(calls > 0);
+
+    globalThis.fetch = async () => { throw new Error('must not fetch'); };
+    const rejected = await request({ token: guestToken, scan_proof: proof, card: { ...scan.card, player: 'Pikachu', card_type: 'pokemon' } });
+    assert.equal(rejected.status, 401);
+  });
+  await t.test('guest correction results carry a proof for the selected price', async () => {
+    const owner = 'guest:test-device';
+    const guestToken = signed({ u: owner, guest: true, exp: Date.now() + 60_000 });
+    const scanProof = signed({ kind: 'guest-price', name: 'charizard ex', number: '125/197', category: 'pokemon', exp: Date.now() + 60_000 });
+    globalThis.fetch = async url => Response.json({ data: String(url).includes('/prices')
+      ? [{ printing: 'Normal', market_price: 22.25 }]
+      : [{ ...card, price: 22.25 }] });
+    const search = await request({ token: guestToken, scan_proof: scanProof, search: 'Charizard ex', number: '125/197', category: 'pokemon' });
+    assert.equal(search.status, 200);
+    assert.match(search.data.results[0].selection_proof, /^[^.]+\.[^.]+$/);
+    const selected = await request({ token: guestToken, card_id: search.data.results[0].card_id, grade: 'Raw', selection_proof: search.data.results[0].selection_proof });
+    assert.equal(selected.status, 200);
+    assert.equal(selected.data.fmv.price, 22.25);
   });
   await t.test('Chinese printings and uncertain scans do not receive English catalog prices', async () => {
     globalThis.fetch = async () => { throw new Error('must not fetch'); };

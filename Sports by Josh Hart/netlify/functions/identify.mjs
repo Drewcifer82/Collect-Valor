@@ -160,7 +160,19 @@ export default async (req) => {
     await releaseGuestReservation();
     return json({ error: 'Scanner could not read the card reliably. Try a clearer photo.' }, 502);
   }
-  return json({ ok: true, card, raw: text, member: !!member, free_remaining: freeRemaining, model, usage, tester_scans_remaining: testerRemaining });
+  const guestDevice = !member ? guestDeviceId(body.guest_id) : '';
+  return json({
+    ok: true,
+    card,
+    raw: text,
+    member: !!member,
+    free_remaining: freeRemaining,
+    model,
+    usage,
+    tester_scans_remaining: testerRemaining,
+    guest_token: guestDevice ? signGuestCollectionToken(guestDevice, secret) : null,
+    price_proof: !member ? signGuestPriceProof(card, secret) : null,
+  });
 
   async function releaseGuestReservation() {
     if (!guestReservation || !guestId) return;
@@ -231,6 +243,36 @@ function clientIp(req) {
 
 function hashIp(ip, secret) {
   return crypto.createHmac('sha256', secret).update('guest-scan:' + ip).digest('hex');
+}
+
+function guestDeviceId(value) {
+  const id = String(value || '').trim();
+  return /^[A-Za-z0-9_-]{16,80}$/.test(id) ? id : '';
+}
+
+function signGuestCollectionToken(deviceId, secret) {
+  const owner = 'guest:' + crypto.createHmac('sha256', secret).update('guest-collection:' + deviceId).digest('hex').slice(0, 40);
+  return sign({ u: owner, guest: true, exp: Date.now() + 365 * 24 * 60 * 60 * 1000 }, secret);
+}
+
+function signGuestPriceProof(card, secret) {
+  return sign({
+    kind: 'guest-price',
+    name: normalizeProof(card && card.player),
+    number: normalizeProof(card && card.number),
+    category: normalizeProof(card && (card.card_type || card.category)),
+    exp: Date.now() + 10 * 60 * 1000,
+  }, secret);
+}
+
+function normalizeProof(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function sign(data, secret) {
+  const payload = Buffer.from(JSON.stringify(data)).toString('base64url');
+  const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  return payload + '.' + sig;
 }
 
 async function consumeGuestScan(id, limit) {

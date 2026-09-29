@@ -91,10 +91,12 @@ test('OpenAI scanner integration', async t => {
       if (String(url).includes('api.openai.com')) return Response.json(completed());
       throw new Error(`Unexpected request ${url}`);
     };
-    const result = await scan({ token: '' });
+    const result = await scan({ token: '', guest_id: 'device_identifier_1234' });
     assert.equal(result.status, 200);
     assert.equal(result.data.member, false);
     assert.equal(result.data.free_remaining, 32);
+    assert.match(result.data.guest_token, /^[^.]+\.[^.]+$/);
+    assert.match(result.data.price_proof, /^[^.]+\.[^.]+$/);
   });
   await t.test('failed guest scan returns its reserved allowance', async () => {
     const calls = [];

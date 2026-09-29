@@ -606,7 +606,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   <p id="notice" class="msg" role="status" aria-live="polite"></p>
   <div class="member-line hidden" id="sub-card">
     <span class="eyebrow">FREE PREVIEW</span>
-    <p>Your first 35 scans are free. Account holders can save cards and build a private collection.</p>
+    <p>Your first 35 scans are free. Every priced card can be saved to your private collection.</p>
     <button class="link" id="sc-verify" type="button">Account holder sign in</button>
     <button class="link" id="sc-tester" type="button">Use a tester pass</button>
   </div>
@@ -1074,6 +1074,22 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let watchlist = null;
   let collection = { cards: [], counts: { singles: 0, slabs: 0, total: 0 }, value: 0 };
   function guestSession() { return { email: null, token: null, plan: 'free', entitled: false }; }
+  function getGuestDeviceId() {
+    const key = 'cv_guest_device_v1';
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) {
+        id = (window.crypto && typeof window.crypto.randomUUID === 'function')
+          ? window.crypto.randomUUID()
+          : 'cv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+        localStorage.setItem(key, id);
+      }
+      return id;
+    } catch (e) {
+      return 'cv_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    }
+  }
+  const guestDeviceId = getGuestDeviceId();
   function entitled() {
     if (!(session && session.entitled)) return false;
     if (session.expires_at && Date.now() >= Date.parse(session.expires_at)) return false;
@@ -1116,10 +1132,11 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('membership-note', 'Account-holder access is on for this device.');
     } else {
       setText('membership-title', 'Start with 35 free scans.');
-      setText('membership-copy', 'Use the scanner first. Account holders can save cards and build a private collection.');
+      setText('membership-copy', 'Identify, price, and save cards to your private collection without a subscription.');
       setText('membership-note', 'No account is needed for your free scans.');
     }
-    setLocked(!isMember);
+    // Premium section locks will be added after every market feature is built.
+    setLocked(false);
     if (watchlist) watchlist.sessionChanged();
   }
 
@@ -1306,9 +1323,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (!list.length) {
       empty.hidden = false;
       const hasAny = collection.cards.length > 0;
-      setText('empty-title', hasAny ? 'No cards match just yet.' : (session && session.token ? 'No cards saved yet' : 'Sign in to see your collection'));
+      setText('empty-title', hasAny ? 'No cards match just yet.' : 'No cards saved yet');
       setText('empty-sub', hasAny ? 'Try a different name or explore another part of your collection.' :
-        (session && session.token ? 'Scan a card and tap Save to collection to add it here.' : 'Collection access is currently limited to account holders.'));
+        'Scan a card and tap Save to collection to add it here.');
       $('collection-clear').classList.toggle('hidden', !hasAny);
       return;
     }
@@ -1560,7 +1577,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     clearCandidates();
     setBusy(true, 'IDENTIFYING CARD');
     try {
-      const { res, data } = await post('identify', { image: dataUrl });
+      const { res, data } = await post('identify', { image: dataUrl, guest_id: guestDeviceId });
       setBusy(false);
       if (data && data.paywall) { track('Scan Failed', { reason: 'limit' }); readout.textContent = 'Your 35 free scans are used.'; showPaywall('intro'); return; }
       if (!res.ok || !data || !data.ok) {
@@ -1568,7 +1585,13 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         readout.textContent = 'Could not identify the card.';
         say((data && data.error) || 'Could not identify the card — try a sharper, straight-on photo.', 'error'); return;
       }
-      current = { card: data.card, image: dataUrl };
+      if (!data.member && data.guest_token) {
+        session = { ...guestSession(), token: data.guest_token, guest: true };
+        try { localStorage.setItem('cv_session', JSON.stringify(session)); } catch (e) {}
+        updateSessionUI();
+        loadCollection();
+      }
+      current = { card: data.card, image: dataUrl, priceProof: data.price_proof || '' };
       resetSaveStar();
       renderCard(data.card);
       showLinks();
@@ -1636,7 +1659,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setPriceLabel('MARKET VALUE');
     setText('r-price', 'Checking market prices…');
     saveStar.disabled = true;
-    try { await fetchPriceInner({ card }, card); }
+    try { await fetchPriceInner({ card, scan_proof: current && current.priceProof || '' }, card); }
     finally { if (!saveStar.classList.contains('saved')) saveStar.disabled = false; }
   }
 
@@ -1726,7 +1749,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function clearCandidates() { $('fix-results').replaceChildren(); $('matches-head').classList.add('hidden'); }
 
   async function manualSearch(auto) {
-    if (!entitled()) { showPaywall('intro'); return; }
+    if (!auto && !entitled()) { showPaywall('intro'); return; }
     const q = fixInput.value.trim();
     if (!q) { fixInput.focus(); return; }
     if (!auto) track('Manual Search Used');
@@ -1774,7 +1797,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     return s;
   }
   async function chSearch(q, category, number) {
-    const body = { search: q, page_size: 100 };
+    const body = { search: q, page_size: 100, scan_proof: current && current.priceProof || '' };
     if (number) body.number = number;
     if (category) body.category = category;
     const { res, data } = await post('cardhedge', body);
@@ -1834,7 +1857,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setPane('overview');
     try { result.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {}
     try {
-      const { res, data } = await post('cardhedge', { card_id: c.card_id, grade: 'Raw' });
+      const { res, data } = await post('cardhedge', { card_id: c.card_id, grade: 'Raw', selection_proof: c.selection_proof || '' });
       if (res.ok && data && data.ok) {
         const picked = pickValue(data);
         if (picked != null) {
@@ -2186,7 +2209,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   saveStar.addEventListener('click', saveCurrent);
   async function saveCurrent() {
     if (!current || saveStar.classList.contains('saved')) return;
-    if (!session || !session.token || session.guest) { showPaywall('intro'); return; }
+    if (!session || !session.token) { showPaywall('intro'); return; }
     saveMsg.className = 'save-msg'; saveMsg.textContent = '';
     saveStar.disabled = true; saveStar.textContent = 'Saving…';
     try {

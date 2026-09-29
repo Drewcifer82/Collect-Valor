@@ -30,8 +30,11 @@ export default async (req) => {
   const apiKey = process.env.CARDHEDGE_API_KEY; // legacy paths (slab/movers/history) only
   if (!secret) return json({ error: 'Server not configured' }, 500);
 
-  // Gate on the session token BEFORE spending any paid API call.
-  if (!verify(body.token, secret)) {
+  // Gate on the session token BEFORE spending any paid API call. Guest sessions
+  // also need a short-lived proof minted by a successful scan, so the public
+  // pricing route cannot be used as an unlimited general-purpose API proxy.
+  const session = readSigned(body.token, secret);
+  if (!session || (session.guest && !guestRequestAllowed(body, session, secret))) {
     return json({ error: 'Not signed in' }, 401);
   }
 
@@ -47,7 +50,9 @@ export default async (req) => {
     }
     if (body.search) {
       const category = String(body.category || '').toLowerCase();
-      if (/pok[eé]mon/.test(category)) return await pokemonSearchPath(body);
+      if (session.guest || /pok[eé]mon/.test(category)) {
+        return await pokemonSearchPath(body, session.guest ? { owner: session.u, secret } : null);
+      }
       if (!category && process.env.TCGAPI_KEY) {
         const responses = await Promise.allSettled([pokemonSearchPath(body), searchPath(body, apiKey)]);
         const results = [];
@@ -308,7 +313,7 @@ function stampAppearsOnProduct(card, stamp) {
   return comparable(card.name).includes(wanted) || comparable(card.set).includes(wanted);
 }
 
-async function pokemonSearchPath(body) {
+async function pokemonSearchPath(body, guestAccess = null) {
   const key = process.env.TCGAPI_KEY;
   if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
   const search = String(body.search).trim();
@@ -322,6 +327,7 @@ async function pokemonSearchPath(body) {
     return json({ ok: true, results: candidates.map(c => ({
       card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
       number: c.number, variant: c.variant, category: 'pokemon', image: c.image, prices: [],
+      selection_proof: guestAccess ? signGuestSelection(tcgId(c), guestAccess) : undefined,
     })), count: candidates.length });
   }
   // A collector number narrows the search before requesting specific finishes.
@@ -332,6 +338,7 @@ async function pokemonSearchPath(body) {
     card_id: tcgId(c), description: c.name, player: c.name, set: c.set,
     number: c.number, variant: c.variant, category: 'pokemon', image: c.image,
     prices: c.market_price === null ? [] : [{ grade: 'Raw', price: c.market_price }],
+    selection_proof: guestAccess ? signGuestSelection(tcgId(c), guestAccess) : undefined,
   }));
   return json({ ok: true, results, count: results.length });
 }
@@ -662,17 +669,51 @@ function numOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-function verify(token, secret) {
+function readSigned(token, secret) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return false;
   const [payload, sig] = token.split('.');
   const expected = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   try {
-    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false;
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return !(data.exp && Date.now() >= Number(data.exp));
+    if (data.exp && Date.now() >= Number(data.exp)) return null;
+    return data && typeof data === 'object' ? data : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function guestRequestAllowed(body, session, secret) {
+  if (body.card_id) {
+    const proof = readSigned(body.selection_proof, secret);
+    return !!(proof && proof.kind === 'guest-selection' && proof.owner === session.u && proof.card_id === String(body.card_id));
+  }
+  const proof = readSigned(body.scan_proof, secret);
+  if (!proof || proof.kind !== 'guest-price' || proof.category !== 'pokemon') return false;
+  if (body.card && typeof body.card === 'object') {
+    return normalizeProof(body.card.player) === proof.name
+      && normalizeProof(body.card.number) === proof.number
+      && normalizeProof(body.card.card_type || body.card.category) === proof.category;
+  }
+  if (body.search) {
+    const category = normalizeProof(body.category);
+    return normalizeProof(body.search) === proof.name
+      && normalizeProof(body.number) === proof.number
+      && (!category || category === 'pokemon');
+  }
+  return false;
+}
+
+function signGuestSelection(cardId, access) {
+  const payload = Buffer.from(JSON.stringify({
+    kind: 'guest-selection', owner: access.owner, card_id: String(cardId), exp: Date.now() + 10 * 60 * 1000,
+  })).toString('base64url');
+  const sig = crypto.createHmac('sha256', access.secret).update(payload).digest('base64url');
+  return payload + '.' + sig;
+}
+
+function normalizeProof(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 function json(obj, status = 200) {
