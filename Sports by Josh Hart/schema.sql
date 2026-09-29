@@ -9,6 +9,51 @@
 
 create extension if not exists pgcrypto;
 
+-- Public scanner allowance: 35 successful scans per anonymized network address.
+-- `identify.mjs` hashes the address with SESSION_SECRET before it reaches this table.
+create table if not exists public.guest_scan_usage (
+  id         text primary key,
+  count      integer not null default 0 check (count >= 0),
+  updated_at timestamptz not null default now()
+);
+alter table public.guest_scan_usage enable row level security;
+
+create or replace function public.consume_guest_scan(p_id text, p_limit integer)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  next_count integer;
+begin
+  if p_limit < 1 then raise exception 'p_limit must be positive'; end if;
+  insert into public.guest_scan_usage (id, count)
+  values (p_id, 1)
+  on conflict (id) do update
+    set count = guest_scan_usage.count + 1, updated_at = now()
+    where guest_scan_usage.count < p_limit
+  returning count into next_count;
+  return coalesce(next_count, 0);
+end;
+$$;
+
+create or replace function public.release_guest_scan(p_id text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  update public.guest_scan_usage
+  set count = greatest(count - 1, 0), updated_at = now()
+  where id = p_id;
+$$;
+
+revoke all on function public.consume_guest_scan(text, integer) from public, anon, authenticated;
+revoke all on function public.release_guest_scan(text) from public, anon, authenticated;
+grant execute on function public.consume_guest_scan(text, integer) to service_role;
+grant execute on function public.release_guest_scan(text) to service_role;
+
 create table if not exists public.collection (
   id           uuid primary key default gen_random_uuid(),
   owner        text not null,                 -- username from the login token

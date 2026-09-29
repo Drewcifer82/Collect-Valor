@@ -13,6 +13,7 @@ const CARD_SCHEMA = {
   },
   required: ['identified', 'confidence', 'card_type', 'rookie', ...STRING_FIELDS],
 };
+const FREE_LIMIT = 35;
 export default async (req) => {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
@@ -33,11 +34,19 @@ export default async (req) => {
   // Collect Valor is private during development. Only an existing account holder
   // with a signed session can send a card photo to the paid vision service.
   const member = memberFromToken(body.token, secret);
+  let guestId = null;
+  let freeRemaining = null;
+  let guestReservation = false;
   if (!member) {
-    return json({ ok: false, access_required: true, error: 'Collect Valor is currently available to account holders only.' }, 403);
+    guestId = hashIp(clientIp(req), secret);
+    const used = await consumeGuestScan(guestId, FREE_LIMIT);
+    if (used == null) return json({ error: 'Free scans are temporarily unavailable. Please try again shortly.' }, 503);
+    if (used === 0) return json({ ok: false, paywall: true, free_remaining: 0, error: 'Your 35 free scans are used.' });
+    freeRemaining = FREE_LIMIT - used;
+    guestReservation = true;
   }
   let testerRemaining = null;
-  const dailyLimit = member.tester ? 75 : Number(member.scan_limit) || 0;
+  const dailyLimit = member ? (member.tester ? 75 : Number(member.scan_limit) || 0) : 0;
   if (dailyLimit) {
     const usage = await consumeTesterScan(String(member.tester || member.u), dailyLimit);
     if (usage == null) return json({ error: `Daily scan limit reached. Try again tomorrow.`, scan_limit: dailyLimit }, 429);
@@ -120,6 +129,7 @@ export default async (req) => {
       }),
     });
     if (!resp.ok) {
+      await releaseGuestReservation();
       const failure = await resp.json().catch(() => ({}));
       const code = failure.error?.code;
       const error = ['insufficient_quota', 'credit_balance_exhausted'].includes(code) ? 'Scanner API credits are unavailable. Check OpenAI billing.'
@@ -131,19 +141,32 @@ export default async (req) => {
       return json({ error }, 502);
     }
     const data = await resp.json();
-    if (data.status !== 'completed') return json({ error: 'Scanner could not finish reading the card. Please try again.' }, 502);
+    if (data.status !== 'completed') {
+      await releaseGuestReservation();
+      return json({ error: 'Scanner could not finish reading the card. Please try again.' }, 502);
+    }
     text = (data.output || []).filter(item => item.type === 'message')
       .flatMap(item => item.content || []).filter(item => item.type === 'output_text')
       .map(item => item.text).join('');
     usage = data.usage;
 
   } catch {
+    await releaseGuestReservation();
     return json({ error: 'Could not reach vision service' }, 502);
   }
 
   const card = parseCard(text);
-  if (!card) return json({ error: 'Scanner could not read the card reliably. Try a clearer photo.' }, 502);
-  return json({ ok: true, card, raw: text, member: true, model, usage, tester_scans_remaining: testerRemaining });
+  if (!card) {
+    await releaseGuestReservation();
+    return json({ error: 'Scanner could not read the card reliably. Try a clearer photo.' }, 502);
+  }
+  return json({ ok: true, card, raw: text, member: !!member, free_remaining: freeRemaining, model, usage, tester_scans_remaining: testerRemaining });
+
+  async function releaseGuestReservation() {
+    if (!guestReservation || !guestId) return;
+    guestReservation = false;
+    await releaseGuestScan(guestId);
+  }
 };
 
 function parseCard(text) {
@@ -198,6 +221,41 @@ async function consumeTesterScan(passId, limit) {
     const count = Number(await response.json());
     return Number.isFinite(count) && count >= 1 && count <= limit ? count : null;
   } catch { return null; }
+}
+
+function clientIp(req) {
+  return req.headers.get('x-nf-client-connection-ip')
+    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+    || 'unknown';
+}
+
+function hashIp(ip, secret) {
+  return crypto.createHmac('sha256', secret).update('guest-scan:' + ip).digest('hex');
+}
+
+async function consumeGuestScan(id, limit) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  try {
+    const response = await fetch(`${url}/rest/v1/rpc/consume_guest_scan`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_id: id, p_limit: limit }),
+    });
+    if (!response.ok) return null;
+    const count = Number(await response.json());
+    return Number.isInteger(count) && count >= 0 && count <= limit ? count : null;
+  } catch { return null; }
+}
+
+async function releaseGuestScan(id) {
+  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return;
+  try {
+    await fetch(`${url}/rest/v1/rpc/release_guest_scan`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_id: id }),
+    });
+  } catch {}
 }
 
 function json(obj, status = 200) {

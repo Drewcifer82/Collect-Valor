@@ -76,10 +76,36 @@ test('OpenAI scanner integration', async t => {
     globalThis.fetch = async () => { throw new Error('Unexpected request'); };
     assert.equal((await scan({ image: '' })).status, 400);
   });
-  await t.test('private preview prevents a guest scan before the provider is called', async () => {
-    globalThis.fetch = async () => { throw new Error('The provider must not be called for guests'); };
+  await t.test('guest limit prevents a scan before the provider is called', async () => {
+    globalThis.fetch = async url => {
+      assert.match(String(url), /consume_guest_scan/);
+      return Response.json(0);
+    };
     const result = await scan({ token: '' });
-    assert.equal(result.status, 403);
-    assert.equal(result.data.access_required, true);
+    assert.equal(result.status, 200);
+    assert.equal(result.data.paywall, true);
+  });
+  await t.test('guest scan reserves one free scan and reports the remaining allowance', async () => {
+    globalThis.fetch = async (url) => {
+      if (String(url).includes('consume_guest_scan')) return Response.json(3);
+      if (String(url).includes('api.openai.com')) return Response.json(completed());
+      throw new Error(`Unexpected request ${url}`);
+    };
+    const result = await scan({ token: '' });
+    assert.equal(result.status, 200);
+    assert.equal(result.data.member, false);
+    assert.equal(result.data.free_remaining, 32);
+  });
+  await t.test('failed guest scan returns its reserved allowance', async () => {
+    const calls = [];
+    globalThis.fetch = async (url) => {
+      calls.push(String(url));
+      if (String(url).includes('consume_guest_scan')) return Response.json(1);
+      if (String(url).includes('api.openai.com')) return Response.json({ error: {} }, { status: 503 });
+      if (String(url).includes('release_guest_scan')) return new Response(null, { status: 204 });
+      throw new Error(`Unexpected request ${url}`);
+    };
+    assert.equal((await scan({ token: '' })).status, 502);
+    assert.ok(calls.some(url => url.includes('release_guest_scan')));
   });
 });

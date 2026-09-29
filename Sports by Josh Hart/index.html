@@ -582,7 +582,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   </nav>
   <button class="who-pill" id="who-pill" type="button">GUEST</button>
 </header>
-<section class="intro"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h1 id="heading">Collect Valor is coming soon.</h1><p id="subtitle">We are not operational yet. The app is currently available to account holders only. Expect our Grand Opening by October 5th.</p></section>
+<section class="intro"><span class="eyebrow">A LITTLE CARD. A BIG DISCOVERY.</span><h1 id="heading">Scan a card, get the market.</h1><p id="subtitle">Take a photo to identify your Pokémon card and check its current market reference. Your first 35 scans are free.</p></section>
 <!-- ============ PRICE DESK ============ -->
 <section id="scan" class="page workspace">
 <div class="scan-console">
@@ -605,8 +605,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   </form>
   <p id="notice" class="msg" role="status" aria-live="polite"></p>
   <div class="member-line hidden" id="sub-card">
-    <span class="eyebrow">DEVELOPMENT PREVIEW</span>
-    <p>Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
+    <span class="eyebrow">FREE PREVIEW</span>
+    <p>Your first 35 scans are free. Account holders can save cards and build a private collection.</p>
     <button class="link" id="sc-verify" type="button">Account holder sign in</button>
     <button class="link" id="sc-tester" type="button">Use a tester pass</button>
   </div>
@@ -769,10 +769,10 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 <!-- ============ PAYWALL ============ -->
 <dialog id="paywall" class="collection-dialog" aria-labelledby="pw-title">
   <header><span class="label">COLLECT VALOR</span><button class="secondary" id="pw-close" type="button" aria-label="Close">&times;</button></header>
-  <span class="pw-badge">DEVELOPMENT PREVIEW</span>
+  <span class="pw-badge">FREE PREVIEW</span>
   <div id="pw-stage-intro">
-    <h2 id="pw-title">We’re still building.</h2>
-    <p class="pw-fine">Collect Valor is not operational yet and is currently available to account holders only. Expect our Grand Opening by October 5th.</p>
+    <h2 id="pw-title">Your free scans are used.</h2>
+    <p class="pw-fine">Sign in if you already have an account. Public membership access is coming soon.</p>
     <button class="primary" id="pw-have-paid" type="button">Account holder sign in</button>
     <button class="secondary" id="pw-have-tester-pass" type="button">Use a tester pass</button>
   </div>
@@ -1094,14 +1094,14 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('who', name || 'Guest collector');
     setText('acct-email', name || 'Guest');
     setText('profile-avatar', initials);
-    setText('profile-eyebrow', isTester ? 'TEMPORARY TESTER' : isMember ? 'ACCOUNT HOLDER' : 'DEVELOPMENT PREVIEW');
-    setText('plan-name', isTester ? '30-DAY TESTER PASS' : isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW');
+    setText('profile-eyebrow', isTester ? 'TEMPORARY TESTER' : isMember ? 'ACCOUNT HOLDER' : 'FREE PREVIEW');
+    setText('plan-name', isTester ? '30-DAY TESTER PASS' : isMember ? 'ACCOUNT HOLDER' : '35 FREE SCANS');
     const plan = session && session.plan;
     setText('acct-plan', isMember
       ? (isTester ? '40 scans per day' : 'Account holder')
-      : 'Account holder access required');
+      : '35 free scans');
     const pill = $('who-pill');
-    if (pill) { pill.textContent = isTester ? 'TESTER' : isMember ? 'ACCOUNT HOLDER' : 'PRIVATE PREVIEW'; pill.classList.toggle('member', isMember); }
+    if (pill) { pill.textContent = isTester ? 'TESTER' : isMember ? 'ACCOUNT HOLDER' : 'FREE SCANS'; pill.classList.toggle('member', isMember); }
     $('signout').classList.toggle('hidden', !name);
     $('manage-sub').classList.toggle('hidden', !(isMember && (plan === 'beta' || plan === 'pro')));
     { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
@@ -1115,9 +1115,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('membership-copy', 'Thank you for helping us build Collect Valor before the Grand Opening.');
       setText('membership-note', 'Account-holder access is on for this device.');
     } else {
-      setText('membership-title', 'We’re still building.');
-      setText('membership-copy', 'Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.');
-      setText('membership-note', 'Public memberships are not available yet.');
+      setText('membership-title', 'Start with 35 free scans.');
+      setText('membership-copy', 'Use the scanner first. Account holders can save cards and build a private collection.');
+      setText('membership-note', 'No account is needed for your free scans.');
     }
     setLocked(!isMember);
     if (watchlist) watchlist.sessionChanged();
@@ -1562,7 +1562,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     try {
       const { res, data } = await post('identify', { image: dataUrl });
       setBusy(false);
-      if (data && data.access_required) { track('Scan Failed', { reason: 'access' }); readout.textContent = 'Account holder access required.'; showPaywall('intro'); return; }
+      if (data && data.paywall) { track('Scan Failed', { reason: 'limit' }); readout.textContent = 'Your 35 free scans are used.'; showPaywall('intro'); return; }
       if (!res.ok || !data || !data.ok) {
         track('Scan Failed', { reason: 'provider' });
         readout.textContent = 'Could not identify the card.';
@@ -1575,6 +1575,10 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       bumpScanCount();
       track('Scan Completed');
       fetchPrice(data.card);
+      if (!session || !session.entitled) {
+        const remaining = Number(data.free_remaining);
+        if (Number.isInteger(remaining)) say(remaining ? `${remaining} free scan${remaining === 1 ? '' : 's'} left.` : 'That was your last free scan.', 'ok');
+      }
     } catch (err) {
       track('Scan Failed', { reason: 'network' });
       setBusy(false);
