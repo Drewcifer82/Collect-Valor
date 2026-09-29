@@ -639,9 +639,9 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
           <div><span>SALES / 90D</span><strong id="ov-vol">—</strong></div>
         </div>
         <section class="pressure-panel" id="pressure-wrap" aria-label="Buying and selling pressure">
-          <div class="pressure-labels"><span>Buying <strong id="buy-pct">—</strong></span><span>Selling <strong id="sell-pct">—</strong></span></div>
+          <div class="pressure-labels"><span>Buying estimate <strong id="buy-pct">—</strong></span><span>Selling estimate <strong id="sell-pct">—</strong></span></div>
           <div class="pressure-track" role="img" id="pressure-track"><span id="buy-fill"></span><span id="sell-fill"></span></div>
-          <p id="pr-verdict">Buying and selling activity will appear here with price-history data.</p><small>Sales activity estimate · not measured order flow</small>
+          <p id="pr-verdict" role="status" aria-live="polite">Buying and selling pressure will appear after a card is matched.</p><small>Estimate from 30-day market-price movement · not measured order flow</small>
         </section>
         <div class="insight-tabs" role="tablist" aria-label="Card insights">
           <button type="button" role="tab" id="insight-tab-overview" aria-controls="pane-overview" aria-selected="true" data-pane="overview">Overview</button>
@@ -668,7 +668,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <span class="save-msg" id="save-msg"></span>
     </div>
   </article>
-  <p class="insight-note">Identification by OpenAI. Pokémon market prices and price history from TCG API. Sales activity estimates are still being built. Check the matched card, year, and variation before trusting a price.</p>
+  <p class="insight-note">Identification by OpenAI. Pokémon market prices and price history from TCG API. Buying and selling pressure is an estimate from market-price movement, not measured order flow. Check the matched card, year, and variation before trusting a price.</p>
   <div class="matches-head hidden" id="matches-head"><span class="label">CHOOSE YOUR EXACT CARD</span><span id="matches-note">Tap your card for its real price</span></div>
   <div class="cards" id="fix-results"></div>
   <div class="movers hidden" id="market"><span class="label">MARKET MOVERS · BIGGEST WEEKLY GAINS</span><div id="market-list"></div></div>
@@ -1540,6 +1540,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let current = null;      // the card on screen: { card, image, value, is_slab }
   let lastData = null;     // last Card Hedge pricing payload
   let histCache = null;
+  let historyInsights = null;
+  let historyLoading = null;
   let historyRequest = 0;
   let conditionRows = null;
   let selectedCondition = 'NM';
@@ -1728,6 +1730,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     fillInsights(data);
     lastData = data;
     loadConditionPrices();
+    loadMarketHistory();
   }
 
   // No exact Card Hedge match: make the pick-list the hero, don't fake a value.
@@ -1885,6 +1888,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         fillOverview(data, picked); fillInsights(data);
         lastData = data;
         loadConditionPrices();
+        loadMarketHistory();
       } else {
         setText('r-price', 'Could not get a price — you can still save the card.'); current.value = null;
       }
@@ -1991,7 +1995,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const buy = Math.max(0, Math.min(100, Math.round(ins.pressure_buy))), sell = 100 - buy;
       setText('buy-pct', buy + '%'); setText('sell-pct', sell + '%');
       $('buy-fill').style.width = buy + '%'; $('sell-fill').style.width = sell + '%';
-      $('pressure-track').setAttribute('aria-label', buy + '% buying, ' + sell + '% selling');
+      $('pressure-track').setAttribute('aria-label', buy + '% estimated buying pressure, ' + sell + '% estimated selling pressure');
       setText('pr-verdict',
         buy >= 70 ? 'Strong demand — buyers in control' :
         buy >= 55 ? 'Leaning up — more buyers than sellers' :
@@ -2000,8 +2004,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     } else {
       setText('buy-pct', '—'); setText('sell-pct', '—');
       $('buy-fill').style.width = '50%'; $('sell-fill').style.width = '50%';
-      $('pressure-track').setAttribute('aria-label', 'Buying and selling activity will appear with price history data');
-      setText('pr-verdict', 'Buying and selling activity will appear here with price-history data.');
+      $('pressure-track').setAttribute('aria-label', 'No buying and selling pressure estimate is available');
+      setText('pr-verdict', 'Not enough 30-day history to estimate market pressure.');
     }
     if (hasAvg) {
       show('avgs-wrap');
@@ -2109,7 +2113,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
 
   function resetResultData() {
-    lastData = null; histCache = null; historyRequest++; chartSpanDays = 30; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
+    lastData = null; histCache = null; historyInsights = null; historyLoading = null; historyRequest++; chartSpanDays = 30; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
     document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.condition === 'NM')));
     setText('condition-note', 'Condition prices load after the card is matched.');
     setText('ov-range', '—');
@@ -2121,26 +2125,44 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
 
   // ---- Price history: chart + recent sales, loaded on demand ----
+  async function loadMarketHistory() {
+    if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) return [];
+    if (histCache !== null) return histCache;
+    if (historyLoading) return historyLoading;
+    const request = ++historyRequest;
+    setText('pr-verdict', 'Analyzing price direction and reported sales volume…');
+    const task = (async () => {
+      try {
+        const { res, data } = await post('cardhedge', {
+          history_for: current.card.card_id,
+          card: current.proofCard || current.card,
+          scan_proof: current.priceProof || '',
+          selection_proof: current.selectionProof || '',
+        });
+        if (request !== historyRequest) return [];
+        histCache = res.ok && data && data.ok && Array.isArray(data.history) ? data.history : [];
+        historyInsights = res.ok && data && data.ok ? data.insights || null : null;
+      } catch (e) {
+        if (request !== historyRequest) return [];
+        histCache = []; historyInsights = null;
+      }
+      fillInsights({ insights: historyInsights });
+      return histCache;
+    })();
+    historyLoading = task;
+    try { return await task; }
+    finally { if (request === historyRequest) historyLoading = null; }
+  }
+
   async function maybeLoadHistory() {
     const pane = $('pane-history');
     if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) {
       pane.innerHTML = historyPlaceholderHtml('Match a Pokémon card first to load its market history.');
       return;
     }
-    if (histCache !== null) { renderHistory(histCache); return; }
-    const request = ++historyRequest;
-    pane.innerHTML = '<div class="panel-empty" role="status" aria-live="polite"><b>Loading price history…</b>Getting the latest TCGplayer market records.</div>';
-    try {
-      const { res, data } = await post('cardhedge', {
-        history_for: current.card.card_id,
-        card: current.proofCard || current.card,
-        scan_proof: current.priceProof || '',
-        selection_proof: current.selectionProof || '',
-      });
-      if (request !== historyRequest) return;
-      histCache = res.ok && data && data.ok && Array.isArray(data.history) ? data.history : [];
-    } catch (e) { if (request !== historyRequest) return; histCache = []; }
-    if (!histCache.length) {
+    if (histCache === null) pane.innerHTML = '<div class="panel-empty" role="status" aria-live="polite"><b>Loading price history…</b>Getting the latest TCGplayer market records.</div>';
+    await loadMarketHistory();
+    if (!histCache || !histCache.length) {
       pane.innerHTML = historyPlaceholderHtml('No price history is available for this printing yet. History generally begins once a card reaches a $1 market value.');
       return;
     }

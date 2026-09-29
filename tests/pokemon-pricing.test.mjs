@@ -96,6 +96,7 @@ test('Pokemon pricing integration', async t => {
       { date: '2026-09-27', printing: 'Holofoil', price: 18.5, low_price: 16, avg_sales_price: 18.1, sales_volume: 7 },
       { date: '2026-09-29', printing: 'Holofoil', price: 19.75, low_price: null, avg_sales_price: null, sales_volume: 0 },
     ]);
+    assert.deepEqual(result.data.insights, { avg_30: 18.1, avg_90: 18.1, n_90: 7, pressure_buy: 67 });
   });
   await t.test('repeat searches fetch all editions and selected prices stay fresh with database configured', async () => {
     const envKeys = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];

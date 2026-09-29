@@ -1,5 +1,5 @@
 /* Collect Valor service worker — bump CACHE on every deploy or users get stale HTML */
-const CACHE = 'cv-v1-2026-09-29-price-history';
+const CACHE = 'cv-v1-2026-09-29-market-pressure';
 const SHELL = [
   '/', '/index.html',
   '/faq', '/faq.html',

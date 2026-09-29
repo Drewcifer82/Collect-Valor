@@ -450,7 +450,41 @@ async function pokemonHistoryPath(body) {
     avg_sales_price: numOrNull(row.avg_sales_price),
     sales_volume: numOrNull(row.sales_volume),
   })).filter(row => row.date && row.price !== null);
-  return json({ ok: true, source: 'tcgplayer', history });
+  return json({ ok: true, source: 'tcgplayer', history, insights: computeTcgInsights(history) });
+}
+
+function computeTcgInsights(history) {
+  const DAY = 86400000;
+  const points = (Array.isArray(history) ? history : []).map(row => ({
+    ...row,
+    price: numOrNull(row.price),
+    avg_sales_price: numOrNull(row.avg_sales_price),
+    sales_volume: numOrNull(row.sales_volume),
+    time: Date.parse(String(row.date || '').slice(0, 10)),
+  })).filter(row => row.price !== null && Number.isFinite(row.time)).sort((a, b) => a.time - b.time);
+  if (!points.length) return { avg_30: null, avg_90: null, n_90: null, pressure_buy: null };
+  const newest = points[points.length - 1].time;
+  const within = days => points.filter(row => newest - row.time <= days * DAY);
+  const w30 = within(30), w90 = within(90);
+  const meanMarket = rows => rows.length ? rows.reduce((sum, row) => sum + row.price, 0) / rows.length : null;
+  const averageSale = rows => {
+    const reported = rows.filter(row => row.avg_sales_price !== null && row.sales_volume !== null && row.sales_volume > 0);
+    const volume = reported.reduce((sum, row) => sum + row.sales_volume, 0);
+    return volume > 0 ? reported.reduce((sum, row) => sum + row.avg_sales_price * row.sales_volume, 0) / volume : meanMarket(rows);
+  };
+  const knownVolume = w90.filter(row => row.sales_volume !== null);
+  let pressure = null;
+  if (w30.length >= 2 && w30[0].price > 0) {
+    const movement = (w30[w30.length - 1].price - w30[0].price) / w30[0].price;
+    pressure = Math.round(Math.min(90, Math.max(10, 50 + movement * 250)));
+  }
+  const round2 = value => value === null ? null : Math.round(value * 100) / 100;
+  return {
+    avg_30: round2(averageSale(w30)),
+    avg_90: round2(averageSale(w90)),
+    n_90: knownVolume.length ? Math.round(knownVolume.reduce((sum, row) => sum + Math.max(0, row.sales_volume), 0)) : null,
+    pressure_buy: pressure,
+  };
 }
 
 function priceResponse(price, low, asOf) {
