@@ -449,21 +449,22 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #collection .collection-stat strong{margin:15px 0 10px;font:700 32px/1 Inter,Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-1.2px}
 #collection .collection-stat.total strong{font-size:42px;color:var(--collection-mint)}
 #collection .collection-stat p{max-width:32ch;font-size:12px;line-height:1.55;color:#919db6}
-#collection .collection-toolbar{margin-bottom:16px;padding-top:2px}
+#collection .collection-toolbar{margin-bottom:30px;padding-top:2px}
 #collection .collection-toolbar h2{font-size:24px;letter-spacing:-.65px}
 #collection .collection-toolbar p{font-size:13px;line-height:1.5}
 #collection .collection-toolbar .primary{min-height:48px;padding-inline:20px;border-radius:14px;box-shadow:0 10px 28px #3e94c326;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
 #collection .collection-toolbar .primary:hover{transform:translateY(-2px);box-shadow:0 14px 34px #8b78d32d;filter:saturate(1.08)}
-#collection .collection-controls{gap:10px;margin-bottom:12px;padding:12px;border:1px solid #25314a;border-radius:18px;background:#0f1625aa;box-shadow:inset 0 1px #ffffff06}
+#collection .collection-controls{gap:10px;margin-bottom:0;padding:12px;border:1px solid #25314a;border-radius:18px;background:#0f1625aa;box-shadow:inset 0 1px #ffffff06}
 #collection .collection-controls label{display:block}
 #collection .collection-controls .label{margin:0 0 8px 3px;font:600 11px/1.2 Inter,Arial,sans-serif;letter-spacing:.01em;color:#aeb9d0}
 #collection .collection-controls input,#collection .collection-controls select{min-height:50px;padding:13px 15px;border-color:#2b3854;border-radius:12px;background:#151f33;box-shadow:inset 0 1px 0 #ffffff07;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
 #collection .collection-controls input:hover,#collection .collection-controls select:hover{border-color:#425272;background:#18243a}
 #collection .collection-controls input:focus,#collection .collection-controls select:focus{border-color:#58cfe0;box-shadow:0 0 0 3px #45cbd31d}
-#collection .collection-filters{gap:9px;margin:0 0 13px}
+#collection .collection-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:28px 0 24px}
 #collection .collection-filters button{min-height:42px;padding:9px 15px;border-color:#2a3651;border-radius:12px;background:#121b2c;color:#9ba7bf;font-weight:600;transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease}
 #collection .collection-filters button:hover{transform:translateY(-1px);border-color:#455677;color:#edf0fa}
 #collection .collection-filters button[aria-pressed=true]{border-color:#7e72cb;background:linear-gradient(135deg,#272642,#1c2740);color:#f5f3ff;box-shadow:inset 0 1px #ffffff0c,0 8px 24px #070a1433}
+#collection .collection-filters button[data-coll=binders]{grid-column:1/-1;margin-top:4px}
 #collection .collection-status{margin:0 2px 18px;color:#7f8ca6;font-size:11px}
 #collection .collection-grid{gap:18px}
 #collection .collection-card{position:relative;display:flex;flex-direction:column;height:100%;border-color:#293650;border-radius:19px;background:linear-gradient(160deg,#182238,var(--collection-surface) 62%);box-shadow:0 16px 38px #03060e30,inset 0 1px #ffffff07;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
@@ -491,6 +492,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   #collection .collection-toolbar>div{flex:1 1 100%}
   #collection .collection-toolbar .primary{width:100%}
   #collection .collection-controls{padding:10px;border-radius:16px}
+  #collection .collection-toolbar{margin-bottom:26px}
+  #collection .collection-filters{gap:10px;margin:24px 0 22px}
   #collection .collection-grid{gap:12px}
   #collection .collection-card{border-radius:16px}
   #collection .collection-open{padding:10px}
