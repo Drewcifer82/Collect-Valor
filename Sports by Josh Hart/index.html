@@ -623,7 +623,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <div class="value"><span class="label" id="r-plabel">MARKET VALUE</span><strong id="r-estimate">—</strong></div>
     </div>
     <div class="tags" id="r-chips"></div>
-    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION</span><div class="condition-options"><button type="button" data-condition="NM" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-pressed="false">DMG</button></div><p class="condition-note" id="condition-note" role="status" aria-live="polite">Condition prices load after the card is matched.</p></div>
+    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION</span><div class="condition-options"><button type="button" data-condition="NM" aria-label="Near Mint" title="Near Mint" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-label="Lightly Played" title="Lightly Played" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-label="Moderately Played" title="Moderately Played" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-label="Heavily Played" title="Heavily Played" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-label="Damaged" title="Damaged" aria-pressed="false">DMG</button></div><p class="condition-note" id="condition-note" role="status" aria-live="polite">NM means Near Mint. Condition prices load after the card is matched.</p></div>
     <ul class="highlights hidden" id="r-highlights"></ul>
     <div class="notes hidden" id="r-notes"></div>
     <p class="price-note" id="r-price"></p>
@@ -2053,13 +2053,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (row && row.low_price != null) return { value: Number(row.low_price), basis: 'Lowest live item price before shipping' };
     return null;
   }
-  function restoreMarketPrice() {
-    if (!current || !Number.isFinite(Number(current.marketValue))) return;
-    current.value = Number(current.marketValue);
-    setPriceLabel('MARKET VALUE', 'tcgplayer');
-    setText('r-estimate', '$' + money(current.marketValue));
-    setText('r-price', current.marketNote || 'TCGplayer · TCG API');
-  }
   function renderConditionPrice() {
     const label = CONDITION_NAMES[selectedCondition] || selectedCondition;
     if (!current || !current.card || !current.card.card_id) {
@@ -2068,6 +2061,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     }
     current.card.grade = selectedCondition;
     if (conditionRows === null) {
+      setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
+      setText('r-estimate', 'Loading…');
       setText('condition-note', 'Loading ' + label + ' pricing…');
       if (!conditionLoading) loadConditionPrices();
       return;
@@ -2075,17 +2070,20 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const row = conditionRows.find(item => conditionCode(item.condition) === selectedCondition);
     const amount = conditionAmount(row);
     if (!row || !amount || !Number.isFinite(amount.value)) {
-      restoreMarketPrice();
-      setText('condition-note', 'No ' + label + ' listing data is available. Market value is shown instead.');
+      current.value = null;
+      setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
+      setText('r-estimate', 'No condition price');
+      setText('r-price', 'TCG API has no verified ' + label + ' price for this printing.');
+      setText('condition-note', selectedCondition + ' means ' + label + '. No condition price is available for this printing.');
       return;
     }
     current.value = amount.value;
-    setPriceLabel(selectedCondition + ' LISTING PRICE', 'tcgplayer');
+    setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
     setText('r-estimate', '$' + money(amount.value));
     const count = Number(row.sample_count);
     const date = String(row.last_updated_at || '').slice(0, 10);
     setText('r-price', [amount.basis, Number.isFinite(count) ? count + ' sampled listing' + (count === 1 ? '' : 's') : '', date ? 'as of ' + date : ''].filter(Boolean).join(' · '));
-    setText('condition-note', label + ' price from live TCGplayer listings.');
+    setText('condition-note', selectedCondition + ' means ' + label + '. Price based on live TCGplayer listings.');
   }
   async function loadConditionPrices() {
     if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) return;
@@ -2115,7 +2113,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function resetResultData() {
     lastData = null; histCache = null; historyInsights = null; historyLoading = null; historyRequest++; chartSpanDays = 30; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
     document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.condition === 'NM')));
-    setText('condition-note', 'Condition prices load after the card is matched.');
+    setText('condition-note', 'NM means Near Mint. Condition prices load after the card is matched.');
     setText('ov-range', '—');
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
     hide('avgs-wrap'); hide('links-wrap');
