@@ -184,7 +184,7 @@ td,th{overflow-wrap:anywhere}
 .grading-outcome>span{font-size:11px;color:var(--muted)}.grading-outcome strong{display:block;font:700 28px monospace;margin:10px 0;color:#55dbb7}
 .grading-outcome strong.negative{color:#ff9ba6}.grading-outcome small{font-size:11px;line-height:1.6;display:block;color:var(--muted)}
 .insight-gate{position:relative;isolation:isolate}
-.premium-lock{position:relative;isolation:isolate}.premium-lock-content{transition:filter .18s ease,opacity .18s ease}.premium-lock.is-locked .premium-lock-content{filter:blur(6px);opacity:.46;pointer-events:none;user-select:none}.premium-lock-overlay{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:14px;background:#151d2e66;border-radius:12px}.premium-lock.is-locked .premium-lock-overlay{display:flex}.premium-lock-overlay button{min-height:44px}.premium-inline-lock{display:none;position:relative}.premium-inline-lock.is-locked{display:inline-flex}.premium-inline-lock.is-locked+#lnk-ebay{filter:blur(5px);opacity:.42;pointer-events:none;user-select:none}
+.premium-lock{position:relative;isolation:isolate}.premium-lock-content{transition:filter .18s ease,opacity .18s ease}.premium-lock.is-locked .premium-lock-content{filter:blur(6px);opacity:.46;pointer-events:none;user-select:none}.premium-lock-overlay{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:14px;background:#151d2e66;border-radius:12px}.premium-lock.is-locked .premium-lock-overlay{display:flex}.premium-lock-overlay button{min-height:44px}.premium-inline-lock{display:none;position:relative}.premium-inline-lock.is-locked{display:inline-flex}.premium-inline-lock.is-locked+#lnk-ebay{opacity:.48;pointer-events:none;user-select:none}
 .insight-unlock{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 12px;background:linear-gradient(180deg,#151d2e15,#151d2ecc);border-radius:12px}
 .insight-unlock h3{font-size:24px;letter-spacing:-.6px;margin:16px 0 8px}.insight-unlock p{font-size:13px;line-height:1.6;color:var(--text);max-width:330px;margin:0 0 20px}
 .insight-unlock .primary{max-width:100%;line-height:1.5;white-space:normal}
@@ -1323,7 +1323,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('collection-status', collFilter === 'showcase' ? 'Showcase is a member feature.' : 'Community Binders are a member feature.');
       setText('empty-title', collFilter === 'showcase' ? 'Your Showcase is locked.' : 'Community Binders are locked.');
       setText('empty-sub', collFilter === 'showcase' ? 'Subscribe to share favorite cards in your public Showcase.' : 'Subscribe to discover other collectors’ public Showcases.');
-      const subscribe = document.createElement('button'); subscribe.className = 'primary'; subscribe.type = 'button'; subscribe.textContent = 'Please Subscribe'; subscribe.addEventListener('click', openSubscribe);
+      empty.querySelectorAll('[data-premium-cta]').forEach((button) => button.remove());
+      const subscribe = document.createElement('button'); subscribe.className = 'primary'; subscribe.type = 'button'; subscribe.dataset.premiumCta = 'true'; subscribe.textContent = 'Please Subscribe'; subscribe.addEventListener('click', openSubscribe);
       empty.appendChild(subscribe); return;
     }
     if (collFilter === 'binders') { renderBinders(); return; }
