@@ -360,11 +360,8 @@ td,th{overflow-wrap:anywhere}
 .collection-art-frame .thumb-ph{width:100%;aspect-ratio:.71;border-radius:8px;background:linear-gradient(145deg,#293448,#101724);display:grid;place-items:center;color:var(--muted);font:9px monospace;letter-spacing:1px}
 .collection-card-value strong.none{color:var(--muted);font-size:13px}
 .collection-art-frame img.thumb.slab{border:6px solid #c6d3e5;border-radius:10px}
-.binder-head{grid-column:1/-1;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-top:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.binder-head .bo{font-weight:700;font-size:15px;overflow-wrap:anywhere}
-.binder-head .byou{font:9px monospace;letter-spacing:1px;color:#6de0c0;border:1px solid #32d6ac55;border-radius:5px;padding:3px 6px}
-.binder-head .bc{font:11px monospace;color:var(--muted)}
-.binder-head .bv{margin-left:auto;font:700 14px monospace;color:#32d6ac}
+.community-stage{grid-column:1/-1}.community-yours{max-width:330px;margin:0 auto 38px;text-align:center}.community-yours h3,.community-discovery h3{margin:0;font-size:20px}.community-yours p,.community-discovery p{color:var(--muted);font-size:12px;line-height:1.6;margin:7px 0 16px}.community-preview{width:100%;border:1px solid #4d4774;border-radius:18px;background:radial-gradient(circle at 10% 10%,#21c8e112,transparent 40%),radial-gradient(circle at 90% 8%,#e77aee10,transparent 40%),#151d2e;padding:14px;text-align:left;color:var(--text)}.community-preview .collection-art-frame{margin:0 0 12px;padding:13px}.community-preview .collection-art-frame img{max-height:245px;object-fit:contain}.community-preview strong{display:block;font-size:16px;overflow-wrap:anywhere}.community-preview small{display:block;margin-top:5px;color:var(--muted);font:10px monospace}.community-divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:0 0 30px}.community-discovery-head{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap;margin-bottom:16px}.community-discovery-head p{margin-bottom:0}.community-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.community-tile{min-width:0;border:1px solid #2d3956;border-radius:16px;background:#121b2c;padding:12px;text-align:left;color:var(--text);transition:transform .18s ease,border-color .18s ease}.community-tile:hover{transform:translateY(-2px);border-color:#8075ca}.community-tile .collection-art-frame{margin:0 0 10px;padding:9px;background:#101827}.community-tile .collection-art-frame img{max-height:190px;object-fit:contain}.community-tile strong{display:block;font-size:13px;overflow-wrap:anywhere}.community-tile small{display:block;margin-top:5px;color:var(--muted);font:9px monospace}.community-more{display:block;margin:24px auto 0}.community-open-head{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}.community-open-head h3{margin:0;font-size:20px}.community-open-head p{margin:5px 0 0;color:var(--muted);font-size:12px}.community-open-head .secondary{min-height:44px}
+@media(max-width:760px){.community-grid{gap:10px}.community-tile{padding:9px}.community-tile .collection-art-frame{padding:6px}.community-tile strong{font-size:12px}.community-yours{max-width:260px;margin-bottom:30px}}
 .collection-dialog .danger{width:100%;min-height:44px;margin-top:10px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:12px}
 .collection-dialog .danger.arm{color:#ff9ba6;border-color:#ff9ba666}
 .collection-dialog .collection-art-frame img.thumb{max-width:230px;margin:auto}
@@ -1493,7 +1490,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   });
   cdlg.addEventListener('close', () => renderCollection());
 
-  // ---- Community binders: everyone's showcased cards ----
+  // ---- Community binders: collector-first Showcase discovery ----
+  let communityVisible = 9, communityOpen = null;
   async function renderBinders() {
     const grid = $('coll-list'), empty = $('coll-empty');
     setText('collection-status', 'Community binders · cards people ★ into their showcase');
@@ -1516,15 +1514,50 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       return;
     }
     empty.hidden = true;
-    binders.forEach((b) => {
-      const head = document.createElement('div'); head.className = 'binder-head';
-      head.innerHTML = '<span class="bo">' + escapeHtml(b.owner) + '</span>' +
-        (b.is_you ? '<span class="byou">YOU</span>' : '') +
-        '<span class="bc">' + b.count + ' card' + (b.count === 1 ? '' : 's') + '</span>' +
-        '<span class="bv">$' + money(b.total_value) + '</span>';
-      grid.appendChild(head);
-      (b.cards || []).forEach((card) => grid.appendChild(buildTile(card, true)));
-    });
+    const yourBinder = binders.find((b) => b.is_you);
+    const others = binders.filter((b) => !b.is_you);
+    if (communityOpen) {
+      const binder = binders.find((b) => b.owner === communityOpen);
+      if (binder) { renderOpenBinder(grid, binder); return; }
+      communityOpen = null;
+    }
+    const stage = document.createElement('section'); stage.className = 'community-stage';
+    if (yourBinder) stage.appendChild(buildYourShowcase(yourBinder));
+    const discovery = document.createElement('div'); discovery.className = 'community-discovery';
+    const head = document.createElement('div'); head.className = 'community-discovery-head';
+    head.innerHTML = '<div><h3>Explore collectors</h3><p>Open a Showcase to see the cards they chose to share.</p></div><span class="label">' + others.length + ' SHOWCASE' + (others.length === 1 ? '' : 'S') + '</span>';
+    discovery.appendChild(head);
+    const tiles = document.createElement('div'); tiles.className = 'community-grid';
+    others.slice(0, communityVisible).forEach((binder) => tiles.appendChild(buildCommunityTile(binder)));
+    discovery.appendChild(tiles);
+    if (others.length > communityVisible) {
+      const more = document.createElement('button'); more.type = 'button'; more.className = 'secondary community-more'; more.textContent = 'See more collections';
+      more.addEventListener('click', () => { communityVisible += 9; renderBinders(); }); discovery.appendChild(more);
+    }
+    stage.appendChild(discovery); grid.appendChild(stage);
+  }
+
+  function topShowcaseCard(binder) { return (binder.cards || []).slice().sort((a, b) => Number(b.value || 0) - Number(a.value || 0))[0]; }
+  function buildYourShowcase(binder) {
+    const section = document.createElement('section'); section.className = 'community-yours';
+    const title = document.createElement('h3'); title.textContent = 'Your Showcase';
+    const note = document.createElement('p'); note.textContent = binder.count + ' card' + (binder.count === 1 ? '' : 's') + ' you chose to share.';
+    section.append(title, note, buildCommunityTile(binder, true)); return section;
+  }
+  function buildCommunityTile(binder, yours) {
+    const button = document.createElement('button'); button.type = 'button'; button.className = yours ? 'community-preview' : 'community-tile';
+    const card = topShowcaseCard(binder); if (card) button.appendChild(artFrame(card));
+    const name = document.createElement('strong'); name.textContent = yours ? 'Open your Showcase' : binder.owner;
+    const detail = document.createElement('small'); detail.textContent = binder.count + ' card' + (binder.count === 1 ? '' : 's') + ' · $' + money(binder.total_value);
+    button.append(name, detail); button.setAttribute('aria-label', 'Open ' + (yours ? 'your Showcase' : binder.owner + "'s Showcase"));
+    button.addEventListener('click', () => { communityOpen = binder.owner; renderBinders(); }); return button;
+  }
+  function renderOpenBinder(grid, binder) {
+    const head = document.createElement('div'); head.className = 'community-open-head';
+    const copy = document.createElement('div'); const title = document.createElement('h3'); title.textContent = binder.is_you ? 'Your Showcase' : binder.owner + "'s Showcase";
+    const note = document.createElement('p'); note.textContent = binder.count + ' card' + (binder.count === 1 ? '' : 's') + ' shared publicly.'; copy.append(title, note);
+    const back = document.createElement('button'); back.type = 'button'; back.className = 'secondary'; back.textContent = 'Back to collections'; back.addEventListener('click', () => { communityOpen = null; renderBinders(); });
+    head.append(copy, back); grid.appendChild(head); (binder.cards || []).forEach((card) => grid.appendChild(buildTile(card, true)));
   }
 
   // ---- Prize card: the most valuable card you own ----
