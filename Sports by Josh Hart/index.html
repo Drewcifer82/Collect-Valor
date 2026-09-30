@@ -184,8 +184,7 @@ td,th{overflow-wrap:anywhere}
 .grading-outcome>span{font-size:11px;color:var(--muted)}.grading-outcome strong{display:block;font:700 28px monospace;margin:10px 0;color:#55dbb7}
 .grading-outcome strong.negative{color:#ff9ba6}.grading-outcome small{font-size:11px;line-height:1.6;display:block;color:var(--muted)}
 .insight-gate{position:relative;isolation:isolate}
-.insights-locked #paid-insights,.insights-locked [data-paid]{filter:blur(6px);user-select:none;pointer-events:none}
-.insights-locked #paid-insights{max-height:460px;overflow:hidden;opacity:.5}
+.premium-lock{position:relative;isolation:isolate}.premium-lock-content{transition:filter .18s ease,opacity .18s ease}.premium-lock.is-locked .premium-lock-content{filter:blur(6px);opacity:.46;pointer-events:none;user-select:none}.premium-lock-overlay{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:14px;background:#151d2e66;border-radius:12px}.premium-lock.is-locked .premium-lock-overlay{display:flex}.premium-lock-overlay button{min-height:44px}.premium-inline-lock{display:none;position:relative}.premium-inline-lock.is-locked{display:inline-flex}.premium-inline-lock.is-locked+#lnk-ebay{filter:blur(5px);opacity:.42;pointer-events:none;user-select:none}
 .insight-unlock{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 12px;background:linear-gradient(180deg,#151d2e15,#151d2ecc);border-radius:12px}
 .insight-unlock h3{font-size:24px;letter-spacing:-.6px;margin:16px 0 8px}.insight-unlock p{font-size:13px;line-height:1.6;color:var(--text);max-width:330px;margin:0 0 20px}
 .insight-unlock .primary{max-width:100%;line-height:1.5;white-space:normal}
@@ -199,6 +198,7 @@ td,th{overflow-wrap:anywhere}
 .watch-stat:first-child{background:linear-gradient(120deg,#24293f,#151d2e);border-color:#51496f}
 .watch-up{color:#64dabd}.watch-down{color:#f394b8}.watch-flat{color:var(--muted)}
 .watch-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:24px;align-items:start}
+.watch-access{position:relative;isolation:isolate}.watch-access.is-locked .watch-premium-content{filter:blur(7px);opacity:.42;pointer-events:none;user-select:none}.watch-unlock{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:20px}.watch-access.is-locked .watch-unlock{display:flex}.watch-unlock-card{max-width:360px;text-align:center;border:1px solid #7568b8;background:#151d2ef2;border-radius:18px;padding:24px;box-shadow:0 16px 46px #05081188}.watch-unlock-card h2{font-size:22px;margin:9px 0}.watch-unlock-card p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 17px}.watch-unlock-card .primary{min-height:44px}
 .watch-lineup,.watch-discover{min-width:0}
 .watch-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
 .watch-heading h2,.watch-discover h2{margin:0;font-size:22px;letter-spacing:-.5px}
@@ -623,7 +623,7 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
     <p class="price-note" id="r-price"></p>
     <div class="rdebug hidden" id="r-debug"></div>
     <button class="fixlink" id="fix-link" type="button">Search for a different card ↓</button>
-    <div class="marketplace-links hidden" id="links-wrap"><a id="lnk-tcg" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Search TCGplayer ↗</a><a id="lnk-ebay" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Find this card on eBay ↗</a></div>
+    <div class="marketplace-links hidden" id="links-wrap"><a id="lnk-tcg" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Search TCGplayer ↗</a><span class="premium-inline-lock" id="ebay-lock"><button class="secondary subscribe-cta" type="button">Please Subscribe</button></span><a id="lnk-ebay" class="hidden" href="#" target="_blank" rel="noopener noreferrer">Find this card on eBay ↗</a></div>
 
     <div class="insight-gate" id="insight-gate">
       <div id="paid-insights">
@@ -632,11 +632,11 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
           <div><span>90-DAY AVG.</span><strong id="ov-avg90">—</strong></div>
           <div><span>SALES / 90D</span><strong id="ov-vol">—</strong></div>
         </div>
-        <section class="pressure-panel" id="pressure-wrap" aria-label="Buying and selling pressure">
+        <div class="premium-lock" id="pressure-lock"><section class="pressure-panel premium-lock-content" id="pressure-wrap" aria-label="Buying and selling pressure">
           <div class="pressure-labels"><span>Buying estimate <strong id="buy-pct">—</strong></span><span>Selling estimate <strong id="sell-pct">—</strong></span></div>
           <div class="pressure-track" role="img" id="pressure-track"><span id="buy-fill"></span><span id="sell-fill"></span></div>
           <p id="pr-verdict" role="status" aria-live="polite">Buying and selling pressure will appear after a card is matched.</p><small>Estimate from 30-day market-price movement · not measured order flow</small>
-        </section>
+        </section><div class="premium-lock-overlay"><button class="secondary subscribe-cta" type="button">Please Subscribe</button></div></div>
         <div class="insight-tabs" role="tablist" aria-label="Card insights">
           <button type="button" role="tab" id="insight-tab-overview" aria-controls="pane-overview" aria-selected="true" data-pane="overview">Overview</button>
           <button type="button" role="tab" id="insight-tab-history" aria-controls="pane-history" aria-selected="false" tabindex="-1" data-pane="history">History</button>
@@ -702,7 +702,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 </dialog>
 
 <!-- ============ WATCHLIST ============ -->
-<section id="watch" class="page" hidden aria-label="Your watchlist">
+<section id="watch" class="page watch-access" hidden aria-label="Your watchlist">
+  <div class="watch-premium-content">
   <div class="watch-summary">
     <article class="watch-stat"><span class="label">ON YOUR RADAR</span><strong id="watch-count">0</strong><small>Cards you're following</small></article>
     <article class="watch-stat"><span class="label">MOVING UP</span><strong id="watch-up-count" class="watch-up">0</strong><small>Since you added them</small></article>
@@ -720,7 +721,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
     </div>
     <aside class="watch-discover" aria-labelledby="watch-discover-title"><span class="eyebrow">YOUR NEXT GREAT FIND</span><h2 id="watch-discover-title">Find it. Follow it.</h2><p>Search cards and add your favorites. No need to own a card to follow it.</p><form id="watch-search-form"><label class="watch-search-label" for="watch-search">SEARCH POKÉMON CARDS</label><input id="watch-search" type="search" placeholder="Try Lugia or Lugia 149/147" autocomplete="off" required maxlength="200"><button id="watch-search-submit" type="submit" class="secondary" style="margin-top:12px">Search cards</button></form><p id="watch-search-status" role="status" aria-live="polite"></p><div id="watch-catalog" class="watch-catalog"></div><p class="footnote">Enter a card name, or a card name plus its card number for an exact match. Pokémon prices from TCG API.</p></aside>
   </div>
-  <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p>
+  <p class="footnote">Saved in this browser for this account; watchlists do not sync across devices. Clearing browser data removes them. Watching a card does not add it to your collection.</p></div>
+  <div class="watch-unlock" id="watch-unlock"><div class="watch-unlock-card"><span class="eyebrow">MEMBER FEATURE</span><h2>Your watchlist is ready.</h2><p>To activate and use the Watchlist, please become a subscriber. It’s only $8.99 a month. Help support our community.</p><button class="primary subscribe-cta" type="button">Please Subscribe</button></div></div>
 </section>
 <dialog id="watch-dialog" class="collection-dialog" aria-labelledby="watch-dialog-name"><header><span class="label">ON YOUR RADAR</span><button id="watch-dialog-close" class="secondary" aria-label="Close watchlist card">&times;</button></header><div id="watch-dialog-art" class="watch-detail-art"></div><h2 id="watch-dialog-name"></h2><p id="watch-dialog-meta" class="detail"></p><div class="watch-detail-prices"><div><span class="label">LATEST PRICE</span><strong id="watch-dialog-price"></strong></div><div><span class="label">WHEN ADDED</span><strong id="watch-dialog-start"></strong></div></div><p id="watch-dialog-change"></p><p id="watch-dialog-checked" class="footnote"></p></dialog>
 
@@ -765,8 +767,9 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
   <header><span class="label">COLLECT VALOR</span><button class="secondary" id="pw-close" type="button" aria-label="Close">&times;</button></header>
   <span class="pw-badge">FREE PREVIEW</span>
   <div id="pw-stage-intro">
-    <h2 id="pw-title">Your free scans are used.</h2>
-    <p class="pw-fine">Sign in if you already have an account. Public membership access is coming soon.</p>
+    <h2 id="pw-title">Keep building your collection.</h2>
+    <p class="pw-fine">Join Collect Valor for $8.99 a month and help support our collector community.</p>
+    <button class="primary" id="pw-subscribe" type="button">Subscribe — $8.99/month</button>
     <button class="primary" id="pw-have-paid" type="button">Account holder sign in</button>
     <button class="secondary" id="pw-have-tester-pass" type="button">Use a tester pass</button>
   </div>
@@ -1117,8 +1120,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     { const _m=$('manage-sub-msg'); if(_m){ _m.classList.add('hidden'); _m.textContent=''; } }
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('acct-unlock').textContent = 'Account holder sign in';
-    $('profile-name-form').hidden = !name;
-    if (name) $('profile-name').value = (session && session.display_name) || '';
+    $('profile-name-form').hidden = !(session && session.token);
+    if (session && session.token) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
       setText('membership-title', 'You have private access.');
@@ -1129,8 +1132,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       setText('membership-copy', 'Identify, price, and save cards to your private collection without a subscription.');
       setText('membership-note', 'No account is needed for your free scans.');
     }
-    // Premium section locks will be added after every market feature is built.
-    setLocked(false);
+    setLocked(!isMember);
     if (watchlist) watchlist.sessionChanged();
   }
 
@@ -1195,6 +1197,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       if (on && focus) b.focus();
     });
     ['overview', 'history'].forEach((p) => { $('pane-' + p).hidden = p !== name; });
+    if (name === 'history' && !entitled()) {
+      const pane = $('pane-history');
+      pane.innerHTML = '<div class="premium-lock is-locked"><div class="premium-lock-content panel-empty"><b>Price history</b><div class="chart-spans placeholder-spans"><button type="button" disabled>30D</button><button type="button" disabled>60D</button><button type="button" disabled>90D</button></div>Market history is a member feature.</div><div class="premium-lock-overlay"><button class="secondary subscribe-cta" type="button">Please Subscribe</button></div></div>';
+      wireSubscribeButtons(pane);
+      return;
+    }
     if (name === 'history') maybeLoadHistory();
   }
   document.querySelectorAll('[data-pane]').forEach((b, i, all) => {
@@ -1210,14 +1218,15 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     });
   });
 
-  // ===== Member gate on the deeper insights (teaser blur for guests) =====
+  // ===== Member locks =====
   function setLocked(locked) {
-    const r = $('result');
-    r.classList.toggle('insights-locked', locked);
-    const paid = $('paid-insights');
-    try { paid.inert = locked; } catch (e) {}
-    paid.setAttribute('aria-hidden', String(locked));
-    $('insight-unlock').hidden = !locked;
+    $('pressure-lock').classList.toggle('is-locked', locked);
+    $('ebay-lock').classList.toggle('is-locked', locked);
+    $('watch').classList.toggle('is-locked', locked);
+    const watchContent = $('watch').querySelector('.watch-premium-content');
+    try { watchContent.inert = locked; } catch (e) {}
+    watchContent.setAttribute('aria-hidden', String(locked));
+    $('insight-unlock').hidden = true;
   }
   $('unlock-insights').addEventListener('click', () => { track('Account Access Clicked'); showPaywall('intro'); });
 
@@ -1309,6 +1318,14 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   function renderCollection() {
     const grid = $('coll-list'), empty = $('coll-empty');
+    if (!entitled() && (collFilter === 'showcase' || collFilter === 'binders')) {
+      grid.replaceChildren(); empty.hidden = false; $('collection-clear').classList.add('hidden');
+      setText('collection-status', collFilter === 'showcase' ? 'Showcase is a member feature.' : 'Community Binders are a member feature.');
+      setText('empty-title', collFilter === 'showcase' ? 'Your Showcase is locked.' : 'Community Binders are locked.');
+      setText('empty-sub', collFilter === 'showcase' ? 'Subscribe to share favorite cards in your public Showcase.' : 'Subscribe to discover other collectors’ public Showcases.');
+      const subscribe = document.createElement('button'); subscribe.className = 'primary'; subscribe.type = 'button'; subscribe.textContent = 'Please Subscribe'; subscribe.addEventListener('click', openSubscribe);
+      empty.appendChild(subscribe); return;
+    }
     if (collFilter === 'binders') { renderBinders(); return; }
     const list = visibleCards();
     const c = collection.counts || {};
@@ -1369,6 +1386,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (readOnly) { open.disabled = true; open.style.cursor = 'default'; return art; }
     open.addEventListener('click', () => openCard(card));
     const star = document.createElement('button'); star.type = 'button'; star.className = 'collection-star';
+    if (!entitled()) { star.textContent = 'Please Subscribe to use Showcase'; star.addEventListener('click', openSubscribe); art.appendChild(star); return art; }
     const paint = () => { star.setAttribute('aria-pressed', String(!!card.is_showcase)); star.textContent = card.is_showcase ? '★ In showcase' : '☆ Add to showcase'; };
     paint();
     star.addEventListener('click', async () => {
@@ -1586,7 +1604,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         session = { ...guestSession(), token: data.guest_token, guest: true };
         try { localStorage.setItem('cv_session', JSON.stringify(session)); } catch (e) {}
         updateSessionUI();
-        loadCollection();
+        loadCollection(); loadProfileName();
       }
       current = { card: data.card, proofCard: { ...data.card }, image: dataUrl, priceProof: data.price_proof || '' };
       resetSaveStar();
@@ -2011,10 +2029,12 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       const ebayQuery = [name, c.set, c.number ? '#' + String(c.number).replace(/^#/, '') : ''].filter(Boolean).join(' ');
       ebay.href = 'https://www.ebay.com/sch/i.html?_nkw=' + encodeURIComponent(ebayQuery);
       ebay.classList.remove('hidden');
+      $('ebay-lock').classList.remove('hidden');
       show('links-wrap');
     } else {
       tcg.classList.add('hidden');
       ebay.classList.add('hidden');
+      $('ebay-lock').classList.add('hidden');
       hide('links-wrap');
     }
   }
@@ -2023,7 +2043,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     lastData = null; histCache = null; historyInsights = null; historyLoading = null; historyRequest++; chartSpanDays = 30;
     setText('ov-range', '—');
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
-    hide('avgs-wrap'); hide('links-wrap');
+    hide('avgs-wrap'); hide('links-wrap'); $('ebay-lock').classList.add('hidden');
     setText('ov-avg30', '—'); setText('ov-avg90', '—'); setText('ov-vol', '—');
     $('pane-history').innerHTML = historyPlaceholderHtml();
     $('r-debug').classList.add('hidden');
@@ -2285,7 +2305,18 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // ===== Private-preview account access =====
   const PAYWALL_ON = false;
+  const PAYMENT_LINK = 'https://buy.stripe.com/8x2cN54rRbOug7q8oI0gw04';
   const pw = $('paywall'), pwMsg = $('pw-msg'), pwEmail = $('pw-email'), pwCode = $('pw-code'), pwCodeMsg = $('pw-code-msg'), pwTesterCode = $('pw-tester-code'), pwTesterMsg = $('pw-tester-msg');
+  function openSubscribe() {
+    window.open(PAYMENT_LINK, '_blank', 'noopener');
+    showPaywall('verify');
+  }
+  function wireSubscribeButtons(root = document) {
+    root.querySelectorAll('.subscribe-cta').forEach((button) => {
+      if (button.dataset.subscribeBound) return;
+      button.dataset.subscribeBound = 'true'; button.addEventListener('click', openSubscribe);
+    });
+  }
   function showPaywall(stage) { setPwStage(stage || 'intro'); if (!pw.open) { try { pw.showModal(); } catch (e) {} } }
   function hidePaywall() { if (pw.open) pw.close(); }
   function setPwStage(stage) {
@@ -2303,6 +2334,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   $('pw-code-back').addEventListener('click', () => setPwStage('verify'));
   $('pw-tester-back').addEventListener('click', () => setPwStage('intro'));
   $('pw-have-paid').addEventListener('click', () => { track('Account Access Clicked'); setPwStage('verify'); });
+  $('pw-subscribe').addEventListener('click', openSubscribe);
   $('pw-have-tester-pass').addEventListener('click', () => setPwStage('tester'));
   $('sc-verify').addEventListener('click', () => { track('Account Access Clicked'); showPaywall('verify'); });
   $('sc-tester').addEventListener('click', () => showPaywall('tester'));
@@ -2370,6 +2402,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
 
   // ===== Boot =====
   resetResultData();
+  wireSubscribeButtons();
   updateSessionUI();
   updateHeader(); renderCollection(); renderPrize();
   if (session && session.token) { loadCollection(); loadProfileName(); setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0); }
