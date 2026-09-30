@@ -68,7 +68,9 @@ export default async (req) => {
   }
 
   const binders = Object.keys(byOwner).sort().map((o) => ({
-    owner: names[o] || 'Collector',
+    // Older accounts may not have chosen a name yet. Give each one a stable,
+    // non-email fallback so Community never shows a wall of identical names.
+    owner: names[o] || defaultCollectorName(o),
     is_you: o === viewer,
     cards: byOwner[o],
     count: byOwner[o].length,
@@ -77,6 +79,11 @@ export default async (req) => {
 
   return json({ ok: true, binders });
 };
+
+function defaultCollectorName(owner) {
+  const id = crypto.createHash('sha256').update(`collector-name:${owner}`).digest('hex').slice(0, 10).toUpperCase();
+  return `Collector ${id}`;
+}
 
 async function displayNames(url, key, owners) {
   if (!owners.length) return {};
