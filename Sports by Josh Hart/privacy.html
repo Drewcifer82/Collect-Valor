@@ -125,7 +125,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
     <thead><tr><th style="width:26%">What</th><th>Why</th><th style="width:26%">How long</th></tr></thead>
     <tbody>
       <tr><td><strong>Your email</strong> (members)</td><td>It confirms account access and receives your six-digit sign-in code, which expires after 10 minutes. We store a hashed code and attempt count for verification.</td><td>Until account deletion is requested and completed. Canceling alone does not erase it.</td></tr>
-      <tr><td><strong>Cards you save</strong></td><td>Your saved card details, selected condition, current value, and the photo you scanned, so your private Collection page can display and update it.</td><td>Until you remove the card or request account deletion. Guests can remove their saved cards individually.</td></tr>
+      <tr><td><strong>Cards you save</strong></td><td>Your saved card details, current value, and the photo you scanned, so your private Collection page can display and update it.</td><td>Until you remove the card or request account deletion. Guests can remove their saved cards individually.</td></tr>
       <tr><td><strong>Card photos you don't save</strong></td><td>Sent to OpenAI to identify the card, then shown back to you. We do not save it to your collection unless you choose to save the card.</td><td>Not saved to our collection storage; provider retention policies also apply.</td></tr>
       <tr><td><strong>Guest access identifiers</strong></td><td>Your first 35 scans are free without an account. We use a hashed IP address as the scan counter and a separate scrambled browser identifier so the same browser can reopen its private saved collection. Neither value contains your email.</td><td>The scan counter and guest collection remain until removed under our retention process. Clearing browser data removes that browser’s access key but does not itself delete server-stored cards.</td></tr>
       <tr><td><strong>Collector profile and private back stories</strong></td><td>Your chosen collector name appears with showcased cards. Optional acquisition details, amount paid, and personal notes stay private, even when a card is showcased.</td><td>Until edited or removed, or account deletion is completed.</td></tr>
@@ -151,7 +151,7 @@ footer a{color:var(--muted);text-decoration:none;margin-right:14px}footer a:hove
   <p>A card scanner app needs a few partners. These are ours and what each one receives:</p>
   <ul>
     <li><strong>OpenAI</strong> — identifies the card from your photo. We send photos and card-reading instructions through its API with response storage disabled. OpenAI’s own data handling and retention policies also apply.</li>
-    <li><strong>TCG API</strong> — provides Pokémon market prices, price history, and raw-card condition prices. It receives the card details (Pokémon name, set, number, and printing), not your account email or private back stories.</li>
+    <li><strong>TCG API</strong> — provides Pokémon market prices and price history. It receives the card details (Pokémon name, set, number, and printing), not your account email or private back stories.</li>
     <li><strong>Supabase</strong> — securely stores saved cards and photos in a private bucket that isn't publicly reachable.</li>
     <li><strong>Netlify</strong> — hosts the site and processes requests, including IP addresses and technical request information.</li>
     <li><strong>Resend</strong> — delivers sign-in codes to your email address.</li>

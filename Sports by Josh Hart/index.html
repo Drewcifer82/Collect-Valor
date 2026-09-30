@@ -314,7 +314,6 @@ td,th{overflow-wrap:anywhere}
 .tag.slab{color:#6de0c0;border-color:#32d6ac55;background:#32d6ac12}
 .tags{display:flex;flex-wrap:wrap;gap:0 2px;margin:12px 0 10px}
 .tags .tag{margin:0 5px 6px 0}
-.card-condition{position:absolute;right:26px;top:238px;max-width:360px;text-align:right}.card-condition .label{margin:0 0 8px}.condition-options{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.condition-options button{min-width:48px;min-height:44px;border:1px solid #596681;background:#1a2438;color:#c8d0e5;border-radius:7px;padding:9px 10px;font:11px monospace;letter-spacing:.5px}.condition-options button[aria-pressed=true]{color:#101827;background:#b9a0ff;border-color:#b9a0ff;font-weight:700}.condition-note{margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.4}
 .price-note{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 6px;overflow-wrap:anywhere}
 .fixlink{background:none;border:0;color:#b6b8ff;font-size:12px;padding:6px 0 14px;text-align:left}
 .rdebug{font:10px/1.6 monospace;color:#c4baff;background:#0e1625;border:1px dashed #b9a0ff44;border-radius:8px;padding:10px;margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -391,7 +390,7 @@ td,th{overflow-wrap:anywhere}
 nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
 nav a:hover{color:white}
 footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
-@media(max-width:760px){nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}.card-condition{position:static;max-width:none;margin:0 0 10px;text-align:left}.condition-options{justify-content:flex-start}}
+@media(max-width:760px){nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}}
 .watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
 /* Price desk polish: raised controls over a recessed scanning surface. */
 #scan.workspace{gap:24px;align-items:start}
@@ -422,10 +421,6 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #scan .result{border-color:#34425d;background:linear-gradient(155deg,#1a253a,#131c2c 72%);box-shadow:0 18px 42px #03060e4d,inset 0 1px #ffffff09}
 #scan .result-head{align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #2b3853}
 #scan .tags{margin:14px 0 10px}
-#scan .card-condition{position:static;max-width:none;margin:0 0 18px;padding:14px 16px;text-align:left;border:1px solid #2d3b57;border-radius:13px;background:#101a2a}
-#scan .card-condition .label{margin-bottom:10px}
-#scan .condition-options{justify-content:flex-start}
-#scan .condition-note{margin:9px 0 0}
 #scan .price-note{margin:0 0 4px;padding:2px 0;min-height:24px}
 #scan .fixlink{padding:8px 0 14px}
 #scan .marketplace-links{margin:0 0 18px}
@@ -623,7 +618,6 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
       <div class="value"><span class="label" id="r-plabel">MARKET VALUE</span><strong id="r-estimate">—</strong></div>
     </div>
     <div class="tags" id="r-chips"></div>
-    <div class="card-condition" role="group" aria-label="Card condition"><span class="label">CARD CONDITION</span><div class="condition-options"><button type="button" data-condition="NM" aria-label="Near Mint" title="Near Mint" aria-pressed="true">NM</button><button type="button" data-condition="LP" aria-label="Lightly Played" title="Lightly Played" aria-pressed="false">LP</button><button type="button" data-condition="MP" aria-label="Moderately Played" title="Moderately Played" aria-pressed="false">MP</button><button type="button" data-condition="HP" aria-label="Heavily Played" title="Heavily Played" aria-pressed="false">HP</button><button type="button" data-condition="DMG" aria-label="Damaged" title="Damaged" aria-pressed="false">DMG</button></div><p class="condition-note" id="condition-note" role="status" aria-live="polite">NM means Near Mint. Condition prices load after the card is matched.</p></div>
     <ul class="highlights hidden" id="r-highlights"></ul>
     <div class="notes hidden" id="r-notes"></div>
     <p class="price-note" id="r-price"></p>
@@ -815,8 +809,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   const signed = n => (n > 0 ? '+' : '') + price(n);
   const percent = n => n === null ? '—' : (n > 0 ? '+' : '') + n.toFixed(1) + '%';
   const tone = n => n > 0 ? 'watch-up' : n < 0 ? 'watch-down' : 'watch-flat';
-  const identity = card => JSON.stringify([card.card_id, card.grade]);
-  const meta = card => [card.year, card.set, card.number && '#' + card.number, card.variation, card.grade].filter(Boolean).join(' · ');
+  const identity = card => JSON.stringify([card.card_id, card.is_slab ? card.grade : 'Raw']);
+  const meta = card => [card.year, card.set, card.number && '#' + card.number, card.variation, card.is_slab ? card.grade : ''].filter(Boolean).join(' · ');
   const change = entry => {
     const amount = entry.baseline === null || entry.value === null ? null : entry.value - entry.baseline;
     return { amount, percent: amount === null || entry.baseline <= 0 ? null : amount / entry.baseline * 100 };
@@ -1353,8 +1347,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     const open = document.createElement('button'); open.type = 'button'; open.className = 'collection-open';
     open.setAttribute('aria-label', 'View ' + cardName(card));
     const grade = document.createElement('span'); grade.className = 'collection-grade';
-    grade.textContent = card.is_slab ? ('SLAB · ' + (card.grade || 'GRADED')).toUpperCase()
-      : card.grade ? ('SINGLE · ' + card.grade).toUpperCase() : 'SINGLE / UNGRADED';
+    grade.textContent = card.is_slab ? ('SLAB · ' + (card.grade || 'GRADED')).toUpperCase() : 'SINGLE / UNGRADED';
     const h = document.createElement('h3'); h.textContent = cardName(card);
     const meta = document.createElement('p'); meta.className = 'collection-card-meta';
     meta.textContent = [cardMeta(card), card.category].filter(Boolean).join(' · ');
@@ -1407,7 +1400,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     setText('collection-dialog-set', [cardMeta(card), card.category].filter(Boolean).join(' · ') || '—');
     $('collection-dialog-art').replaceChildren(artFrame(card));
     setText('collection-dialog-value', card.value != null ? '$' + money(card.value) : 'No price yet');
-    setText('collection-dialog-type', card.is_slab ? ('Slab · ' + (card.grade || 'graded')) : ('Single · ' + (card.grade || 'ungraded')));
+    setText('collection-dialog-type', card.is_slab ? ('Slab · ' + (card.grade || 'graded')) : 'Single · ungraded');
     setText('collection-dialog-category', card.category || (card.card_type === 'pokemon' ? 'Pokémon' : '—'));
     setText('collection-dialog-cert', card.cert_number || '—');
     paintDetailStar();
@@ -1543,10 +1536,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   let historyInsights = null;
   let historyLoading = null;
   let historyRequest = 0;
-  let conditionRows = null;
-  let selectedCondition = 'NM';
-  let conditionRequest = 0;
-  let conditionLoading = false;
   let busyFlag = false;
 
   function say(msg, cls) { notice.className = 'msg' + (cls ? ' ' + cls : ''); notice.textContent = msg || ''; }
@@ -1653,12 +1642,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function addChip(container, text, cls) {
     const s = document.createElement('span'); s.className = 'tag' + (cls ? ' ' + cls : ''); s.textContent = String(text).toUpperCase(); container.appendChild(s);
   }
-  document.querySelectorAll('[data-condition]').forEach((button) => button.addEventListener('click', () => {
-    selectedCondition = button.dataset.condition;
-    document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
-    if (current && current.card) current.card.grade = selectedCondition;
-    renderConditionPrice();
-  }));
   function setPriceLabel(txt, source) {
     setText('r-plabel', txt);
     setText('r-source', source === 'unverified' ? 'NO VERIFIED MARKET PRICE' : source === 'ai' ? 'AI ESTIMATE · NOT A MARKET PRICE' : source === 'slab' ? 'CARD HEDGE · SLAB' : source === 'tcgplayer' ? 'TCGPLAYER · TCG API' : 'CARD HEDGE');
@@ -1729,7 +1712,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     fillOverview(data, picked);
     fillInsights(data);
     lastData = data;
-    loadConditionPrices();
     loadMarketHistory();
   }
 
@@ -1887,7 +1869,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         }
         fillOverview(data, picked); fillInsights(data);
         lastData = data;
-        loadConditionPrices();
         loadMarketHistory();
       } else {
         setText('r-price', 'Could not get a price — you can still save the card.'); current.value = null;
@@ -2038,82 +2019,8 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     }
   }
 
-  const CONDITION_NAMES = { NM: 'Near Mint', LP: 'Lightly Played', MP: 'Moderately Played', HP: 'Heavily Played', DMG: 'Damaged' };
-  function conditionCode(value) {
-    const text = String(value || '').trim().toLowerCase();
-    return text === 'near mint' || text === 'nm' ? 'NM'
-      : text === 'lightly played' || text === 'lp' ? 'LP'
-      : text === 'moderately played' || text === 'mp' ? 'MP'
-      : text === 'heavily played' || text === 'hp' ? 'HP'
-      : text === 'damaged' || text === 'dmg' ? 'DMG' : '';
-  }
-  function conditionAmount(row) {
-    if (row && row.median_with_shipping != null) return { value: Number(row.median_with_shipping), basis: 'Median live listing including shipping' };
-    if (row && row.lowest_with_shipping != null) return { value: Number(row.lowest_with_shipping), basis: 'Lowest live listing including shipping' };
-    if (row && row.low_price != null) return { value: Number(row.low_price), basis: 'Lowest live item price before shipping' };
-    return null;
-  }
-  function renderConditionPrice() {
-    const label = CONDITION_NAMES[selectedCondition] || selectedCondition;
-    if (!current || !current.card || !current.card.card_id) {
-      setText('condition-note', 'Condition prices load after the card is matched.');
-      return;
-    }
-    current.card.grade = selectedCondition;
-    if (conditionRows === null) {
-      setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
-      setText('r-estimate', 'Loading…');
-      setText('condition-note', 'Loading ' + label + ' pricing…');
-      if (!conditionLoading) loadConditionPrices();
-      return;
-    }
-    const row = conditionRows.find(item => conditionCode(item.condition) === selectedCondition);
-    const amount = conditionAmount(row);
-    if (!row || !amount || !Number.isFinite(amount.value)) {
-      current.value = null;
-      setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
-      setText('r-estimate', 'No condition price');
-      setText('r-price', 'TCG API has no verified ' + label + ' price for this printing.');
-      setText('condition-note', selectedCondition + ' means ' + label + '. No condition price is available for this printing.');
-      return;
-    }
-    current.value = amount.value;
-    setPriceLabel(label.toUpperCase() + ' VALUE', 'tcgplayer');
-    setText('r-estimate', '$' + money(amount.value));
-    const count = Number(row.sample_count);
-    const date = String(row.last_updated_at || '').slice(0, 10);
-    setText('r-price', [amount.basis, Number.isFinite(count) ? count + ' sampled listing' + (count === 1 ? '' : 's') : '', date ? 'as of ' + date : ''].filter(Boolean).join(' · '));
-    setText('condition-note', selectedCondition + ' means ' + label + '. Price based on live TCGplayer listings.');
-  }
-  async function loadConditionPrices() {
-    if (!current || !current.card || !String(current.card.card_id || '').startsWith('tcg:')) return;
-    current.card.grade = selectedCondition;
-    conditionLoading = true;
-    const request = ++conditionRequest;
-    setText('condition-note', 'Loading ' + (CONDITION_NAMES[selectedCondition] || selectedCondition) + ' pricing…');
-    try {
-      const { res, data } = await post('cardhedge', {
-        condition_for: current.card.card_id,
-        card: current.proofCard || current.card,
-        scan_proof: current.priceProof || '',
-        selection_proof: current.selectionProof || '',
-      });
-      if (request !== conditionRequest) return;
-      conditionLoading = false;
-      conditionRows = res.ok && data && data.ok && Array.isArray(data.conditions) ? data.conditions : [];
-      renderConditionPrice();
-    } catch (e) {
-      if (request !== conditionRequest) return;
-      conditionLoading = false;
-      conditionRows = [];
-      renderConditionPrice();
-    }
-  }
-
   function resetResultData() {
-    lastData = null; histCache = null; historyInsights = null; historyLoading = null; historyRequest++; chartSpanDays = 30; conditionRows = null; selectedCondition = 'NM'; conditionLoading = false; conditionRequest++;
-    document.querySelectorAll('[data-condition]').forEach((choice) => choice.setAttribute('aria-pressed', String(choice.dataset.condition === 'NM')));
-    setText('condition-note', 'NM means Near Mint. Condition prices load after the card is matched.');
+    lastData = null; histCache = null; historyInsights = null; historyLoading = null; historyRequest++; chartSpanDays = 30;
     setText('ov-range', '—');
     const t = $('ov-trend'); t.textContent = '—'; t.className = '';
     hide('avgs-wrap'); hide('links-wrap');

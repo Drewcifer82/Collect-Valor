@@ -48,10 +48,6 @@ export default async (req) => {
       if (String(body.history_for).startsWith('tcg:')) return await pokemonHistoryPath(body);
       return await historyPath(body, apiKey);      // card_id -> sale history
     }
-    if (body.condition_for) {
-      if (!String(body.condition_for).startsWith('tcg:')) return json({ ok: true, conditions: [] });
-      return await pokemonConditionPath(body);
-    }
     if (body.search) {
       const category = String(body.category || '').toLowerCase();
       if (session.guest || /pok[eé]mon/.test(category)) {
@@ -398,33 +394,6 @@ async function pokemonPricePath(body) {
     : rows.length === 1 ? rows[0] : null;
   const price = row ? normalizeCard(row).market_price : null;
   return priceResponse(price, row && firstNum([row.low_price]), row && row.last_updated_at);
-}
-
-async function pokemonConditionPath(body) {
-  const key = process.env.TCGAPI_KEY;
-  if (!key) return json({ error: 'Pokemon pricing is not configured' }, 500);
-  const [, encodedId, encodedPrinting = ''] = String(body.condition_for).split(':');
-  const id = decodeURIComponent(encodedId || '');
-  const printing = decodeURIComponent(encodedPrinting);
-  if (!/^\d+$/.test(id)) return json({ error: 'Invalid Pokemon card ID' }, 400);
-  const query = printing ? '?' + new URLSearchParams({ printing }) : '';
-  const response = await fetch('https://api.tcgapi.dev/v1/cards/' + id + '/prices/conditions' + query, {
-    headers: { 'X-API-Key': key }, signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) throw new Error('Pokemon condition pricing returned ' + response.status);
-  const payload = await response.json();
-  const rows = Array.isArray(payload.data) ? payload.data : payload.data ? [payload.data] : [];
-  const conditions = rows.filter(row => !row.language || /^english$/i.test(String(row.language))).map(row => ({
-    condition: String(row.condition || ''),
-    printing: String(row.printing || printing),
-    language: String(row.language || ''),
-    low_price: numOrNull(row.low_price),
-    lowest_with_shipping: numOrNull(row.lowest_with_shipping),
-    median_with_shipping: numOrNull(row.median_with_shipping),
-    sample_count: Number.isFinite(Number(row.sample_count)) ? Number(row.sample_count) : null,
-    last_updated_at: String(row.last_updated_at || payload.meta?.as_of || ''),
-  }));
-  return json({ ok: true, conditions, as_of: String(payload.meta?.as_of || ''), stale: payload.meta?.stale === true });
 }
 
 async function pokemonHistoryPath(body) {
@@ -775,8 +744,8 @@ function readSigned(token, secret) {
 }
 
 function guestRequestAllowed(body, session, secret) {
-  if (body.condition_for || body.history_for) {
-    const cardId = String(body.condition_for || body.history_for);
+  if (body.history_for) {
+    const cardId = String(body.history_for);
     const selection = readSigned(body.selection_proof, secret);
     if (selection && selection.kind === 'guest-selection' && selection.owner === session.u && selection.card_id === cardId) return true;
     const proof = readSigned(body.scan_proof, secret);
