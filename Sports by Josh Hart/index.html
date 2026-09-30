@@ -184,7 +184,7 @@ td,th{overflow-wrap:anywhere}
 .grading-outcome>span{font-size:11px;color:var(--muted)}.grading-outcome strong{display:block;font:700 28px monospace;margin:10px 0;color:#55dbb7}
 .grading-outcome strong.negative{color:#ff9ba6}.grading-outcome small{font-size:11px;line-height:1.6;display:block;color:var(--muted)}
 .insight-gate{position:relative;isolation:isolate}
-.premium-lock{position:relative;isolation:isolate}.premium-lock-content{transition:filter .18s ease,opacity .18s ease}.premium-lock.is-locked .premium-lock-content{filter:blur(6px);opacity:.46;pointer-events:none;user-select:none}.premium-lock-overlay{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:14px;background:#151d2e66;border-radius:12px}.premium-lock.is-locked .premium-lock-overlay{display:flex}.premium-lock-overlay button{min-height:44px}.premium-inline-lock{display:none;position:relative}.premium-inline-lock.is-locked{display:inline-flex}.premium-inline-lock.is-locked+#lnk-ebay{opacity:.48;pointer-events:none;user-select:none}
+.premium-lock{position:relative;isolation:isolate}.premium-lock-content{transition:filter .18s ease,opacity .18s ease}.premium-lock.is-locked .premium-lock-content{filter:blur(6px);opacity:.46;pointer-events:none;user-select:none}.premium-lock-overlay{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:14px;background:radial-gradient(circle at 16% 18%,#21c8e11c,transparent 38%),radial-gradient(circle at 82% 24%,#9b8bff1c,transparent 36%),radial-gradient(circle at 50% 88%,#e77aee14,transparent 42%),#151d2e73;backdrop-filter:blur(4px);border-radius:12px}.premium-lock.is-locked .premium-lock-overlay{display:flex}.premium-lock-overlay button{min-height:44px}.premium-inline-lock{display:none;position:relative}.premium-inline-lock.is-locked{display:inline-flex}.premium-inline-lock.is-locked+#lnk-ebay{opacity:.48;pointer-events:none;user-select:none}
 .insight-unlock{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px 12px;background:linear-gradient(180deg,#151d2e15,#151d2ecc);border-radius:12px}
 .insight-unlock h3{font-size:24px;letter-spacing:-.6px;margin:16px 0 8px}.insight-unlock p{font-size:13px;line-height:1.6;color:var(--text);max-width:330px;margin:0 0 20px}
 .insight-unlock .primary{max-width:100%;line-height:1.5;white-space:normal}
@@ -198,7 +198,7 @@ td,th{overflow-wrap:anywhere}
 .watch-stat:first-child{background:linear-gradient(120deg,#24293f,#151d2e);border-color:#51496f}
 .watch-up{color:#64dabd}.watch-down{color:#f394b8}.watch-flat{color:var(--muted)}
 .watch-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:24px;align-items:start}
-.watch-access{position:relative;isolation:isolate}.watch-access.is-locked .watch-premium-content{filter:blur(7px);opacity:.42;pointer-events:none;user-select:none}.watch-unlock{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:20px}.watch-access.is-locked .watch-unlock{display:flex}.watch-unlock-card{max-width:360px;text-align:center;border:1px solid #7568b8;background:#151d2ef2;border-radius:18px;padding:24px;box-shadow:0 16px 46px #05081188}.watch-unlock-card h2{font-size:22px;margin:9px 0}.watch-unlock-card p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 17px}.watch-unlock-card .primary{min-height:44px}
+.watch-access{position:relative;isolation:isolate}.watch-access.is-locked .watch-premium-content{filter:blur(7px);opacity:.42;pointer-events:none;user-select:none}.watch-unlock{display:none;position:absolute;inset:0;z-index:1;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 12% 15%,#21c8e119,transparent 34%),radial-gradient(circle at 86% 24%,#9b8bff19,transparent 35%),radial-gradient(circle at 53% 88%,#e77aee15,transparent 42%)}.watch-access.is-locked .watch-unlock{display:flex}.watch-unlock-card{max-width:360px;text-align:center;border:1px solid #7568b8;background:radial-gradient(circle at top left,#21c8e112,transparent 38%),radial-gradient(circle at bottom right,#e77aee10,transparent 42%),#151d2ef2;border-radius:18px;padding:24px;box-shadow:0 16px 46px #05081188}.watch-unlock-card h2{font-size:22px;margin:9px 0}.watch-unlock-card p{color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 17px}.watch-unlock-card .primary{min-height:44px}.premium-collection-lock{background:radial-gradient(circle at 16% 14%,#21c8e117,transparent 35%),radial-gradient(circle at 84% 18%,#9b8bff18,transparent 35%),radial-gradient(circle at 50% 90%,#e77aee14,transparent 45%)!important;box-shadow:inset 0 0 42px #21c8e10d}
 .watch-lineup,.watch-discover{min-width:0}
 .watch-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
 .watch-heading h2,.watch-discover h2{margin:0;font-size:22px;letter-spacing:-.5px}
@@ -1319,7 +1319,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   function renderCollection() {
     const grid = $('coll-list'), empty = $('coll-empty');
     if (!entitled() && (collFilter === 'showcase' || collFilter === 'binders')) {
-      grid.replaceChildren(); empty.hidden = false; $('collection-clear').classList.add('hidden');
+      grid.replaceChildren(); empty.hidden = false; empty.classList.add('premium-collection-lock'); $('collection-clear').classList.add('hidden');
       setText('collection-status', collFilter === 'showcase' ? 'Showcase is a member feature.' : 'Community Binders are a member feature.');
       setText('empty-title', collFilter === 'showcase' ? 'Your Showcase is locked.' : 'Community Binders are locked.');
       setText('empty-sub', collFilter === 'showcase' ? 'Subscribe to share favorite cards in your public Showcase.' : 'Subscribe to discover other collectors’ public Showcases.');
@@ -1328,6 +1328,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       empty.appendChild(subscribe); return;
     }
     if (collFilter === 'binders') { renderBinders(); return; }
+    empty.classList.remove('premium-collection-lock');
     const list = visibleCards();
     const c = collection.counts || {};
     setText('collection-status', 'Showing ' + list.length + ' of ' + (c.total || 0) + ' cards · ' + (c.total || 0) + '/' + CARD_CAP + ' saved');
