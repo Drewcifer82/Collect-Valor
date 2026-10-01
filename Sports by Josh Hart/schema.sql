@@ -107,6 +107,21 @@ create table if not exists public.collector_profiles (
 );
 alter table public.collector_profiles enable row level security;
 
+-- Internal product feedback. It is private to Collect Valor staff; direct
+-- browser access is denied and the Netlify function records the token owner.
+create table if not exists public.feedback (
+  id         uuid primary key default gen_random_uuid(),
+  owner      text not null,
+  rating     smallint not null check (rating between 1 and 5),
+  category   text not null check (category in ('bug', 'idea', 'pricing', 'general')),
+  message    text not null check (char_length(message) between 1 and 750),
+  contact_ok boolean not null default false,
+  share_ok   boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
+alter table public.feedback enable row level security;
+
 alter table public.collection enable row level security;
 -- Intentionally no policies for anon/authenticated: direct client access is denied.
 -- The Netlify functions use the service_role key (which bypasses RLS) and enforce

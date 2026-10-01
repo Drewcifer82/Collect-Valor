@@ -547,6 +547,24 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #profile .profile-panel input:hover{border-color:#465977;background:#142035}
 #profile .profile-panel input:focus{border-color:#56d1e6;box-shadow:0 0 0 3px #45cbd31b}
 #profile .profile-panel .secondary{border-color:#394862;background:linear-gradient(145deg,#202b42,#172135);box-shadow:inset 0 1px #ffffff08}
+#profile .feedback-panel{background:radial-gradient(circle at 92% 0%,#21c8e112,transparent 40%),linear-gradient(155deg,#172136,#101827 72%)}
+#profile .feedback-panel h2{margin-bottom:8px}
+#profile .feedback-panel>p{margin:0 0 18px}
+#profile .feedback-form{display:grid;gap:14px}
+#profile .feedback-form fieldset{border:0;margin:0;padding:0}
+#profile .feedback-form label{display:grid;gap:7px;font:10px monospace;letter-spacing:1px;color:var(--muted)}
+#profile .feedback-form select,#profile .feedback-form textarea{width:100%;border:1px solid #2f3d59;background:#101827;color:var(--text);border-radius:10px;padding:11px;font:14px Inter,Arial,sans-serif;box-shadow:inset 0 2px 9px #03060e55}
+#profile .feedback-form select{min-height:46px}
+#profile .feedback-form textarea{min-height:132px;resize:vertical;line-height:1.55}
+#profile .feedback-rating{display:flex;gap:7px;align-items:center}
+#profile .feedback-rating input{position:absolute;opacity:0;pointer-events:none}
+#profile .feedback-rating label{display:grid;place-items:center;width:44px;height:44px;border:1px solid #3b4967;border-radius:10px;background:#111a2a;color:#c9d2e5;font:700 15px Inter,Arial,sans-serif;letter-spacing:0;cursor:pointer;transition:border-color .18s ease,background .18s ease,color .18s ease}
+#profile .feedback-rating input:checked+label{border-color:#7d72ca;background:#2a2948;color:#fff}
+#profile .feedback-rating input:focus-visible+label{outline:3px solid #37cee5;outline-offset:3px}
+#profile .feedback-check{grid-template-columns:18px minmax(0,1fr);align-items:start;cursor:pointer;text-transform:none;letter-spacing:0!important;font:12px/1.55 Inter,Arial,sans-serif!important;color:#b8c2d8!important}
+#profile .feedback-check input{appearance:auto;width:18px!important;min-width:18px!important;height:18px;min-height:18px!important;margin:1px 0 0!important;padding:0!important;box-shadow:none!important;accent-color:#7e72cb}
+#profile .feedback-form button:disabled{opacity:.54;cursor:not-allowed}
+#profile .feedback-note{margin:0!important;font-size:11px!important}
 @media(max-width:760px){
   #watch .watch-summary{gap:10px}
   #watch .watch-stat{padding:17px 13px;border-radius:16px}
@@ -757,6 +775,16 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
         <button class="secondary" id="acct-unlock" type="button">Account holder sign in</button>
       </article>
       <article class="profile-panel profile-membership" id="membership-panel"><span class="eyebrow">DEVELOPMENT PREVIEW</span><h2 id="membership-title">We’re still building.</h2><p id="membership-copy">Collect Valor is currently available to account holders only. Expect our Grand Opening by October 5th.</p><p class="insight-note" id="membership-note">Public memberships are not available yet.</p></article>
+      <article class="profile-panel feedback-panel" id="feedback-panel" aria-labelledby="feedback-title"><span class="eyebrow">PRIVATE FEEDBACK</span><h2 id="feedback-title">Help improve Collect Valor.</h2><p>Tell Drew what’s working, what needs attention, or what you’d like to see next.</p>
+        <form class="feedback-form" id="feedback-form">
+          <fieldset><legend class="label">YOUR RATING</legend><div class="feedback-rating"><input id="feedback-rating-1" name="feedback-rating" type="radio" value="1" required><label for="feedback-rating-1" aria-label="1 star">★</label><input id="feedback-rating-2" name="feedback-rating" type="radio" value="2"><label for="feedback-rating-2" aria-label="2 stars">★</label><input id="feedback-rating-3" name="feedback-rating" type="radio" value="3"><label for="feedback-rating-3" aria-label="3 stars">★</label><input id="feedback-rating-4" name="feedback-rating" type="radio" value="4"><label for="feedback-rating-4" aria-label="4 stars">★</label><input id="feedback-rating-5" name="feedback-rating" type="radio" value="5"><label for="feedback-rating-5" aria-label="5 stars">★</label></div></fieldset>
+          <label for="feedback-category">CATEGORY<select id="feedback-category" name="category"><option value="general">General</option><option value="bug">Bug</option><option value="idea">Idea</option><option value="pricing">Pricing</option></select></label>
+          <label for="feedback-message">YOUR FEEDBACK<textarea id="feedback-message" name="message" maxlength="750" required placeholder="What would you like Drew to know?"></textarea></label>
+          <label class="feedback-check" for="feedback-contact"><input id="feedback-contact" name="contact-ok" type="checkbox"><span>Can Drew contact you by email about this feedback?</span></label>
+          <label class="feedback-check" for="feedback-share"><input id="feedback-share" name="share-ok" type="checkbox"><span>You may anonymously use this in a future “You asked, we improved” update.</span></label>
+          <button class="primary" id="feedback-submit" type="submit" aria-describedby="feedback-note">Send feedback</button><p class="feedback-note" id="feedback-note" role="status" aria-live="polite">Your feedback stays private.</p>
+        </form>
+      </article>
     </aside>
   </div>
 </section>
@@ -1123,6 +1151,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('acct-unlock').textContent = 'Account holder sign in';
     $('profile-name-form').hidden = !(session && session.token);
+    $('feedback-panel').hidden = !(session && session.token);
     if (session && session.token) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
@@ -1300,6 +1329,25 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
       updateSessionUI();
       msg.textContent = 'Saved. This is what people will see in Community binders.';
     } catch (err) { msg.textContent = err.message || 'Could not save that name.'; }
+  });
+
+  $('feedback-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget, submit = $('feedback-submit'), note = $('feedback-note');
+    if (!form.reportValidity()) return;
+    submit.disabled = true; note.textContent = 'Sending…';
+    try {
+      const { res, data } = await post('save-feedback', {
+        rating: Number(form.elements['feedback-rating'].value),
+        category: form.elements.category.value,
+        message: form.elements.message.value.trim(),
+        contact_ok: form.elements['contact-ok'].checked,
+        share_ok: form.elements['share-ok'].checked,
+      });
+      if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not save your feedback.');
+      form.reset(); note.textContent = 'Thank you — your feedback was sent to Drew.';
+    } catch (error) { note.textContent = error.message || 'Could not save your feedback.'; }
+    finally { submit.disabled = false; }
   });
 
   function updateHeader() {
