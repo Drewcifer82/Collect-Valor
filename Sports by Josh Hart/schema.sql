@@ -117,10 +117,12 @@ create table if not exists public.feedback (
   message    text not null check (char_length(message) between 1 and 750),
   contact_ok boolean not null default false,
   share_ok   boolean not null default false,
+  public_display_ok boolean not null default false,
   created_at timestamptz not null default now()
 );
 create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
 alter table public.feedback enable row level security;
+alter table public.feedback add column if not exists public_display_ok boolean not null default false;
 
 alter table public.collection enable row level security;
 -- Intentionally no policies for anon/authenticated: direct client access is denied.

@@ -19,17 +19,32 @@ export default async (req) => {
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: 'Choose a rating from 1 to 5 stars.' }, 400);
   if (!CATEGORIES.has(category)) return json({ error: 'Choose a feedback category.' }, 400);
   if (!message || message.length > 750) return json({ error: 'Feedback must be between 1 and 750 characters.' }, 400);
+  if (!await hasActivePaidSubscription(url, key, owner)) return json({ error: 'Reviews are available to active subscribers only.' }, 403);
 
   try {
     const response = await fetch(`${url}/rest/v1/feedback`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ owner, rating, category, message, contact_ok: body.contact_ok === true, share_ok: body.share_ok === true }),
+      body: JSON.stringify({ owner, rating, category, message, contact_ok: body.contact_ok === true, share_ok: false, public_display_ok: body.public_display_ok === true }),
     });
     if (!response.ok) return json({ error: 'Could not save your feedback.' }, 502);
     return json({ ok: true });
   } catch { return json({ error: 'Could not save your feedback.' }, 502); }
 };
+
+async function hasActivePaidSubscription(url, key, owner) {
+  try {
+    const response = await fetch(`${url}/rest/v1/users?username=eq.${encodeURIComponent(owner)}&select=plan,plan_status,paid_email`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) return false;
+    const rows = await response.json();
+    const user = Array.isArray(rows) && rows[0];
+    const plan = String(user && user.plan || '').toLowerCase();
+    const status = String(user && user.plan_status || '').toLowerCase();
+    return Boolean(user && user.paid_email && ['beta', 'pro'].includes(plan) && status === 'active');
+  } catch { return false; }
+}
 
 function ownerFromToken(token, secret) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return null;

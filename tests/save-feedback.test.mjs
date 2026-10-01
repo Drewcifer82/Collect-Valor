@@ -16,13 +16,16 @@ test('feedback saves only validated fields under the signed-in owner', async (t)
   Object.assign(process.env, { SUPABASE_URL: 'https://db.example.test', SUPABASE_SERVICE_ROLE_KEY: 'service-key', SESSION_SECRET: secret });
   t.after(() => { globalThis.fetch = originalFetch; for (const [key, value] of Object.entries(original)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } });
   let request;
-  globalThis.fetch = async (url, options) => { request = { url: String(url), options }; return new Response('', { status: 201 }); };
-  const response = await saveFeedback(new Request('http://localhost/save-feedback', { method: 'POST', body: JSON.stringify({ token: token(), rating: 5, category: 'idea', message: 'A useful idea.', contact_ok: true, share_ok: false, owner: 'attacker@example.test' }) }));
+  globalThis.fetch = async (url, options) => {
+    if (String(url).includes('/rest/v1/users?')) return Response.json([{ plan: 'beta', plan_status: 'active', paid_email: 'collector@example.test' }]);
+    request = { url: String(url), options }; return new Response('', { status: 201 });
+  };
+  const response = await saveFeedback(new Request('http://localhost/save-feedback', { method: 'POST', body: JSON.stringify({ token: token(), rating: 5, category: 'idea', message: 'A useful idea.', contact_ok: true, public_display_ok: true, owner: 'attacker@example.test' }) }));
   assert.equal(response.status, 200);
   assert.equal((await response.json()).ok, true);
   assert.equal(request.url, 'https://db.example.test/rest/v1/feedback');
   assert.equal(request.options.method, 'POST');
-  assert.deepEqual(JSON.parse(request.options.body), { owner: 'collector@example.test', rating: 5, category: 'idea', message: 'A useful idea.', contact_ok: true, share_ok: false });
+  assert.deepEqual(JSON.parse(request.options.body), { owner: 'collector@example.test', rating: 5, category: 'idea', message: 'A useful idea.', contact_ok: true, share_ok: false, public_display_ok: true });
 });
 
 test('feedback rejects unsigned or invalid submissions before saving', async (t) => {
@@ -35,4 +38,17 @@ test('feedback rejects unsigned or invalid submissions before saving', async (t)
   assert.equal(unsigned.status, 401);
   const invalid = await saveFeedback(new Request('http://localhost/save-feedback', { method: 'POST', body: JSON.stringify({ token: token(), rating: 8, category: 'idea', message: 'Invalid rating' }) }));
   assert.equal(invalid.status, 400);
+});
+
+test('feedback rejects signed-in people without an active paid subscription', async (t) => {
+  const originalFetch = globalThis.fetch;
+  const original = { SUPABASE_URL: process.env.SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY, SESSION_SECRET: process.env.SESSION_SECRET };
+  Object.assign(process.env, { SUPABASE_URL: 'https://db.example.test', SUPABASE_SERVICE_ROLE_KEY: 'service-key', SESSION_SECRET: secret });
+  t.after(() => { globalThis.fetch = originalFetch; for (const [key, value] of Object.entries(original)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } });
+  globalThis.fetch = async (url) => {
+    assert.match(String(url), /\/rest\/v1\/users\?/);
+    return Response.json([{ plan: 'tester', plan_status: 'active', paid_email: null }]);
+  };
+  const response = await saveFeedback(new Request('http://localhost/save-feedback', { method: 'POST', body: JSON.stringify({ token: token(), rating: 5, category: 'general', message: 'Great app.' }) }));
+  assert.equal(response.status, 403);
 });

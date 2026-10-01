@@ -559,12 +559,15 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 #profile .feedback-rating{display:flex;gap:7px;align-items:center}
 #profile .feedback-rating input{position:absolute;opacity:0;pointer-events:none}
 #profile .feedback-rating label{display:grid;place-items:center;width:44px;height:44px;border:1px solid #3b4967;border-radius:10px;background:#111a2a;color:#c9d2e5;font:700 15px Inter,Arial,sans-serif;letter-spacing:0;cursor:pointer;transition:border-color .18s ease,background .18s ease,color .18s ease}
-#profile .feedback-rating input:checked+label{border-color:#7d72ca;background:#2a2948;color:#fff}
+#profile .feedback-rating label.is-selected{border-color:#7d72ca;background:#2a2948;color:#fff}
 #profile .feedback-rating input:focus-visible+label{outline:3px solid #37cee5;outline-offset:3px}
 #profile .feedback-check{grid-template-columns:18px minmax(0,1fr);align-items:start;cursor:pointer;text-transform:none;letter-spacing:0!important;font:12px/1.55 Inter,Arial,sans-serif!important;color:#b8c2d8!important}
 #profile .feedback-check input{appearance:auto;width:18px!important;min-width:18px!important;height:18px;min-height:18px!important;margin:1px 0 0!important;padding:0!important;box-shadow:none!important;accent-color:#7e72cb}
 #profile .feedback-form button:disabled{opacity:.54;cursor:not-allowed}
 #profile .feedback-note{margin:0!important;font-size:11px!important}
+/* Public reviews at the bottom of the home page. */
+.home-reviews{margin:64px 0 0;padding:34px;border:1px solid #344260;border-radius:24px;background:radial-gradient(circle at 8% 4%,#21c8e112,transparent 30%),radial-gradient(circle at 95% 10%,#9b8bff14,transparent 34%),linear-gradient(155deg,#172136,#101827 72%);box-shadow:0 22px 54px #02040b48}.home-reviews-head{max-width:660px}.home-reviews h2{font-size:clamp(26px,4vw,36px);letter-spacing:-1px;margin:10px 0}.home-reviews-head p{margin:0;color:var(--muted);font-size:14px;line-height:1.65}.review-breakdown{display:grid;gap:10px;max-width:700px;margin:28px 0}.review-row{display:grid;grid-template-columns:58px minmax(0,1fr) 86px;gap:12px;align-items:center;font-size:12px}.review-row-label{color:#d8d1f3;font-weight:700}.review-track{height:10px;overflow:hidden;border-radius:999px;background:#0c1320;box-shadow:inset 0 1px 3px #0008}.review-fill{display:block;height:100%;border-radius:inherit;background:var(--gradient);transition:width .25s ease}.review-count{text-align:right;color:var(--muted);font:11px monospace;white-space:nowrap}.reviews-invite{max-width:700px;padding:19px 20px;border:1px solid #34415e;border-radius:16px;background:#101827;color:#bac5db;font-size:13px;line-height:1.65}.public-review-list{display:grid;gap:14px;margin-top:30px}.public-review{margin:0;padding:20px;border:1px solid #303d59;border-radius:16px;background:#111a2a;box-shadow:inset 0 1px #ffffff06}.public-review blockquote{margin:0;color:#e7ebf5;font-size:15px;line-height:1.65;white-space:pre-wrap}.public-review footer{display:block;border:0;margin:14px 0 0;padding:0;color:#b7aaf2;font:12px monospace}.reviews-more{display:block;margin:22px auto 0}.reviews-empty{margin:28px 0 0;color:var(--muted);font-size:13px}.reviews-error{color:#ffb2bb}
+@media(max-width:600px){.home-reviews{margin-top:42px;padding:24px 18px;border-radius:20px}.review-row{grid-template-columns:52px minmax(0,1fr) 76px;gap:8px}.public-review{padding:17px}.public-review blockquote{font-size:14px}}
 @media(max-width:760px){
   #watch .watch-summary{gap:10px}
   #watch .watch-stat{padding:17px 13px;border-radius:16px}
@@ -781,12 +784,20 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
           <label for="feedback-category">CATEGORY<select id="feedback-category" name="category"><option value="general">General</option><option value="bug">Bug</option><option value="idea">Idea</option><option value="pricing">Pricing</option></select></label>
           <label for="feedback-message">YOUR FEEDBACK<textarea id="feedback-message" name="message" maxlength="750" required placeholder="What would you like Drew to know?"></textarea></label>
           <label class="feedback-check" for="feedback-contact"><input id="feedback-contact" name="contact-ok" type="checkbox"><span>Can Drew contact you by email about this feedback?</span></label>
-          <label class="feedback-check" for="feedback-share"><input id="feedback-share" name="share-ok" type="checkbox"><span>You may anonymously use this in a future “You asked, we improved” update.</span></label>
+          <label class="feedback-check" for="feedback-share"><input id="feedback-share" name="share-ok" type="checkbox"><span>You may display this review publicly with my collector name.</span></label>
           <button class="primary" id="feedback-submit" type="submit" aria-describedby="feedback-note">Send feedback</button><p class="feedback-note" id="feedback-note" role="status" aria-live="polite">Your feedback stays private.</p>
         </form>
       </article>
     </aside>
   </div>
+</section>
+
+<section id="reviews" class="home-reviews" aria-labelledby="reviews-title">
+  <div class="home-reviews-head"><span class="eyebrow">COLLECTOR REVIEWS</span><h2 id="reviews-title">What collectors are saying.</h2><p>Ratings from active Collect Valor subscribers.</p></div>
+  <div class="review-breakdown" id="review-breakdown" aria-label="Review rating breakdown"></div>
+  <p class="reviews-invite">Since Collect Valor has been available to the public, we’ve received these reviews. To leave a review, consider becoming a subscriber to support this project—and have fun.</p>
+  <div class="public-review-list" id="public-review-list" aria-live="polite"></div>
+  <button class="secondary reviews-more hidden" id="reviews-more" type="button">Read All Reviews</button>
 </section>
 
 <footer><span>COLLECT VALOR <span aria-hidden="true">/</span> Made for the thrill of the find.</span><span><a href="/blog">Journal</a><a href="/faq">FAQ</a><a href="/privacy">Privacy</a>Identification by OpenAI · Pokémon prices via TCG API</span></footer>
@@ -1122,6 +1133,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (session.expires_at && Date.now() >= Date.parse(session.expires_at)) return false;
     return true;
   }
+  function canReview() { return !!(session && session.token && ['beta', 'pro'].includes(String(session.plan || '').toLowerCase())); }
 
   try {
     const saved = localStorage.getItem('cv_session');
@@ -1151,7 +1163,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('acct-unlock').textContent = 'Account holder sign in';
     $('profile-name-form').hidden = !(session && session.token);
-    $('feedback-panel').hidden = !(session && session.token);
+    $('feedback-panel').hidden = !canReview();
     if (session && session.token) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
@@ -1204,6 +1216,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (!COPY[page]) page = 'scan';
     currentPage = page;
     document.querySelectorAll('.page').forEach((el) => { el.hidden = el.id !== page; });
+    $('reviews').hidden = page !== 'scan';
     document.querySelectorAll('nav button').forEach((b) => {
       const on = b.dataset.page === page;
       b.classList.toggle('active', on);
@@ -1342,13 +1355,56 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
         category: form.elements.category.value,
         message: form.elements.message.value.trim(),
         contact_ok: form.elements['contact-ok'].checked,
-        share_ok: form.elements['share-ok'].checked,
+        public_display_ok: form.elements['share-ok'].checked,
       });
       if (!res.ok || !data || !data.ok) throw new Error((data && data.error) || 'Could not save your feedback.');
-      form.reset(); note.textContent = 'Thank you — your feedback was sent to Drew.';
+      form.reset(); updateRatingVisual(); note.textContent = 'Thank you — your feedback was sent to Drew.';
     } catch (error) { note.textContent = error.message || 'Could not save your feedback.'; }
     finally { submit.disabled = false; }
   });
+  function updateRatingVisual() {
+    const chosen = Number(document.querySelector('input[name="feedback-rating"]:checked')?.value || 0);
+    document.querySelectorAll('.feedback-rating label').forEach((label, index) => label.classList.toggle('is-selected', index < chosen));
+  }
+  document.querySelectorAll('input[name="feedback-rating"]').forEach((input) => input.addEventListener('change', updateRatingVisual));
+
+  let publicReviews = [], reviewsExpanded = false;
+  function renderPublicReviews(counts, total) {
+    const breakdown = $('review-breakdown'), list = $('public-review-list'), more = $('reviews-more');
+    breakdown.replaceChildren(); list.replaceChildren();
+    [5, 4, 3, 2, 1].forEach((rating) => {
+      const count = Number(counts[rating] || 0), percent = total ? Math.round(count / total * 100) : 0;
+      const row = document.createElement('div'); row.className = 'review-row';
+      const label = document.createElement('span'); label.className = 'review-row-label'; label.textContent = rating + ' stars';
+      const track = document.createElement('div'); track.className = 'review-track'; track.setAttribute('role', 'img'); track.setAttribute('aria-label', `${rating} stars: ${count} reviews, ${percent}%`);
+      const fill = document.createElement('span'); fill.className = 'review-fill'; fill.style.width = percent + '%'; track.appendChild(fill);
+      const value = document.createElement('span'); value.className = 'review-count'; value.textContent = `${percent}% (${count})`;
+      row.append(label, track, value); breakdown.appendChild(row);
+    });
+    if (!publicReviews.length) {
+      const empty = document.createElement('p'); empty.className = 'reviews-empty'; empty.textContent = 'Public subscriber reviews will appear here.'; list.appendChild(empty);
+      more.classList.add('hidden'); return;
+    }
+    publicReviews.slice(0, reviewsExpanded ? publicReviews.length : 5).forEach((review) => {
+      const article = document.createElement('article'); article.className = 'public-review';
+      const quote = document.createElement('blockquote'); quote.textContent = '“' + review.message + '”';
+      const byline = document.createElement('footer'); byline.textContent = '— ' + review.name;
+      article.append(quote, byline); list.appendChild(article);
+    });
+    more.classList.toggle('hidden', reviewsExpanded || publicReviews.length <= 5);
+  }
+  async function loadPublicReviews() {
+    try {
+      const response = await fetch('/.netlify/functions/public-reviews');
+      const data = await response.json();
+      if (!response.ok || !data || !data.ok) throw new Error('Could not load reviews.');
+      publicReviews = Array.isArray(data.reviews) ? data.reviews : [];
+      renderPublicReviews(data.counts || {}, Number(data.total || 0));
+    } catch {
+      $('public-review-list').innerHTML = '<p class="reviews-empty reviews-error">Reviews are unavailable right now.</p>';
+    }
+  }
+  $('reviews-more').addEventListener('click', () => { reviewsExpanded = true; loadPublicReviews(); });
 
   function updateHeader() {
     const c = collection.counts || {};
@@ -2505,6 +2561,7 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   // ===== Boot =====
   resetResultData();
   wireSubscribeButtons();
+  loadPublicReviews();
   updateSessionUI();
   updateHeader(); renderCollection(); renderPrize();
   if (session && session.token) { loadCollection(); loadProfileName(); setTimeout(() => { try { loadMarket(); } catch (e) {} }, 0); }
