@@ -1133,7 +1133,6 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     if (session.expires_at && Date.now() >= Date.parse(session.expires_at)) return false;
     return true;
   }
-  function canReview() { return !!(session && session.token && ['beta', 'pro'].includes(String(session.plan || '').toLowerCase())); }
 
   try {
     const saved = localStorage.getItem('cv_session');
@@ -1163,7 +1162,9 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
     $('acct-unlock').classList.toggle('hidden', isMember);
     $('acct-unlock').textContent = 'Account holder sign in';
     $('profile-name-form').hidden = !(session && session.token);
-    $('feedback-panel').hidden = !canReview();
+    // Keep the form available to signed-in accounts for testing. The server
+    // remains the authority and accepts submissions from paid subscribers only.
+    $('feedback-panel').hidden = !(session && session.token);
     if (session && session.token) $('profile-name').value = (session && session.display_name) || '';
     $('sub-card').classList.toggle('hidden', isMember);
     if (isMember) {
