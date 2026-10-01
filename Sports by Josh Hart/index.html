@@ -386,8 +386,9 @@ td,th{overflow-wrap:anywhere}
 /* Nav link to static pages + footer links */
 nav a{color:var(--muted);padding:12px 18px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block}
 nav a:hover{color:white}
+.menu-toggle{display:none;border:1px solid var(--line);border-radius:12px;width:48px;height:48px;padding:0;background:#151d2e;color:var(--text);align-items:center;justify-content:center;box-shadow:inset 0 1px #ffffff08}.menu-toggle svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}.menu-toggle[aria-expanded=true]{border-color:#8075ca;background:#202a42}
 footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none;margin-right:14px}footer a:hover{color:var(--text)}
-@media(max-width:760px){nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}nav a{text-align:center;min-height:44px;padding:12px 4px;font-size:12px}}
+@media(max-width:760px){header{position:relative;align-items:flex-start}.menu-toggle{display:inline-flex;flex:0 0 auto}header nav{position:absolute;z-index:20;top:calc(100% + 12px);right:0;width:min(300px,calc(100vw - 36px));display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border:1px solid #354563;border-radius:16px;background:#151d2ef7;box-shadow:0 18px 42px #03061188;backdrop-filter:blur(12px)}header nav[hidden]{display:none}header nav button,header nav a{text-align:left;min-height:44px;padding:12px 10px;font-size:12px}header .who-pill{display:none}}
 .watch-thumb .thumb{width:100%;height:auto;max-height:90px;object-fit:contain}.watch-thumb .thumb-ph{min-height:75px;font-size:8px}.watch-detail-art .thumb{width:100%;height:auto;object-fit:contain}
 /* Price desk polish: raised controls over a recessed scanning surface. */
 #scan.workspace{gap:24px;align-items:start}
@@ -567,7 +568,8 @@ footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--mute
 <main>
 <header>
   <div class="brand">COLLECT VALOR<small>YOUR COLLECTION. DISCOVERED.</small></div>
-  <nav aria-label="Main navigation">
+  <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-controls="main-nav" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
+  <nav id="main-nav" aria-label="Main navigation">
     <button class="active" data-page="scan" aria-current="page">Price desk</button>
     <button data-page="collection">Collection</button>
     <button data-page="watch">Watchlist</button>
@@ -1188,6 +1190,20 @@ window.createWatchlist = function ({ getSession, getCurrent, canWatch, post, sho
   }
   document.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => navigate(b.dataset.page)));
   $('profile-showcase-link').addEventListener('click', () => { setCollFilter('showcase'); navigate('collection'); });
+
+  // ===== Mobile menu =====
+  const menuToggle = $('menu-toggle'), mainNav = $('main-nav');
+  function setMenu(open) {
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    mainNav.hidden = !open;
+  }
+  function mobileMenu() { return window.matchMedia('(max-width: 760px)').matches; }
+  setMenu(!mobileMenu());
+  menuToggle.addEventListener('click', () => setMenu(menuToggle.getAttribute('aria-expanded') !== 'true'));
+  mainNav.addEventListener('click', (event) => { if (mobileMenu() && event.target.closest('a,button')) setMenu(false); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && menuToggle.getAttribute('aria-expanded') === 'true') { setMenu(false); menuToggle.focus(); } });
+  window.addEventListener('resize', () => { if (!mobileMenu()) setMenu(true); else setMenu(false); });
 
   // ===== Insight tabs =====
   function setPane(name, focus) {
