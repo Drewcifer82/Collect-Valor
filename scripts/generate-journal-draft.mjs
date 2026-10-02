@@ -21,7 +21,7 @@ Return Markdown only. Include, in this exact order:
 4. A final line beginning with "Suggested slug: ".
 
 Audience: Pokémon card collectors. Voice: plainspoken, useful, collector-first, and honest.
-Rules: write original content; do not claim current prices, release news, sales data, or other facts that need fresh research; do not give financial guarantees; do not imply Collect Valor is affiliated with Pokémon, The Pokémon Company, TCGplayer, or any other third party; do not mention features that are not confirmed in the app. The draft is for human review, not direct publishing.`;
+Rules: write original content; do not claim current prices, release news, sales data, or other facts that need fresh research; do not give financial guarantees; do not imply Collect Valor is affiliated with Pokémon, The Pokémon Company, TCGplayer, or any other third party; do not mention, propose, or describe any Collect Valor feature, planned feature, hypothetical tool, or product roadmap. The draft is for human review, not direct publishing.`;
 
 const response = await fetch('https://api.openai.com/v1/responses', {
   method: 'POST',
