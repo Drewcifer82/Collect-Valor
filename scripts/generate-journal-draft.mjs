@@ -42,7 +42,12 @@ if (!response.ok) {
 }
 
 const payload = await response.json();
-const draft = payload.output_text?.trim();
+const draft = (payload.output_text
+  || payload.output
+    ?.flatMap((item) => item.content || [])
+    .filter((item) => item.type === 'output_text')
+    .map((item) => item.text)
+    .join(''))?.trim();
 
 if (!draft) {
   throw new Error('OpenAI returned no Journal draft.');
